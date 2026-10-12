@@ -2,8 +2,9 @@
 #include "../../Minecraft.h"
 #include "../../../locale/I18n.h"
 #include "../../../util/Mth.h"
+
 OptionsItem::OptionsItem( OptionId optionId, std::string label, GuiElement* element )
-: GuiElementContainer(false, true, 0, 0, 24, 12),
+: GuiElementContainer(false, true, 0, 0, 24, 14),
   m_optionId(optionId),
   m_label(label) {
 	  addChild(element);
@@ -12,11 +13,13 @@ OptionsItem::OptionsItem( OptionId optionId, std::string label, GuiElement* elem
 void OptionsItem::setupPositions() {
 	int currentHeight = 0;
 	for(std::vector<GuiElement*>::iterator it = children.begin(); it != children.end(); ++it) {
-		(*it)->x = x + width - (*it)->width - 15;
-		(*it)->y = y + currentHeight;
-		currentHeight += (*it)->height;
+		(*it)->x = x + width - (*it)->width - 10;
+		(*it)->y = y;
+		if ((*it)->height > currentHeight) {
+			currentHeight = (*it)->height;
+		}
 	}
-	height = currentHeight;
+	height = Mth::Max(20, currentHeight);
 }
 
 void OptionsItem::render( Minecraft* minecraft, int xm, int ym ) {
@@ -79,6 +82,6 @@ void OptionsItem::render( Minecraft* minecraft, int xm, int ym ) {
 		text += ": " + scaleText;
 	}
 
-	minecraft->font->draw(text, (float)x, (float)y + yOffset, 0x909090, false);
+	minecraft->font->drawShadow(text, (float)x + 2, (float)y + yOffset, 0xe0e0e0);
 	super::render(minecraft, xm, ym);
 }

@@ -21,7 +21,6 @@
 #include "../../renderer/Textures.h"
 #include "../../../SharedConstants.h"
 
-// Some kind of default settings, might be overridden in ::init
 StartMenuScreen::StartMenuScreen()
 {
 }
@@ -40,12 +39,12 @@ void StartMenuScreen::init()
 		bHost = new Button(    2, 0, 0, 200, 20, "Singleplayer");
 		bJoin = new Button(    3, 0, 0, 200, 20, "Multiplayer");
 		bOptions = new Button( 4, 0, 0, 200, 20, "Options...");
-		bQuit = new Button( 5, 0, 0, 200, 20, "Ouit Game");
+		bQuit = new Button( 5, 0, 0, 200, 20, "Quit Game");
 	} else {
 		bHost = new Button(    2, 0, 0, 160, 24, "Start Game");
 		bJoin = new Button(    3, 0, 0, 160, 24, "Join Game");
 		bOptions = new Button( 4, 0, 0, 160, 24, "Options");
-		bQuit = new Button( 5, 0, 0, 160, 24, "Ouit Game");
+		bQuit = new Button( 5, 0, 0, 160, 24, "Quit Game");
 	}
 	bJoin->active = bHost->active = bOptions->active = true;
 
@@ -55,7 +54,6 @@ void StartMenuScreen::init()
 
 	buttons.push_back(bHost);
 	buttons.push_back(bJoin);
-	//buttons.push_back(&bTest);
 	buttons.push_back(bQuit);
 
 	tabButtons.push_back(bHost);
@@ -67,22 +65,8 @@ void StartMenuScreen::init()
 		tabButtons.push_back(bOptions);
 	#endif
 
-    //// add quit button (top right X icon) – match OptionsScreen style
-    //{
-    //    ImageDef def;
-    //    def.name = "gui/touchgui.png";
-    //    def.width = 34;
-    //    def.height = 26;
-    //    def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
-    //    bQuit.setImageDef(def, true);
-    //    bQuit.scaleWhenPressed = false;
-    //    buttons.push_back(&bQuit);
-    //    // don't include in tab navigation
-    //}
+	copyright = "\xffMojang AB";
 
-	copyright = "\xffMojang AB";//. Do not distribute!";
-
-	// always show base version string, suffix was previously added for Android builds
 	std::string versionString = Common::getGameVersionString();
 
 	std::string _username = minecraft->options.getStringValue(OPTIONS_USERNAME);
@@ -98,7 +82,7 @@ void StartMenuScreen::init()
 	#endif
 	#else
 		#ifdef RPI
-			version = "v0.1.1 alpha";//(MCPE " + versionString + " compatible)";
+			version = "v0.1.1 alpha";
 		#else
 			version = versionString;
 		#endif
@@ -107,18 +91,18 @@ void StartMenuScreen::init()
 
 void StartMenuScreen::setupPositions() {
 	if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 2){
-		int yBase = (height / 2) - 20;
+		int yBase = (height / 2) - 15;
 
 		bHost->y =	 yBase;
 		bJoin->y =	 bHost->y + 24;
 		bOptions->y = bJoin->y + 24;
 		bQuit->y = bOptions->y + 24;
 	} else {
-		int yBase = height / 2;
+		int yBase = (height / 2) - 10;
 		bHost->y =	 yBase;
-		bJoin->y =	 bHost->y + 24 + 4;
-		bOptions->y = bJoin->y + 24 + 4;
-		bQuit->y = bOptions->y + 24 + 4;
+		bJoin->y =	 bHost->y + 28;
+		bOptions->y = bJoin->y + 28;
+		bQuit->y = bOptions->y + 28;
 	}
 
 	// Center buttons
@@ -126,10 +110,6 @@ void StartMenuScreen::setupPositions() {
 	bJoin->x = (width - bJoin->width) / 2;
 	bOptions->x = (width - bOptions->width) / 2;
 	bQuit->x = (width - bQuit->width) / 2;
-
-    //// position quit icon at top-right (use image-defined size)
-    //bQuit.x = width - bQuit.width;
-    //bQuit.y = 0;
 }
 
 void StartMenuScreen::tick() {
@@ -166,8 +146,10 @@ void StartMenuScreen::render( int xm, int ym, float a )
 {
 	renderBackground();
 
-	// Show current username in the top-left corner
-	drawString(font, username, 2, 2, 0xffffffff);
+	// Username pill badge top-left
+	int unameW = font->width(username) + 12;
+	fill(4, 4, 4 + unameW, 18, 0x60000000);
+	drawString(font, username, 10, 6, 0xffffffff);
 
 #if defined(RPI)
 	TextureId id = minecraft->textures->loadTexture("gui/pi_title.png");
@@ -180,13 +162,12 @@ void StartMenuScreen::render( int xm, int ym, float a )
 		minecraft->textures->bind(id);
 
 		const float x = (float)width / 2;
-		const float y = height/16;
-		//const float scale = Mth::Min(
-		const float wh = Mth::Min((float)width/2.0f, (float)data->w / 2);
+		const float y = 10;
+		const float wh = Mth::Min((float)width * 0.45f, (float)data->w / 2.0f);
 		const float scale = 2.0f * wh / (float)data->w;
 		const float h = scale * (float)data->h;
 
-		// Render title text
+		// Render title logo
 		Tesselator& t = Tesselator::instance;
 		glColor4f2(1, 1, 1, 1);
 		t.begin();
@@ -202,31 +183,40 @@ void StartMenuScreen::render( int xm, int ym, float a )
 		blit(0, height - 12, 0, 0, 43, 12, 256, 72+72);
 #endif
 
-	drawString(font, version, width - font->width(version) - 2, height - 10, 0xffcccccc);//0x666666);
-	drawString(font, copyright, 2, height - 20, 0xffffff);
+	drawString(font, version, width - font->width(version) - 6, height - 22, 0xddcccccc);
+	drawString(font, copyright, width - font->width(copyright) - 6, height - 12, 0xddffffff);
+
 	glEnable2(GL_BLEND);
 	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f2(1, 1, 1, 1);
-	if (Textures::isTextureIdValid(minecraft->textures->loadAndBindTexture("gui/logo/github.png")))
-		blit(2, height - 10, 0, 0, 8, 8, 256, 256);
-	{
-			std::string txt = "Kolyah35/minecraft-pe-0.6.1";
-			float wtxt = font->width(txt);
-			Gui::drawColoredString(font, txt, 12, height - 10, 255);
-			// underline link
-			float y0 = height - 10 + font->lineHeight - 1;
-			this->fill(12, (int)y0, 12 + (int)wtxt, (int)(y0 + 1), 0xffffffff);
-    }
 
-	
+	if (Textures::isTextureIdValid(minecraft->textures->loadAndBindTexture("gui/logo/github.png"))) {
+		glColor4f2(1, 1, 1, 1);
+		blit(6, height - 13, 0, 0, 8, 8, 256, 256);
+	}
+
+	std::string txt = "Kolyah35/minecraft-pe-0.6.1";
+	int wtxt = font->width(txt);
+	const int logoX = 6;
+	const int logoW = 8 + 4 + wtxt;
+	const int logoY = height - 14;
+	const int logoH = 12;
+
+	bool hoveredLink = (xm >= logoX && xm <= logoX + logoW && ym >= logoY && ym <= logoY + logoH);
+	Gui::drawColoredString(font, txt, 18, height - 13, hoveredLink ? 255 : 220);
+	if (hoveredLink) {
+		fill(18, height - 4, 18 + wtxt, height - 3, 0xffffffff);
+	}
+
 	Screen::render(xm, ym, a);
+	glDisable2(GL_BLEND);
 }
 
 void StartMenuScreen::mouseClicked(int x, int y, int buttonNum) {
-	const int logoX = 2;
-	const int logoW = 8 + 2 + font->width("Kolyah35/minecraft-pe-0.6.1");
-	const int logoY = height - 10;
-	const int logoH = 10;
+	std::string txt = "Kolyah35/minecraft-pe-0.6.1";
+	const int logoX = 6;
+	const int logoW = 8 + 4 + font->width(txt);
+	const int logoY = height - 14;
+	const int logoH = 12;
 	if (x >= logoX && x <= logoX + logoW && y >= logoY && y <= logoY + logoH)
 		minecraft->platform()->openURL("https://gitea.sffempire.ru/Kolyah35/minecraft-pe-0.6.1");
 	else

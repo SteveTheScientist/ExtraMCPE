@@ -24,14 +24,12 @@ void OptionsGroup::setupPositions() {
 	int curY = y + labelHeight - scrollOffset;
 	const int contentStartY = y + labelHeight;
 
-	// First we write the header and then we add the items
 	for(auto it = children.begin(); it != children.end(); ++it) {
-		(*it)->width = width - 5;
-		
+		(*it)->width = width - 10;
 		(*it)->y = curY;
-		(*it)->x = x + 10;
+		(*it)->x = x + 5;
 		(*it)->setupPositions();
-		curY += (*it)->height + 3;
+		curY += (*it)->height + 6;
 	}
 	curY += bottomPadding;
 	contentHeight = std::max(0, curY - contentStartY + scrollOffset);
@@ -44,11 +42,11 @@ void OptionsGroup::setupPositions() {
 }
 
 void OptionsGroup::render( Minecraft* minecraft, int xm, int ym ) {
-	float padX = 10.0f;
-	float padY = 5.0f;
+	float padX = 5.0f;
+	float padY = 2.0f;
 	const int labelHeight = 18;
-	
-	minecraft->font->draw(label, (float)x + padX, (float)y + padY, 0xffffffff, false);
+
+	minecraft->font->drawShadow(label, (float)x + padX, (float)y + padY, 0xffffffff);
 
 	glEnable2(GL_SCISSOR_TEST);
 	glScissor(
@@ -143,7 +141,6 @@ OptionsGroup& OptionsGroup::addOptionItem(OptionId optId, Minecraft* minecraft )
 
 	if (option == nullptr) return *this;
 
-	// TODO: do a options key class to check it faster via dynamic_cast
 	if (option->getStringId().find("options.key") != std::string::npos) createKey(optId, minecraft);
 	else if (dynamic_cast<OptionBool*>(option)) createToggle(optId, minecraft);
 	else if (dynamic_cast<OptionFloat*>(option)) createProgressSlider(optId, minecraft);
@@ -152,8 +149,6 @@ OptionsGroup& OptionsGroup::addOptionItem(OptionId optId, Minecraft* minecraft )
 
 	return *this;
 }
-
-// TODO: wrap this copypaste shit into templates
 
 void OptionsGroup::createToggle(OptionId optId, Minecraft* minecraft ) {
 	ImageDef def;

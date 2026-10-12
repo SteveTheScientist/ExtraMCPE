@@ -82,54 +82,50 @@ void OptionsScreen::init() {
 	}
 
 	generateOptionScreens();
-	// start with first category selected
 	selectCategory(0);
 }
 
 void OptionsScreen::setupPositions() {
-	int buttonHeight = btnClose->height;
+	int headerH = btnClose->height;
 
-	btnClose->x = width - btnClose->width;
-	btnClose->y = 0;
+	btnClose->x = width - btnClose->width - 4;
+	btnClose->y = 2;
 
-	int offsetNum = 1;
+	bHeader->x = 0;
+	bHeader->y = 0;
+	bHeader->width = width - btnClose->width - 8;
+	bHeader->height = headerH;
+
+	int categoryWidth = 76;
+	int offsetNum = 0;
 
 	for (std::vector<Touch::TButton*>::iterator it = categoryButtons.begin(); it != categoryButtons.end(); ++it) {
-
-		(*it)->x = 0;
-		(*it)->y = offsetNum * buttonHeight;
-		(*it)->selected = false;
+		(*it)->width = categoryWidth;
+		(*it)->height = 26;
+		(*it)->x = 2;
+		(*it)->y = bHeader->height + 4 + offsetNum * 28;
 
 		offsetNum++;
 	}
 
-	bHeader->x = 0;
-	bHeader->y = 0;
-	bHeader->width = width - btnClose->width;
-	bHeader->height = btnClose->height;
-
-	// Credits button (bottom-right)
 	if (btnCredits != NULL) {
-		btnCredits->x = width - btnCredits->width;
-		btnCredits->y = height - btnCredits->height;
+		btnCredits->width = 66;
+		btnCredits->height = 24;
+		btnCredits->x = width - btnCredits->width - 6;
+		btnCredits->y = height - btnCredits->height - 4;
 	}
 
 	for (std::vector<OptionsGroup*>::iterator it = optionPanes.begin(); it != optionPanes.end(); ++it) {
-
 		if (categoryButtons.size() > 0 && categoryButtons[0] != NULL) {
-
-			(*it)->x = categoryButtons[0]->width;
-			(*it)->y = bHeader->height;
-			(*it)->width = width - categoryButtons[0]->width;
-			(*it)->height = height - bHeader->height;
+			(*it)->x = categoryWidth + 8;
+			(*it)->y = bHeader->height + 4;
+			(*it)->width = width - (categoryWidth + 8) - 10;
+			(*it)->height = height - bHeader->height - 8;
 
 			(*it)->setupPositions();
 		}
 	}
-
-	// don't override user selection on resize
 }
-
 
 void OptionsScreen::render(int xm, int ym, float a) {
 	renderBackground();
@@ -168,7 +164,6 @@ void OptionsScreen::selectCategory(int index) {
 	int currentIndex = 0;
 
 	for (std::vector<Touch::TButton*>::iterator it = categoryButtons.begin(); it != categoryButtons.end(); ++it) {
-
 		if (index == currentIndex)
 			(*it)->selected = true;
 		else
@@ -182,8 +177,6 @@ void OptionsScreen::selectCategory(int index) {
 }
 
 void OptionsScreen::generateOptionScreens() {
-	// how the fuck it works
-
 	optionPanes.push_back(new OptionsGroup("options.group.general"));
 	optionPanes.push_back(new OptionsGroup("options.group.game"));
 	optionPanes.push_back(new OptionsGroup("options.group.controls"));
@@ -207,10 +200,10 @@ void OptionsScreen::generateOptionScreens() {
 		.addOptionItem(OPTIONS_DESTROY_VIBRATION, minecraft)
 		.addOptionItem(OPTIONS_IS_LEFT_HANDED, minecraft);
 
-	// // Controls Pane
+	// Controls Pane
 	optionPanes[2]->addOptionItem(OPTIONS_INVERT_Y_MOUSE, minecraft)
 		.addOptionItem(OPTIONS_USE_TOUCHSCREEN, minecraft)
-		.addOptionItem(OPTIONS_AUTOJUMP, minecraft)	
+		.addOptionItem(OPTIONS_AUTOJUMP, minecraft)
 		.addOptionItem(OPTIONS_BLOCK_OUTLINE, minecraft)
 		.addOptionItem(OPTIONS_IS_JOY_TOUCH_AREA, minecraft);
 
@@ -218,11 +211,8 @@ void OptionsScreen::generateOptionScreens() {
 		optionPanes[2]->addOptionItem((OptionId)i, minecraft);
 	}
 
-	// // Graphics Pane
+	// Graphics Pane
 	optionPanes[3]->addOptionItem(OPTIONS_FANCY_GRAPHICS, minecraft)
-		// .addOptionItem(&Option::VIEW_BOBBING, minecraft)
-		// .addOptionItem(&Option::AMBIENT_OCCLUSION, minecraft)
-		// .addOptionItem(&Option::ANAGLYPH, minecraft)
 		.addOptionItem(OPTIONS_LIMIT_FRAMERATE, minecraft)
 		.addOptionItem(OPTIONS_VSYNC, minecraft)
 		.addOptionItem(OPTIONS_VIEW_DISTANCE, minecraft)
@@ -247,7 +237,6 @@ void OptionsScreen::generateOptionScreens() {
 		.addOptionItem(OPTIONS_BETA_SKY, minecraft)
 		.addOptionItem(OPTIONS_RESTORED_ANIMS, minecraft)
 		.addOptionItem(OPTIONS_DEBUG_STYLE, minecraft);
-		
 }
 
 void OptionsScreen::mouseClicked(int x, int y, int buttonNum) {
@@ -273,7 +262,7 @@ void OptionsScreen::mouseWheel(int dx, int dy, int xm, int ym) {
 void OptionsScreen::keyPressed(int eventKey) {
 	if (currentOptionsGroup != NULL)
 		currentOptionsGroup->keyPressed(minecraft, eventKey);
-	if (eventKey == Keyboard::KEY_ESCAPE) 
+	if (eventKey == Keyboard::KEY_ESCAPE)
 		minecraft->options.save();
 
 	super::keyPressed(eventKey);
@@ -287,7 +276,6 @@ void OptionsScreen::charPressed(char inputChar) {
 }
 
 void OptionsScreen::tick() {
-
 	if (currentOptionsGroup != NULL)
 		currentOptionsGroup->tick(minecraft);
 
