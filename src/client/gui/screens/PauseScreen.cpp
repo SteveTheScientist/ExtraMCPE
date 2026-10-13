@@ -90,7 +90,7 @@ void PauseScreen::buttonClicked(Button* button) {
 	} else if (button->id == bOptions->id) {
 		minecraft->setScreen(new OptionsScreen());
 	} else if (button->id == bCredits->id) {
-		minecraft->setScreen(new CreditsScreen());
+		minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_PAUSE));
 	} else if (button->id == bQuit->id) {
 		minecraft->leaveGame();
 	}

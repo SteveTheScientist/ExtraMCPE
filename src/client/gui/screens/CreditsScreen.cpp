@@ -1,12 +1,13 @@
 #include "CreditsScreen.h"
 #include "StartMenuScreen.h"
 #include "OptionsScreen.h"
+#include "PauseScreen.h"
 #include "../../Minecraft.h"
 #include "../components/Button.h"
 #include "platform/input/Mouse.h"
 
-CreditsScreen::CreditsScreen()
-: btnDone(NULL), _scrollY(0.0f), _scrollSpeed(0.5f)
+CreditsScreen::CreditsScreen(CreditsReturnTarget returnTarget)
+: btnDone(NULL), m_returnTarget(returnTarget), _scrollY(0.0f), _scrollSpeed(0.5f)
 {}
 
 CreditsScreen::~CreditsScreen() {
@@ -66,7 +67,11 @@ void CreditsScreen::tick() {
 }
 
 void CreditsScreen::render(int xm, int ym, float a) {
-    renderDirtBackground(0);
+    if (m_returnTarget == CREDITS_RETURN_PAUSE && minecraft->isLevelGenerated()) {
+        renderBackground();
+    } else {
+        renderDirtBackground(0);
+    }
 
     Font* font = minecraft->font;
     float y = _scrollY;
@@ -98,7 +103,13 @@ void CreditsScreen::render(int xm, int ym, float a) {
 
 void CreditsScreen::buttonClicked(Button* button) {
     if (button->id == 1) {
-        minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
+        if (m_returnTarget == CREDITS_RETURN_OPTIONS) {
+            minecraft->setScreen(new OptionsScreen());
+        } else if (m_returnTarget == CREDITS_RETURN_PAUSE) {
+            minecraft->setScreen(new PauseScreen(false));
+        } else {
+            minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
+        }
     }
 }
 

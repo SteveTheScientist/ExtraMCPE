@@ -6,10 +6,16 @@
 #include <vector>
 #include <string>
 
+enum CreditsReturnTarget {
+    CREDITS_RETURN_STARTMENU,
+    CREDITS_RETURN_OPTIONS,
+    CREDITS_RETURN_PAUSE
+};
+
 class CreditsScreen: public Screen {
 public:
     typedef Screen super;
-    CreditsScreen();
+    CreditsScreen(CreditsReturnTarget returnTarget = CREDITS_RETURN_STARTMENU);
     virtual ~CreditsScreen();
     virtual void init();
     virtual void setupPositions();
@@ -19,6 +25,7 @@ public:
     virtual void mouseClicked(int x, int y, int buttonNum);
 private:
     Button* btnDone;
+    CreditsReturnTarget m_returnTarget;
     std::vector<std::string> _lines;
     float _scrollY;
     float _scrollSpeed;

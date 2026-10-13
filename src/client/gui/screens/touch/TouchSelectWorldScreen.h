@@ -105,7 +105,7 @@ private:
 	void loadLevelSource();
 	std::string getUniqueLevelName(const std::string& level);
 
-	ImageButton bDelete;
+	TButton bDelete;
 	TButton bCreate;
 	THeader bHeader;
 	TButton bBack;

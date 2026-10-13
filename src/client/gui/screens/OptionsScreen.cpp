@@ -1,6 +1,7 @@
 #include "OptionsScreen.h"
 
 #include "StartMenuScreen.h"
+#include "PauseScreen.h"
 #include "UsernameScreen.h"
 #include "DialogDefinitions.h"
 #include "../../Minecraft.h"
@@ -145,8 +146,8 @@ void OptionsScreen::removed() {
 void OptionsScreen::buttonClicked(Button* button) {
 	if (button == btnClose) {
 		minecraft->options.save();
-		if (minecraft->screen != NULL) {
-			minecraft->setScreen(NULL);
+		if (minecraft->isLevelGenerated()) {
+			minecraft->setScreen(new PauseScreen(false));
 		} else {
 			minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
 		}
@@ -156,7 +157,7 @@ void OptionsScreen::buttonClicked(Button* button) {
 		selectCategory(categoryButton);
 	}
 	else if (button == btnCredits) {
-		minecraft->setScreen(new CreditsScreen());
+		minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_OPTIONS));
 	}
 }
 
