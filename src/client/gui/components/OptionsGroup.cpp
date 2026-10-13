@@ -48,16 +48,7 @@ void OptionsGroup::render( Minecraft* minecraft, int xm, int ym ) {
 
 	minecraft->font->drawShadow(label, (float)x + padX, (float)y + padY, 0xffffffff);
 
-	glEnable2(GL_SCISSOR_TEST);
-	glScissor(
-		Gui::GuiScale * x,
-		minecraft->height - Gui::GuiScale * (y + Screen::currentOffsetY + height),
-		Gui::GuiScale * width,
-		Gui::GuiScale * (height - labelHeight)
-	);
-
 	super::render(minecraft, xm, ym);
-	glDisable2(GL_SCISSOR_TEST);
 }
 
 void OptionsGroup::tick(Minecraft* minecraft) {

@@ -79,14 +79,6 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
     fill(x, y, x + width, y + height, bgColor);
     fill(x + 1, y + 1, x + width - 1, y + height - 1, borderColor);
 
-    glEnable2(GL_SCISSOR_TEST);
-    glScissor(
-        Gui::GuiScale * (x + 2), 
-        minecraft->height - Gui::GuiScale * (y + Screen::currentOffsetY + height - 2),
-        Gui::GuiScale * (width - 2), 
-        Gui::GuiScale * (height - 2)
-    );
-
 	int _y = y + (height - Font::DefaultLineHeight) / 2;
 
     if (text.empty() && !focused) {
@@ -98,6 +90,4 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
     drawString(minecraft->font, text, x + 2, _y, 0xffffffff);
 
     if (focused && blink) text.pop_back();
-
-    glDisable2(GL_SCISSOR_TEST);
 }

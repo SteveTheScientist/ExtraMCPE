@@ -10,23 +10,12 @@
 #include <locale/I18n.h>
 
 SimpleChooseLevelScreen::SimpleChooseLevelScreen(const std::string& levelName)
-:   bTabGame(nullptr),
-    bTabWorld(nullptr),
-    bTabMore(nullptr),
-    bGamemode(nullptr),
-    bDifficulty(nullptr),
+:   bGamemode(nullptr),
     bCheats(nullptr),
-    bWorldType(nullptr),
-    bGenerateStructures(nullptr),
-    bBonusChest(nullptr),
     bCreate(nullptr),
     bCancel(nullptr),
-    activeTab(0),
-    difficulty(2), // Normal
     gamemode(GameType::Survival),
     cheatsEnabled(false),
-    generateStructures(true),
-    bonusChest(false),
     hasChosen(false),
     levelName(levelName),
     tLevelName(0, "New World"),
@@ -36,15 +25,8 @@ SimpleChooseLevelScreen::SimpleChooseLevelScreen(const std::string& levelName)
 
 SimpleChooseLevelScreen::~SimpleChooseLevelScreen()
 {
-    delete bTabGame;
-    delete bTabWorld;
-    delete bTabMore;
     delete bGamemode;
-    delete bDifficulty;
     delete bCheats;
-    delete bWorldType;
-    delete bGenerateStructures;
-    delete bBonusChest;
     delete bCreate;
     delete bCancel;
 }
@@ -55,40 +37,13 @@ void SimpleChooseLevelScreen::init()
 
     tLevelName.text = "New World";
 
-    // Tabs
-    bTabGame  = new Button(10, "Game");
-    bTabWorld = new Button(11, "World");
-    bTabMore  = new Button(12, "More");
-
-    // Tab 0
-    bGamemode   = new Button(1, "Game Mode: Survival");
-    bDifficulty = new Button(2, "Difficulty: Normal");
-    bCheats     = new Button(4, "Allow Commands: OFF");
-
-    // Tab 1
-    bWorldType  = new Button(20, "World Type: Default");
-
-    // Tab 2
-    bGenerateStructures = new Button(30, "Generate Structures: ON");
-    bBonusChest         = new Button(31, "Bonus Chest: OFF");
-
-    // Bottom
-    bCreate = new Button(3, "Create New World");
-    bCancel = new Button(5, "Cancel");
-
-    buttons.push_back(bTabGame);
-    buttons.push_back(bTabWorld);
-    buttons.push_back(bTabMore);
+    bGamemode = new Button(1, "Game Mode: Survival");
+    bCheats   = new Button(4, "Allow Commands: OFF");
+    bCreate   = new Button(3, "Create New World");
+    bCancel   = new Button(5, "Cancel");
 
     buttons.push_back(bGamemode);
-    buttons.push_back(bDifficulty);
     buttons.push_back(bCheats);
-
-    buttons.push_back(bWorldType);
-
-    buttons.push_back(bGenerateStructures);
-    buttons.push_back(bBonusChest);
-
     buttons.push_back(bCreate);
     buttons.push_back(bCancel);
 
@@ -101,74 +56,37 @@ void SimpleChooseLevelScreen::init()
 void SimpleChooseLevelScreen::setupPositions()
 {
     int centerX = width / 2;
-
-    // Tabs
-    int tabW = 90;
-    int tabH = 20;
-    bTabGame->width  = tabW; bTabGame->height  = tabH;
-    bTabWorld->width = tabW; bTabWorld->height = tabH;
-    bTabMore->width  = tabW; bTabMore->height  = tabH;
-
-    bTabGame->x  = centerX - 140; bTabGame->y  = 6;
-    bTabWorld->x = centerX - 45;  bTabWorld->y = 6;
-    bTabMore->x  = centerX + 50;  bTabMore->y  = 6;
-
-    // Bottom bar
-    int btnW = 145;
+    int fieldW = 210;
     int btnH = 20;
-    int bottomY = height - 26;
+    int fieldX = centerX - fieldW / 2;
+
+    tLevelName.width = fieldW; tLevelName.height = 20;
+    tLevelName.x = fieldX; tLevelName.y = 40;
+
+    tSeed.width = fieldW; tSeed.height = 20;
+    tSeed.x = fieldX; tSeed.y = 80;
+
+    bGamemode->width = fieldW; bGamemode->height = btnH;
+    bGamemode->x = fieldX; bGamemode->y = 120;
+
+    bCheats->width = fieldW; bCheats->height = btnH;
+    bCheats->x = fieldX; bCheats->y = 156;
+
+    // Bottom action buttons
+    int bottomY = height - 28;
+    int btnW = 145;
 
     bCreate->width = btnW; bCreate->height = btnH;
     bCreate->x = centerX - 150; bCreate->y = bottomY;
 
     bCancel->width = btnW; bCancel->height = btnH;
     bCancel->x = centerX + 5; bCancel->y = bottomY;
-
-    // Tab 0 (Game)
-    int fieldW = 210;
-    int fieldX = centerX - fieldW / 2;
-
-    tLevelName.width = fieldW; tLevelName.height = 20;
-    tLevelName.x = fieldX; tLevelName.y = 52;
-
-    bGamemode->width = fieldW; bGamemode->height = btnH;
-    bGamemode->x = fieldX; bGamemode->y = 84;
-
-    bDifficulty->width = fieldW; bDifficulty->height = btnH;
-    bDifficulty->x = fieldX; bDifficulty->y = 110;
-
-    bCheats->width = fieldW; bCheats->height = btnH;
-    bCheats->x = fieldX; bCheats->y = 136;
-
-    // Tab 1 (World)
-    tSeed.width = fieldW; tSeed.height = 20;
-    tSeed.x = fieldX; tSeed.y = 52;
-
-    bWorldType->width = fieldW; bWorldType->height = btnH;
-    bWorldType->x = fieldX; bWorldType->y = 96;
-
-    // Tab 2 (More)
-    bGenerateStructures->width = fieldW; bGenerateStructures->height = btnH;
-    bGenerateStructures->x = fieldX; bGenerateStructures->y = 52;
-
-    bBonusChest->width = fieldW; bBonusChest->height = btnH;
-    bBonusChest->x = fieldX; bBonusChest->y = 78;
-
-    // Visibility management based on activeTab
-    bGamemode->visible   = (activeTab == 0);
-    bDifficulty->visible = (activeTab == 0);
-    bCheats->visible     = (activeTab == 0);
-
-    bWorldType->visible  = (activeTab == 1);
-
-    bGenerateStructures->visible = (activeTab == 2);
-    bBonusChest->visible         = (activeTab == 2);
 }
 
 void SimpleChooseLevelScreen::tick()
 {
-    if (activeTab == 0) tLevelName.tick(minecraft);
-    else if (activeTab == 1) tSeed.tick(minecraft);
+    tLevelName.tick(minecraft);
+    tSeed.tick(minecraft);
 }
 
 void SimpleChooseLevelScreen::render( int xm, int ym, float a )
@@ -176,24 +94,23 @@ void SimpleChooseLevelScreen::render( int xm, int ym, float a )
     renderDirtBackground(0);
     glEnable2(GL_BLEND);
 
-    // Separator lines
-    fill(0, 30, width, 31, 0xff555555);
-    fill(0, height - 32, width, height - 31, 0xff555555);
+    // Header title
+    drawCenteredString(minecraft->font, "Create New World", width / 2, 12, 0xffffffff);
 
-    // Highlight active tab
-    Button* activeTabBtn = (activeTab == 0)? bTabGame : ((activeTab == 1)? bTabWorld : bTabMore);
-    if (activeTabBtn) {
-        fill(activeTabBtn->x, activeTabBtn->y + activeTabBtn->height - 2, activeTabBtn->x + activeTabBtn->width, activeTabBtn->y + activeTabBtn->height, 0xffffffff);
-    }
+    // Field labels
+    drawString(minecraft->font, "World Name", tLevelName.x, tLevelName.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
+    tLevelName.render(minecraft, xm, ym);
 
-    if (activeTab == 0) {
-        drawString(minecraft->font, "World Name", tLevelName.x, tLevelName.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
-        tLevelName.render(minecraft, xm, ym);
-    } else if (activeTab == 1) {
-        drawString(minecraft->font, "World Seed", tSeed.x, tSeed.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
-        tSeed.render(minecraft, xm, ym);
-        drawString(minecraft->font, "Leave blank for random seed", tSeed.x, tSeed.y + tSeed.height + 3, 0xff808080);
-    }
+    drawString(minecraft->font, "Seed for the World Generator", tSeed.x, tSeed.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
+    tSeed.render(minecraft, xm, ym);
+    drawString(minecraft->font, "Leave blank for random seed", tSeed.x, tSeed.y + tSeed.height + 2, 0xff808080);
+
+    // Mode description
+    const char* modeDesc = (gamemode == GameType::Survival) ? "Mobs, health and gather resources" : "Unlimited resources and flying";
+    drawCenteredString(minecraft->font, modeDesc, width / 2, bGamemode->y + bGamemode->height + 2, 0xff808080);
+
+    // Separator line above bottom buttons
+    fill(0, height - 34, width, height - 33, 0xff555555);
 
     // Render buttons
     for (unsigned int i = 0; i < buttons.size(); i++) {
@@ -206,18 +123,15 @@ void SimpleChooseLevelScreen::render( int xm, int ym, float a )
 void SimpleChooseLevelScreen::mouseClicked(int x, int y, int buttonNum)
 {
     if (buttonNum == MouseAction::ACTION_LEFT) {
-        if (activeTab == 0) {
-            if (tLevelName.pointInside(x, y)) {
-                tLevelName.setFocus(minecraft);
-            } else {
-                tLevelName.loseFocus(minecraft);
-            }
-        } else if (activeTab == 1) {
-            if (tSeed.pointInside(x, y)) {
-                tSeed.setFocus(minecraft);
-            } else {
-                tSeed.loseFocus(minecraft);
-            }
+        if (tLevelName.pointInside(x, y)) {
+            tLevelName.setFocus(minecraft);
+            tSeed.loseFocus(minecraft);
+        } else if (tSeed.pointInside(x, y)) {
+            tSeed.setFocus(minecraft);
+            tLevelName.loseFocus(minecraft);
+        } else {
+            tLevelName.loseFocus(minecraft);
+            tSeed.loseFocus(minecraft);
         }
     }
 
@@ -228,43 +142,15 @@ void SimpleChooseLevelScreen::buttonClicked( Button* button )
 {
     if (hasChosen) return;
 
-    if (button == bTabGame)  { activeTab = 0; setupPositions(); return; }
-    if (button == bTabWorld) { activeTab = 1; setupPositions(); return; }
-    if (button == bTabMore)  { activeTab = 2; setupPositions(); return; }
-
     if (button == bGamemode) {
         gamemode ^= 1;
         bGamemode->msg = (gamemode == GameType::Survival) ? "Game Mode: Survival" : "Game Mode: Creative";
         return;
     }
 
-    if (button == bDifficulty) {
-        difficulty = (difficulty + 1) % 4;
-        const char* diffNames[] = { "Peaceful", "Easy", "Normal", "Hard" };
-        bDifficulty->msg = std::string("Difficulty: ") + diffNames[difficulty];
-        return;
-    }
-
     if (button == bCheats) {
         cheatsEnabled = !cheatsEnabled;
         bCheats->msg = cheatsEnabled ? "Allow Commands: ON" : "Allow Commands: OFF";
-        return;
-    }
-
-    if (button == bWorldType) {
-        bWorldType->msg = "World Type: Default";
-        return;
-    }
-
-    if (button == bGenerateStructures) {
-        generateStructures = !generateStructures;
-        bGenerateStructures->msg = generateStructures ? "Generate Structures: ON" : "Generate Structures: OFF";
-        return;
-    }
-
-    if (button == bBonusChest) {
-        bonusChest = !bonusChest;
-        bBonusChest->msg = bonusChest ? "Bonus Chest: ON" : "Bonus Chest: OFF";
         return;
     }
 

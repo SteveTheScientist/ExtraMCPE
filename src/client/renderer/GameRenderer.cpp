@@ -185,8 +185,7 @@ void GameRenderer::render(float a) {
 		if (_t_keepPic < 0) {
 			if (!(mc->screen && !mc->screen->renderGameBehind())) {
 
-				if (mc->screen && mc->screen->hasClippingArea(screenScissorArea))
-					useScreenScissor = true;
+				useScreenScissor = false;
 
 				renderLevel(a);
 				hasClearedColorBuffer = true;

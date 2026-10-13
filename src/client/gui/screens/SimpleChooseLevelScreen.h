@@ -26,33 +26,13 @@ public:
 	virtual void mouseClicked(int x, int y, int buttonNum);
 
 private:
-	// Tabs
-	Button* bTabGame;
-	Button* bTabWorld;
-	Button* bTabMore;
-
-	// Tab 0 (Game)
 	Button* bGamemode;
-	Button* bDifficulty;
 	Button* bCheats;
-
-	// Tab 1 (World)
-	Button* bWorldType;
-
-	// Tab 2 (More)
-	Button* bGenerateStructures;
-	Button* bBonusChest;
-
-	// Bottom action buttons
 	Button* bCreate;
 	Button* bCancel;
 
-	int activeTab; // 0 = Game, 1 = World, 2 = More
-	int difficulty; // 0 = Peaceful, 1 = Easy, 2 = Normal, 3 = Hard
 	int gamemode;
 	bool cheatsEnabled;
-	bool generateStructures;
-	bool bonusChest;
 	bool hasChosen;
 
 	std::string levelName;

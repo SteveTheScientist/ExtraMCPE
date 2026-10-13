@@ -332,7 +332,7 @@ void Font::drawSlow( const char* str, float x, float y, int color, bool darken /
 	int alpha = (0xff000000 & color) >> 24;
 	if (!alpha) alpha = 0xff;
 	t.color((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, alpha);
-	
+
 	t.addOffset((float)x, (float)y, 0);
 	float xOffset = 0;
 	float yOffset = 0;
@@ -354,19 +354,16 @@ void Font::buildChar( unsigned char i, float x /*= 0*/, float y /*=0*/ )
 {
 	Tesselator& t = Tesselator::instance;
 
-	//i -= _charOffset;
-	//int ix = (i % _cols) * 8 + _x;
-	//int iy = (i / _cols) * 8 + _y;
 	float ix = (float)((i & 15) * 8);
 	float iy = (float)((i >> 4) * 8);
-	float s = 7.99f;
+	float sw = 8.0f;
+	float sh = 8.0f;
 
 	float uo = (0.0f) / 128.0f;
 	float vo = (0.0f) / 128.0f;
 
-	t.vertexUV(x, y + s, 0, ix / 128.0f + uo, (iy + s) / 128.0f + vo);
-	t.vertexUV(x + s, y + s, 0, (ix + s) / 128.0f + uo, (iy + s) / 128.0f + vo);
-	t.vertexUV(x + s, y, 0, (ix + s) / 128.0f + uo, iy / 128.0f + vo);
+	t.vertexUV(x, y + sh, 0, ix / 128.0f + uo, (iy + 7.99f) / 128.0f + vo);
+	t.vertexUV(x + sw, y + sh, 0, (ix + 7.99f) / 128.0f + uo, (iy + 7.99f) / 128.0f + vo);
+	t.vertexUV(x + sw, y, 0, (ix + 7.99f) / 128.0f + uo, iy / 128.0f + vo);
 	t.vertexUV(x, y, 0, ix / 128.0f + uo, iy / 128.0f + vo);
 }
-
