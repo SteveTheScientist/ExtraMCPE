@@ -187,41 +187,14 @@ void StartMenuScreen::render( int xm, int ym, float a )
 		t.draw();
 	}
 
-	drawString(font, version, width - font->width(version) - 6, height - 22, 0xddcccccc);
 	drawString(font, copyright, width - font->width(copyright) - 6, height - 12, 0xddffffff);
-
-	if (Textures::isTextureIdValid(minecraft->textures->loadAndBindTexture("gui/logo/github.png"))) {
-		glColor4f2(1, 1, 1, 1);
-		blit(6, height - 13, 0, 0, 8, 8, 256, 256);
-	}
-
-	std::string txt = "Kolyah35/minecraft-pe-0.6.1";
-	int wtxt = font->width(txt);
-	const int logoX = 6;
-	const int logoW = 8 + 4 + wtxt;
-	const int logoY = height - 14;
-	const int logoH = 12;
-
-	bool hoveredLink = (xm >= logoX && xm <= logoX + logoW && ym >= logoY && ym <= logoY + logoH);
-	Gui::drawColoredString(font, txt, 18, height - 13, hoveredLink ? 255 : 220);
-	if (hoveredLink) {
-		fill(18, height - 4, 18 + wtxt, height - 3, 0xffffffff);
-	}
 
 	Screen::render(xm, ym, a);
     glDisable2(GL_BLEND);
 }
 
 void StartMenuScreen::mouseClicked(int x, int y, int buttonNum) {
-	std::string txt = "Kolyah35/minecraft-pe-0.6.1";
-	const int logoX = 6;
-	const int logoW = 8 + 4 + font->width(txt);
-	const int logoY = height - 14;
-	const int logoH = 12;
-	if (x >= logoX && x <= logoX + logoW && y >= logoY && y <= logoY + logoH)
-		minecraft->platform()->openURL("https://gitea.sffempire.ru/Kolyah35/minecraft-pe-0.6.1");
-	else
-		Screen::mouseClicked(x, y, buttonNum);
+	Screen::mouseClicked(x, y, buttonNum);
 }
 
 bool StartMenuScreen::handleBackEvent( bool isDown ) {

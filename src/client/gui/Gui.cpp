@@ -586,7 +586,7 @@ void Gui::postError( int errCode )
 void Gui::setScissorRect( const IntRectangle& bbox )
 {
 	GLuint x = (GLuint)(GuiScale * bbox.x);
-	GLuint y = minecraft->height - (GLuint)(GuiScale * (bbox.y + Screen::currentOffsetY + bbox.h));
+	GLuint y = minecraft->height - (GLuint)(GuiScale * (bbox.y + bbox.h));
 	GLuint w = (GLuint)(GuiScale * bbox.w);
 	GLuint h = (GLuint)(GuiScale * bbox.h);
 	glScissor(x, y, w, h);

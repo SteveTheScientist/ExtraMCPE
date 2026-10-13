@@ -219,28 +219,9 @@ void GameRenderer::render(float a) {
 	}
 
 	if (mc->screen != NULL) {
-		if (useScreenScissor)
-			glDisable2(GL_SCISSOR_TEST);
-
-		float offsetY = 0.0f;
-		if (mc->screen->openAnimationProgress < 1.0f) {
-			float p = mc->screen->openAnimationProgress;
-			// Ease-out cubic for smooth slide-in
-			float t = 1.0f - p;
-			float ease = 1.0f - t * t * t;
-			offsetY = -20.0f * (1.0f - ease);
-		}
-		Screen::currentOffsetY = offsetY;
-
 		glPushMatrix2();
-		if (offsetY != 0.0f) {
-			glTranslatef2(0.0f, offsetY, 0.0f);
-		}
-
-		mc->screen->render(xMouse, yMouse - (int)offsetY, a);
+		mc->screen->render(xMouse, yMouse, a);
 		glPopMatrix2();
-
-		Screen::currentOffsetY = 0.0f;
 
 		mc->platform()->hideCursor(!mc->options.getBooleanValue(OPTIONS_RPI_CURSOR));
 		if (mc->options.getBooleanValue(OPTIONS_RPI_CURSOR))

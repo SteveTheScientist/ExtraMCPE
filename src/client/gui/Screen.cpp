@@ -1,7 +1,5 @@
 #include "Screen.h"
 #include "components/Button.h"
-
-float Screen::currentOffsetY = 0.0f;
 #include "components/TextBox.h"
 #include "../Minecraft.h"
 #include "../renderer/Tesselator.h"
@@ -99,7 +97,7 @@ void Screen::mouseEvent()
 	// forward wheel events to subclasses
 	if (e.action == MouseAction::ACTION_WHEEL) {
 		int xm = e.x * width / minecraft->width;
-		int ym = e.y * height / minecraft->height - 1 - (int)currentOffsetY;
+		int ym = e.y * height / minecraft->height - 1;
 		mouseWheel(e.dx, e.dy, xm, ym);
 		return;
 	}
