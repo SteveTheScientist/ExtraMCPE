@@ -378,14 +378,14 @@ if [[ "$NO_JAVA" == false && "$NO_BUILD" == false ]]; then
   ensure_dir "$(dirname "$BUILD_DIR/gen/R.java")"
 
   # generate R.java
-  "$AAPT" package -f -M "$ANDROID_MANIFEST" -S "$ANDROID_RES_DIR" -I "$ANDROID_PLATFORM_DIR/android.jar" -J "$BUILD_DIR/gen" -F "$BUILD_DIR/_rgen.apk"
+  "$AAPT" package -f --custom-package com.mojang.minecraftpe -M "$ANDROID_MANIFEST" -S "$ANDROID_RES_DIR" -I "$ANDROID_PLATFORM_DIR/android.jar" -J "$BUILD_DIR/gen" -F "$BUILD_DIR/_rgen.apk"
   rm -f "$BUILD_DIR/_rgen.apk"
 
   # collect all source files (project + stubs + generated R.java)
   JAVA_SOURCES=(
     $(find "$JAVA_SRC_DIR" -name "*.java" -print)
     $(find "$BUILD_DIR/stubs" -name "*.java" -print)
-    "$BUILD_DIR/gen/R.java"
+    $(find "$BUILD_DIR/gen" -name "*.java" -print)
   )
 
   rm -rf "$BUILD_DIR/classes"
