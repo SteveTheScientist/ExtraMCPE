@@ -2,7 +2,6 @@
 #include "ProgressScreen.h"
 #include "ScreenChooser.h"
 #include "../components/Button.h"
-#include "../components/ImageButton.h"
 #include "../../Minecraft.h"
 #include "../../../world/level/LevelSettings.h"
 #include "../../../platform/time.h"
@@ -11,109 +10,165 @@
 #include <locale/I18n.h>
 
 SimpleChooseLevelScreen::SimpleChooseLevelScreen(const std::string& levelName)
-:   bHeader(nullptr),
+:   bTabGame(nullptr),
+    bTabWorld(nullptr),
+    bTabMore(nullptr),
     bGamemode(nullptr),
+    bDifficulty(nullptr),
     bCheats(nullptr),
-    bBack(nullptr),
+    bWorldType(nullptr),
+    bGenerateStructures(nullptr),
+    bBonusChest(nullptr),
     bCreate(nullptr),
-    levelName(levelName),
-    hasChosen(false),
+    bCancel(nullptr),
+    activeTab(0),
+    difficulty(2), // Normal
     gamemode(GameType::Survival),
     cheatsEnabled(false),
-    tLevelName(0, "World name"),
-    tSeed(1, "World seed")
+    generateStructures(true),
+    bonusChest(false),
+    hasChosen(false),
+    levelName(levelName),
+    tLevelName(0, "New World"),
+    tSeed(1, "Leave blank for random")
 {
 }
 
 SimpleChooseLevelScreen::~SimpleChooseLevelScreen()
 {
-    if (bHeader) delete bHeader;
+    delete bTabGame;
+    delete bTabWorld;
+    delete bTabMore;
     delete bGamemode;
+    delete bDifficulty;
     delete bCheats;
-    delete bBack;
+    delete bWorldType;
+    delete bGenerateStructures;
+    delete bBonusChest;
     delete bCreate;
+    delete bCancel;
 }
 
 void SimpleChooseLevelScreen::init()
 {
     ChooseLevelScreen::init();
 
-    tLevelName.text = I18n::get("selectWorld.newWorld");
+    tLevelName.text = "New World";
 
-    bHeader = new Touch::THeader(0, "Create New World");
+    // Tabs
+    bTabGame  = new Button(10, "Game");
+    bTabWorld = new Button(11, "World");
+    bTabMore  = new Button(12, "More");
 
-    bBack = new ImageButton(2, "");
-    {
-        ImageDef def;
-        def.name = "gui/touchgui.png";
-        def.width = 34;
-        def.height = 26;
-        def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
-        bBack->setImageDef(def, true);
-    }
+    // Tab 0
+    bGamemode   = new Button(1, "Game Mode: Survival");
+    bDifficulty = new Button(2, "Difficulty: Normal");
+    bCheats     = new Button(4, "Allow Commands: OFF");
 
-    bGamemode = new Button(1, "Game Mode: Survival");
-    bCheats  = new Button(4, "Cheats: Off");
-    bCreate  = new Button(3, "Create World");
+    // Tab 1
+    bWorldType  = new Button(20, "World Type: Default");
 
-    buttons.push_back(bHeader);
-    buttons.push_back(bBack);
+    // Tab 2
+    bGenerateStructures = new Button(30, "Generate Structures: ON");
+    bBonusChest         = new Button(31, "Bonus Chest: OFF");
+
+    // Bottom
+    bCreate = new Button(3, "Create New World");
+    bCancel = new Button(5, "Cancel");
+
+    buttons.push_back(bTabGame);
+    buttons.push_back(bTabWorld);
+    buttons.push_back(bTabMore);
+
     buttons.push_back(bGamemode);
+    buttons.push_back(bDifficulty);
     buttons.push_back(bCheats);
-    buttons.push_back(bCreate);
 
-    tabButtons.push_back(bGamemode);
-    tabButtons.push_back(bCheats);
-    tabButtons.push_back(bBack);
-    tabButtons.push_back(bCreate);
+    buttons.push_back(bWorldType);
+
+    buttons.push_back(bGenerateStructures);
+    buttons.push_back(bBonusChest);
+
+    buttons.push_back(bCreate);
+    buttons.push_back(bCancel);
 
     textBoxes.push_back(&tLevelName);
     textBoxes.push_back(&tSeed);
+
+    setupPositions();
 }
 
 void SimpleChooseLevelScreen::setupPositions()
 {
-    int headerH = bBack->height;
-
-    bBack->x = width - bBack->width - 4;
-    bBack->y = 2;
-
-    if (bHeader) {
-        bHeader->x = 0;
-        bHeader->y = 0;
-        bHeader->width = width - bBack->width - 8;
-        bHeader->height = headerH;
-    }
-
     int centerX = width / 2;
 
-    tLevelName.width = tSeed.width = 200;
-    tLevelName.x = centerX - 100;
-    tLevelName.y = headerH + 20;
+    // Tabs
+    int tabW = 90;
+    int tabH = 20;
+    bTabGame->width  = tabW; bTabGame->height  = tabH;
+    bTabWorld->width = tabW; bTabWorld->height = tabH;
+    bTabMore->width  = tabW; bTabMore->height  = tabH;
 
-    tSeed.x = centerX - 100;
-    tSeed.y = tLevelName.y + 32;
+    bTabGame->x  = centerX - 140; bTabGame->y  = 6;
+    bTabWorld->x = centerX - 45;  bTabWorld->y = 6;
+    bTabMore->x  = centerX + 50;  bTabMore->y  = 6;
 
-    bGamemode->width = 200;
-    bGamemode->height = 20;
-    bGamemode->x = centerX - 100;
-    bGamemode->y = tSeed.y + 32;
+    // Bottom bar
+    int btnW = 145;
+    int btnH = 20;
+    int bottomY = height - 26;
 
-    bCheats->width = 200;
-    bCheats->height = 20;
-    bCheats->x = centerX - 100;
-    bCheats->y = bGamemode->y + 32;
+    bCreate->width = btnW; bCreate->height = btnH;
+    bCreate->x = centerX - 150; bCreate->y = bottomY;
 
-    bCreate->width = 200;
-    bCreate->height = 20;
-    bCreate->x = centerX - 100;
-    bCreate->y = height - 28;
+    bCancel->width = btnW; bCancel->height = btnH;
+    bCancel->x = centerX + 5; bCancel->y = bottomY;
+
+    // Tab 0 (Game)
+    int fieldW = 210;
+    int fieldX = centerX - fieldW / 2;
+
+    tLevelName.width = fieldW; tLevelName.height = 20;
+    tLevelName.x = fieldX; tLevelName.y = 52;
+
+    bGamemode->width = fieldW; bGamemode->height = btnH;
+    bGamemode->x = fieldX; bGamemode->y = 84;
+
+    bDifficulty->width = fieldW; bDifficulty->height = btnH;
+    bDifficulty->x = fieldX; bDifficulty->y = 110;
+
+    bCheats->width = fieldW; bCheats->height = btnH;
+    bCheats->x = fieldX; bCheats->y = 136;
+
+    // Tab 1 (World)
+    tSeed.width = fieldW; tSeed.height = 20;
+    tSeed.x = fieldX; tSeed.y = 52;
+
+    bWorldType->width = fieldW; bWorldType->height = btnH;
+    bWorldType->x = fieldX; bWorldType->y = 96;
+
+    // Tab 2 (More)
+    bGenerateStructures->width = fieldW; bGenerateStructures->height = btnH;
+    bGenerateStructures->x = fieldX; bGenerateStructures->y = 52;
+
+    bBonusChest->width = fieldW; bBonusChest->height = btnH;
+    bBonusChest->x = fieldX; bBonusChest->y = 78;
+
+    // Visibility management based on activeTab
+    bGamemode->visible   = (activeTab == 0);
+    bDifficulty->visible = (activeTab == 0);
+    bCheats->visible     = (activeTab == 0);
+
+    bWorldType->visible  = (activeTab == 1);
+
+    bGenerateStructures->visible = (activeTab == 2);
+    bBonusChest->visible         = (activeTab == 2);
 }
 
 void SimpleChooseLevelScreen::tick()
 {
-    for (auto* tb : textBoxes)
-        tb->tick(minecraft);
+    if (activeTab == 0) tLevelName.tick(minecraft);
+    else if (activeTab == 1) tSeed.tick(minecraft);
 }
 
 void SimpleChooseLevelScreen::render( int xm, int ym, float a )
@@ -121,47 +176,48 @@ void SimpleChooseLevelScreen::render( int xm, int ym, float a )
     renderDirtBackground(0);
     glEnable2(GL_BLEND);
 
-    drawString(minecraft->font, "World Name:", tLevelName.x, tLevelName.y - Font::DefaultLineHeight - 1, 0xffffffff);
-    drawString(minecraft->font, "Seed (leave blank for random):", tSeed.x, tSeed.y - Font::DefaultLineHeight - 1, 0xffffffff);
+    // Separator lines
+    fill(0, 30, width, 31, 0xff555555);
+    fill(0, height - 32, width, height - 31, 0xff555555);
 
-    const char* modeDesc = NULL;
-    if (gamemode == GameType::Survival) {
-        modeDesc = "Mobs, health and gather resources";
-    } else if (gamemode == GameType::Creative) {
-        modeDesc = "Unlimited resources and flying";
-    }
-    if (modeDesc) {
-        drawCenteredString(minecraft->font, modeDesc, width / 2, bGamemode->y + bGamemode->height + 2, 0xffcccccc);
+    // Highlight active tab
+    Button* activeTabBtn = (activeTab == 0)? bTabGame : ((activeTab == 1)? bTabWorld : bTabMore);
+    if (activeTabBtn) {
+        fill(activeTabBtn->x, activeTabBtn->y + activeTabBtn->height - 2, activeTabBtn->x + activeTabBtn->width, activeTabBtn->y + activeTabBtn->height, 0xffffffff);
     }
 
-    Screen::render(xm, ym, a);
+    if (activeTab == 0) {
+        drawString(minecraft->font, "World Name", tLevelName.x, tLevelName.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
+        tLevelName.render(minecraft, xm, ym);
+    } else if (activeTab == 1) {
+        drawString(minecraft->font, "World Seed", tSeed.x, tSeed.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
+        tSeed.render(minecraft, xm, ym);
+        drawString(minecraft->font, "Leave blank for random seed", tSeed.x, tSeed.y + tSeed.height + 3, 0xff808080);
+    }
+
+    // Render buttons
+    for (unsigned int i = 0; i < buttons.size(); i++) {
+        buttons[i]->render(minecraft, xm, ym);
+    }
+
     glDisable2(GL_BLEND);
 }
 
 void SimpleChooseLevelScreen::mouseClicked(int x, int y, int buttonNum)
 {
     if (buttonNum == MouseAction::ACTION_LEFT) {
-        int lvlTop = tLevelName.y - (Font::DefaultLineHeight + 4);
-        int lvlBottom = tLevelName.y + tLevelName.height;
-        int lvlLeft = tLevelName.x;
-        int lvlRight = tLevelName.x + tLevelName.width;
-        bool clickedLevel = x >= lvlLeft && x < lvlRight && y >= lvlTop && y < lvlBottom;
-
-        int seedTop = tSeed.y - (Font::DefaultLineHeight + 4);
-        int seedBottom = tSeed.y + tSeed.height;
-        int seedLeft = tSeed.x;
-        int seedRight = tSeed.x + tSeed.width;
-        bool clickedSeed  = x >= seedLeft && x < seedRight && y >= seedTop && y < seedBottom;
-
-        if (clickedLevel) {
-            tLevelName.setFocus(minecraft);
-            tSeed.loseFocus(minecraft);
-        } else if (clickedSeed) {
-            tSeed.setFocus(minecraft);
-            tLevelName.loseFocus(minecraft);
-        } else {
-            tLevelName.loseFocus(minecraft);
-            tSeed.loseFocus(minecraft);
+        if (activeTab == 0) {
+            if (tLevelName.pointInside(x, y)) {
+                tLevelName.setFocus(minecraft);
+            } else {
+                tLevelName.loseFocus(minecraft);
+            }
+        } else if (activeTab == 1) {
+            if (tSeed.pointInside(x, y)) {
+                tSeed.setFocus(minecraft);
+            } else {
+                tSeed.loseFocus(minecraft);
+            }
         }
     }
 
@@ -170,8 +226,11 @@ void SimpleChooseLevelScreen::mouseClicked(int x, int y, int buttonNum)
 
 void SimpleChooseLevelScreen::buttonClicked( Button* button )
 {
-    if (hasChosen)
-        return;
+    if (hasChosen) return;
+
+    if (button == bTabGame)  { activeTab = 0; setupPositions(); return; }
+    if (button == bTabWorld) { activeTab = 1; setupPositions(); return; }
+    if (button == bTabMore)  { activeTab = 2; setupPositions(); return; }
 
     if (button == bGamemode) {
         gamemode ^= 1;
@@ -179,9 +238,38 @@ void SimpleChooseLevelScreen::buttonClicked( Button* button )
         return;
     }
 
+    if (button == bDifficulty) {
+        difficulty = (difficulty + 1) % 4;
+        const char* diffNames[] = { "Peaceful", "Easy", "Normal", "Hard" };
+        bDifficulty->msg = std::string("Difficulty: ") + diffNames[difficulty];
+        return;
+    }
+
     if (button == bCheats) {
         cheatsEnabled = !cheatsEnabled;
-        bCheats->msg = cheatsEnabled ? "Cheats: On" : "Cheats: Off";
+        bCheats->msg = cheatsEnabled ? "Allow Commands: ON" : "Allow Commands: OFF";
+        return;
+    }
+
+    if (button == bWorldType) {
+        bWorldType->msg = "World Type: Default";
+        return;
+    }
+
+    if (button == bGenerateStructures) {
+        generateStructures = !generateStructures;
+        bGenerateStructures->msg = generateStructures ? "Generate Structures: ON" : "Generate Structures: OFF";
+        return;
+    }
+
+    if (button == bBonusChest) {
+        bonusChest = !bonusChest;
+        bBonusChest->msg = bonusChest ? "Bonus Chest: ON" : "Bonus Chest: OFF";
+        return;
+    }
+
+    if (button == bCancel) {
+        minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
         return;
     }
 
@@ -203,10 +291,6 @@ void SimpleChooseLevelScreen::buttonClicked( Button* button )
         minecraft->setScreen(new ProgressScreen());
         hasChosen = true;
         return;
-    }
-
-    if (button == bBack) {
-        minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
     }
 }
 

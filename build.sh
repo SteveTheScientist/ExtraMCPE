@@ -85,7 +85,7 @@ ANDROID_BUILD_TOOLS_DIR="$(find_build_tools_dir)"
 ANDROID_PLATFORM_DIR="$(find_android_platform_dir)"
 
 KEYSTORE_FILE="$BUILD_DIR/debug.keystore"
-PACKAGE_NAME="com.mojang.minecraftpe"
+PACKAGE_NAME="com.steve.extra"
 
 # android tool binaries
 AAPT="$ANDROID_BUILD_TOOLS_DIR/aapt"

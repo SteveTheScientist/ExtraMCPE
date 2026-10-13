@@ -1,5 +1,6 @@
 #include "ItemPane.h"
 #include "../Gui.h"
+#include "../Screen.h"
 #include "../../renderer/gles.h"
 #include "../../renderer/Tesselator.h"
 #include "NinePatch.h"
@@ -56,7 +57,7 @@ void ItemPane::renderBatch( std::vector<GridItem>& items, float alpha )
 
 	glEnable2(GL_SCISSOR_TEST);
 	GLuint x = (GLuint)(screenScale * bbox.x);
-	GLuint y = physicalScreenHeight - (GLuint)(screenScale * (bbox.y + bbox.h));
+	GLuint y = physicalScreenHeight - (GLuint)(screenScale * (bbox.y + Screen::currentOffsetY + bbox.h));
 	GLuint w = (GLuint)(screenScale * bbox.w);
 	GLuint h = (GLuint)(screenScale * bbox.h);
 	glScissor(x, y, w, h);

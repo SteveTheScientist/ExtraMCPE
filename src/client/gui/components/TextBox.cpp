@@ -1,5 +1,6 @@
 #include "TextBox.h"
 #include "../Gui.h"
+#include "../Screen.h"
 #include "../../Minecraft.h"
 #include "../../../AppPlatform.h"
 #include "../../../platform/input/Mouse.h"
@@ -81,7 +82,7 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
     glEnable2(GL_SCISSOR_TEST);
     glScissor(
         Gui::GuiScale * (x + 2), 
-        minecraft->height - Gui::GuiScale * (y + height - 2), 
+        minecraft->height - Gui::GuiScale * (y + Screen::currentOffsetY + height - 2),
         Gui::GuiScale * (width - 2), 
         Gui::GuiScale * (height - 2)
     );

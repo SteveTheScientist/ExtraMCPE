@@ -68,6 +68,7 @@ public:
 	bool passEvents;
 	float openAnimationProgress;
 	float animTime; // 0.0 to 1.0 smooth slide-in time
+	static float currentOffsetY;
 	//GuiParticles* particles;
 protected:
 	Minecraft* minecraft;

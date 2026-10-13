@@ -1,5 +1,6 @@
 #include "InventoryPane.h"
 #include "../Gui.h"
+#include "../Screen.h"
 #include "../../Minecraft.h"
 #include "../../player/input/touchscreen/TouchAreaModel.h"
 #include "../../renderer/entity/ItemRenderer.h"
@@ -62,7 +63,7 @@ void InventoryPane::renderBatch( std::vector<GridItem>& items, float alpha )
 
 	glEnable2(GL_SCISSOR_TEST);
 	GLuint x = (GLuint)(screenScale * bbox.x);
-	GLuint y = mc->height - (GLuint)(screenScale * (bbox.y + bbox.h));
+	GLuint y = mc->height - (GLuint)(screenScale * (bbox.y + Screen::currentOffsetY + bbox.h));
 	GLuint w = (GLuint)(screenScale * bbox.w);
 	GLuint h = (GLuint)(screenScale * bbox.h);
 	glScissor(x, y, w, h);

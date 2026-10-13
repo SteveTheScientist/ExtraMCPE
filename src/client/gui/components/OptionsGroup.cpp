@@ -51,7 +51,7 @@ void OptionsGroup::render( Minecraft* minecraft, int xm, int ym ) {
 	glEnable2(GL_SCISSOR_TEST);
 	glScissor(
 		Gui::GuiScale * x,
-		minecraft->height - Gui::GuiScale * (y + height),
+		minecraft->height - Gui::GuiScale * (y + Screen::currentOffsetY + height),
 		Gui::GuiScale * width,
 		Gui::GuiScale * (height - labelHeight)
 	);
