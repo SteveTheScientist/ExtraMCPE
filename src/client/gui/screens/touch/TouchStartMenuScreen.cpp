@@ -21,63 +21,33 @@
 
 namespace Touch {
 
-//
-// Start menu screen implementation
-//
-
 StartMenuScreen::StartMenuScreen()
-:	bHost(    2, "Start Game"),
-	bJoin(    3, "Join Game"),
-	bOptions( 4, "Options"),
-	bQuit(    5, "")
 {
-	ImageDef def;
-	bJoin.width = 75;
-	def.width = def.height = (float) bJoin.width;
-
-	def.setSrc(IntRectangle(0, 26, (int)def.width, (int)def.width));
-	def.name = "gui/touchgui.png";
-	IntRectangle& defSrc = *def.getSrc();
-
-	bOptions.setImageDef(def, true);
-
-	defSrc.y += defSrc.h;
-	bHost.setImageDef(def, true);
-
-	defSrc.y += defSrc.h;
-	bJoin.setImageDef(def, true);
+	bHost = new Button(    2, 0, 0, 200, 20, "Start Game");
+	bJoin = new Button(    3, 0, 0, 200, 20, "Join Game");
+	bOptions = new Button( 4, 0, 0, 200, 20, "Options");
+	bQuit = new Button(    5, 0, 0, 200, 20, "Quit Game");
 }
 
 StartMenuScreen::~StartMenuScreen()
 {
+	delete bHost;
+	delete bJoin;
+	delete bOptions;
+	delete bQuit;
 }
 
 void StartMenuScreen::init()
 {
-	buttons.push_back(&bHost);
-	buttons.push_back(&bJoin);
-	buttons.push_back(&bOptions);
+	buttons.push_back(bHost);
+	buttons.push_back(bJoin);
+	buttons.push_back(bOptions);
+	buttons.push_back(bQuit);
 
-	// add quit icon (top-right X button)
-	{
-		ImageDef def;
-		def.name = "gui/touchgui.png";
-		def.width = 34;
-		def.height = 26;
-		def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
-		bQuit.setImageDef(def, true);
-		bQuit.scaleWhenPressed = false;
-		buttons.push_back(&bQuit);
-	}
-
-	tabButtons.push_back(&bHost);
-	tabButtons.push_back(&bJoin);
-	tabButtons.push_back(&bOptions);
-
-	#ifdef DEMO_MODE
-		buttons.push_back(&bBuy);
-		tabButtons.push_back(&bBuy);
-	#endif
+	tabButtons.push_back(bHost);
+	tabButtons.push_back(bJoin);
+	tabButtons.push_back(bOptions);
+	tabButtons.push_back(bQuit);
 
 	copyright = "\xffMojang AB";
 
@@ -102,26 +72,25 @@ void StartMenuScreen::init()
         version = versionString + " (Demo)";
     #endif
 
-	bJoin.active = bHost.active = bOptions.active = true;
+	bJoin->active = bHost->active = bOptions->active = bQuit->active = true;
 }
 
 void StartMenuScreen::setupPositions() {
-	int yBase = (height - bHost.height) / 2 + 10;
-	int buttonWidth = bHost.width;
-	float spacing = (width - (3.0f * buttonWidth)) / 4;
+	int yBase = (height / 2) - 10;
+	bHost->width = bJoin->width = bOptions->width = bQuit->width = 200;
+	bHost->height = bJoin->height = bOptions->height = bQuit->height = 20;
 
-	// Center buttons horizontally
-	bJoin.x		= 0*buttonWidth + (int)(1*spacing);
-	bHost.x		= 1*buttonWidth + (int)(2*spacing);
-	bOptions.x	= 2*buttonWidth + (int)(3*spacing);
+	bHost->x = (width - 200) / 2;
+	bHost->y = yBase;
 
-	bJoin.y = yBase;
-	bHost.y = yBase;
-	bOptions.y = yBase;
+	bJoin->x = (width - 200) / 2;
+	bJoin->y = bHost->y + 24;
 
-	// quit icon top-right with margin
-	bQuit.x = width - bQuit.width - 4;
-	bQuit.y = 4;
+	bOptions->x = (width - 200) / 2;
+	bOptions->y = bJoin->y + 24;
+
+	bQuit->x = (width - 200) / 2;
+	bQuit->y = bOptions->y + 24;
 
 	copyrightPosX = width - minecraft->font->width(copyright) - 6;
 	versionPosX = (width - minecraft->font->width(version)) / 2;
@@ -129,7 +98,7 @@ void StartMenuScreen::setupPositions() {
 
 void StartMenuScreen::buttonClicked(::Button* button) {
 
-	if (button->id == bHost.id)
+	if (button->id == bHost->id)
 	{
 		#if defined(DEMO_MODE) || defined(APPLE_DEMO_PROMOTION)
 			minecraft->setScreen( new SimpleChooseLevelScreen("_DemoLevel") );
@@ -137,7 +106,7 @@ void StartMenuScreen::buttonClicked(::Button* button) {
 			minecraft->screenChooser.setScreen(SCREEN_SELECTWORLD);
 		#endif
 	}
-	if (button->id == bJoin.id)
+	if (button->id == bJoin->id)
 	{
         #ifdef APPLE_DEMO_PROMOTION
             minecraft->platform()->createUserInput(DialogDefinitions::DIALOG_DEMO_FEATURE_DISABLED);
@@ -146,11 +115,11 @@ void StartMenuScreen::buttonClicked(::Button* button) {
             minecraft->screenChooser.setScreen(SCREEN_JOINGAME);
         #endif
 	}
-	if (button->id == bOptions.id)
+	if (button->id == bOptions->id)
 	{
 		minecraft->setScreen(new OptionsScreen());
 	}
-	if (button == &bQuit)
+	if (button->id == bQuit->id)
 	{
 		minecraft->quit();
 	}
@@ -182,8 +151,8 @@ void StartMenuScreen::render( int xm, int ym, float a )
 
 		const float x = (float)width / 2;
 		const float y = 10;
-		const float wh = 0.5f * Mth::Min((float)width * 0.7f, (float)data->w);
-		const float scale = wh / (float)data->w;
+		const float wh = Mth::Min((float)width * 0.45f, (float)data->w / 2.0f);
+		const float scale = 2.0f * wh / (float)data->w;
 		const float h = scale * (float)data->h;
 
 		// Render title logo
@@ -195,11 +164,9 @@ void StartMenuScreen::render( int xm, int ym, float a )
 			t.vertexUV(x+wh, y+0, blitOffset, 1, 0);
 			t.vertexUV(x-wh, y+0, blitOffset, 0, 0);
 		t.draw();
-
-		drawCenteredString(font, version, width / 2, (int)(y + h) + 2, 0xffcccccc);
 	}
 
-	// Footer copyright & links
+	drawString(font, version, width - font->width(version) - 6, height - 22, 0xddcccccc);
 	drawString(font, copyright, width - font->width(copyright) - 6, height - 12, 0xddffffff);
 
 	if (Textures::isTextureIdValid(minecraft->textures->loadAndBindTexture("gui/logo/github.png"))) {

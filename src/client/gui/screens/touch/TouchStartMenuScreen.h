@@ -2,7 +2,7 @@
 #define NET_MINECRAFT_CLIENT_GUI_SCREENS_TOUCH__TouchStartMenuScreen_H__
 
 #include "../../Screen.h"
-#include "../../components/LargeImageButton.h"
+#include "../../components/Button.h"
 #include "../../components/ImageButton.h"
 #include "../../components/TextBox.h"
 
@@ -13,7 +13,7 @@ class StartMenuScreen: public Screen
 public:
 	StartMenuScreen();
 	virtual ~StartMenuScreen();
-	
+
 	void init();
 	void setupPositions();
 
@@ -24,11 +24,11 @@ public:
 	bool handleBackEvent(bool isDown);
 	bool isInGameScreen();
 private:
-	
-	LargeImageButton bHost;
-	LargeImageButton bJoin;
-	LargeImageButton bOptions;
-	ImageButton bQuit; // X close icon
+
+	Button* bHost;
+	Button* bJoin;
+	Button* bOptions;
+	Button* bQuit;
 
 	std::string copyright;
 	int copyrightPosX;

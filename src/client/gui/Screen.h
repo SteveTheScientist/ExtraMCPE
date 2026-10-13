@@ -66,6 +66,7 @@ public:
 	int width;
 	int height;
 	bool passEvents;
+	float openAnimationProgress;
 	//GuiParticles* particles;
 protected:
 	Minecraft* minecraft;

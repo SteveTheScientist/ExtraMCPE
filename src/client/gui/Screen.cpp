@@ -10,6 +10,7 @@
 
 Screen::Screen()
 :   passEvents(false),
+	openAnimationProgress(0.0f),
 	clickedButton(NULL),
 	tabButtonIndex(0),
 	width(1),
@@ -62,6 +63,10 @@ bool Screen::handleBackEvent( bool isDown )
 }
 
 void Screen::tick() {
+	if (openAnimationProgress < 1.0f) {
+		openAnimationProgress += 0.2f;
+		if (openAnimationProgress > 1.0f) openAnimationProgress = 1.0f;
+	}
 	for (auto& textbox : textBoxes) {
 		textbox->tick(minecraft);
 	}

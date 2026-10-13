@@ -223,10 +223,22 @@ void GameRenderer::render(float a) {
 		if (useScreenScissor)
 			glDisable2(GL_SCISSOR_TEST);
 
+		glPushMatrix2();
+		if (mc->screen->openAnimationProgress < 1.0f) {
+			float p = mc->screen->openAnimationProgress;
+			float scale = 0.92f + 0.08f * p;
+			float cx = (float)mc->screen->width / 2.0f;
+			float cy = (float)mc->screen->height / 2.0f;
+			glTranslatef2(cx, cy, 0.0f);
+			glScalef2(scale, scale, 1.0f);
+			glTranslatef2(-cx, -cy, 0.0f);
+		}
+
 		mc->screen->render(xMouse, yMouse, a);
+		glPopMatrix2();
 
 		mc->platform()->hideCursor(!mc->options.getBooleanValue(OPTIONS_RPI_CURSOR));
-		if (mc->options.getBooleanValue(OPTIONS_RPI_CURSOR))        
+		if (mc->options.getBooleanValue(OPTIONS_RPI_CURSOR))
 			renderCursor(xMouse, yMouse, mc);
 
 		// Screen might have been removed, so check it again
@@ -314,7 +326,7 @@ void GameRenderer::renderLevel(float a) {
 		setupFog(1);
 		// MCPE renders clouds using this, but this method breaks 3d clouds and also breaks 2d clouds transparency viewed from above, add as a Legacy Sky or Fast Sky option. - shredder
 		if(!mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		if(mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS)) { 
+		if(mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS)) {
 			prepareAndRenderClouds(levelRenderer, a);
 		}
 		}
@@ -326,7 +338,7 @@ void GameRenderer::renderLevel(float a) {
 		Lighting::turnOff();
 
 //		glDisable2(GL_ALPHA_TEST); // vanilla pe disables alpha test here, i renable it so grass side textures dont become opaque - shredder
-		glEnable2(GL_ALPHA_TEST); // 
+		glEnable2(GL_ALPHA_TEST); //
 
 		glDisable2(GL_BLEND);
 		glEnable2(GL_CULL_FACE);
@@ -356,7 +368,7 @@ void GameRenderer::renderLevel(float a) {
 		mc->textures->loadAndBindTexture("terrain.png");
 		// @TODO - below is a commented out double render system that fixes ice transparency, but probs harm performance, add it as an option - shredder
 
-		//if (mc->options.fancyGraphics) { 
+		//if (mc->options.fancyGraphics) {
 		//    glColorMask(false, false, false, false);
 		//    int visibleWaterChunks = levelRenderer->render(cameraEntity, 1, a);
 		//    glColorMask(true, true, true, true);
