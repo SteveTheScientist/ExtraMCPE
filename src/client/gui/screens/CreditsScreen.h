@@ -3,9 +3,6 @@
 
 #include "../Screen.h"
 #include "../components/Button.h"
-
-class ImageButton;
-
 #include <vector>
 #include <string>
 
@@ -14,16 +11,14 @@ public:
     typedef Screen super;
     CreditsScreen();
     virtual ~CreditsScreen();
-    void init();
-    void setupPositions();
+    virtual void init();
+    virtual void setupPositions();
     virtual void tick();
-    void render(int xm, int ym, float a);
-    void buttonClicked(Button* button);
+    virtual void render(int xm, int ym, float a);
+    virtual void buttonClicked(Button* button);
     virtual void mouseClicked(int x, int y, int buttonNum);
 private:
-    Touch::THeader* bHeader;
-    ImageButton* btnBack;
-
+    Button* btnDone;
     std::vector<std::string> _lines;
     float _scrollY;
     float _scrollSpeed;

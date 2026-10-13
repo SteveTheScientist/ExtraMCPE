@@ -40,7 +40,7 @@ void StartMenuScreen::init()
 	bHost = new Button(    2, 0, 0, 200, 20, "Singleplayer");
 	bJoin = new Button(    3, 0, 0, 200, 20, "Multiplayer");
 	bOptions = new Button( 4, 0, 0, 98, 20, "Options...");
-	bCredits = new Button( 6, 0, 0, 98, 20, "Credits");
+	bCredits = new Button( 6, 0, 0, 98, 20, "Credits...");
 	bQuit = new Button(    5, 0, 0, 200, 20, "Quit Game");
 
 	bJoin->active = bHost->active = bOptions->active = bCredits->active = bQuit->active = true;

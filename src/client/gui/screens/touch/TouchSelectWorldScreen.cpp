@@ -161,10 +161,11 @@ void TouchWorldSelectionList::tick()
 
 	++currentTick;
 
-	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT) || dragState == 0)
+	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT) || dragState == 0) {
+		selectedItem = getItemAtPosition(width/2, height/2);
 		return;
+	}
 
-	selectedItem = -1;
 	if (mode == 1) {
 		if (++td.cur == td.dur) {
 			mode = 0;
@@ -181,6 +182,7 @@ void TouchWorldSelectionList::tick()
 	bool slowEnoughToBeBothered = speed < 5.0f;
 	if (!slowEnoughToBeBothered) {
 		xInertia = xInertia * .9f;
+		selectedItem = getItemAtPosition(width/2, height/2);
 		return;
 	}
 
@@ -209,6 +211,7 @@ void TouchWorldSelectionList::tick()
 		mode = 1;
 		tweenInited();
 	}
+	selectedItem = getItemAtPosition(width/2, height/2);
 }
 
 float TouchWorldSelectionList::getPos( float alpha )
@@ -273,16 +276,19 @@ void SelectWorldScreen::init()
 
 void SelectWorldScreen::setupPositions() {
 	int yBase = height - 28;
+	int btnW = 84;
+	int gap = 6;
+	int totalW = btnW * 3 + gap * 2;
+	int startX = (width - totalW) / 2;
 
-	bCreate.y = yBase;
-	bBack.y   = yBase;
-	bDelete.y = yBase;
+	bDelete.width = bCreate.width = bBack.width = btnW;
+	bDelete.height = bCreate.height = bBack.height = 20;
 
-	bBack.width = bDelete.width = bCreate.width = 84;
+	bDelete.y = bCreate.y = bBack.y = yBase;
 
-	bDelete.x   = width / 2 - 4 - bDelete.width - bDelete.width / 2;
-	bCreate.x   = width / 2 - bCreate.width / 2;
-	bBack.x     = width / 2 + 4 + bCreate.width - bBack.width / 2;
+	bDelete.x = startX;
+	bCreate.x = startX + btnW + gap;
+	bBack.x   = startX + (btnW + gap) * 2;
 }
 
 void SelectWorldScreen::buttonClicked(Button* button)

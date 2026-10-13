@@ -3,124 +3,115 @@
 #include "OptionsScreen.h"
 #include "../../Minecraft.h"
 #include "../components/Button.h"
-#include "../components/ImageButton.h"
 #include "platform/input/Mouse.h"
 
 CreditsScreen::CreditsScreen()
-: bHeader(NULL), btnBack(NULL)
+: btnDone(NULL), _scrollY(0.0f), _scrollSpeed(0.5f)
 {}
+
 CreditsScreen::~CreditsScreen() {
-    if (bHeader) delete bHeader;
-    if (btnBack) delete btnBack;
+    delete btnDone;
 }
 
 void CreditsScreen::init() {
-    bHeader = new Touch::THeader(0, "Credits");
-    btnBack = new ImageButton(1, "");
-    {
-        ImageDef def;
-        def.name = "gui/touchgui.png";
-        def.width = 34;
-        def.height = 26;
-        def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
-        btnBack->setImageDef(def, true);
-    }
-    buttons.push_back(bHeader);
-    buttons.push_back(btnBack);
+    btnDone = new Button(1, 0, 0, 200, 20, "Done");
+    buttons.push_back(btnDone);
+    tabButtons.push_back(btnDone);
 
-    // TODO: rewrite it
-    // prepare text lines
     _lines.clear();
-    _lines.push_back("Minecraft: Pocket Edition");
-    _lines.push_back("Original game by Mojang");
+    _lines.push_back("ExtraMC / Minecraft: Pocket Edition");
+    _lines.push_back("Original game by Mojang AB");
     _lines.push_back("");
-    _lines.push_back("Programmers:");
+    _lines.push_back("--- ExtraMC Developers ---");
     _lines.push_back("mschiller890");
     _lines.push_back("InviseDivine");
     _lines.push_back("Kolyah35");
     _lines.push_back("karson");
     _lines.push_back("deepfriedwaffles");
     _lines.push_back("EpikIzCool");
-	_lines.push_back("fileshredder");
+    _lines.push_back("fileshredder");
     _lines.push_back("");
-    // avoid color tags around the URL so it isn't mangled by the parser please
-    _lines.push_back("Join our Discord server: https://discord.gg/c58YesBxve");
+    _lines.push_back("Special Thanks to the Minecraft PE Community");
+    _lines.push_back("");
+    _lines.push_back("Join our Discord server:");
+    _lines.push_back("https://discord.gg/c58YesBxve");
+
     _scrollSpeed = 0.5f;
-    _scrollY = height; // start below screen
+    _scrollY = (float)height - 40; // start below screen title area
 }
 
 void CreditsScreen::setupPositions() {
-    int buttonHeight = btnBack->height;
-    btnBack->x = width - btnBack->width;
-    btnBack->y = 0;
-    if (bHeader) {
-        bHeader->x = 0;
-        bHeader->y = 0;
-        bHeader->width = width - btnBack->width;
-        bHeader->height = btnBack->height;
+    if (btnDone) {
+        btnDone->width = 200;
+        btnDone->height = 20;
+        btnDone->x = (width - 200) / 2;
+        btnDone->y = height - 28;
     }
-
-    // reset scroll starting position when screen size changes
-    _scrollY = height;
 }
 
 void CreditsScreen::tick() {
-    // move text upward
+    super::tick();
+
     _scrollY -= _scrollSpeed;
-    // if text has scrolled off the top, restart
-    float totalHeight = _lines.size() * (minecraft->font->lineHeight + 8);
-    if (_scrollY + totalHeight < 0) {
-        _scrollY = height;
+    float totalHeight = _lines.size() * (minecraft->font->lineHeight + 6);
+    if (_scrollY + totalHeight < 40) {
+        _scrollY = (float)height - 40;
     }
 
     if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
-        _scrollSpeed = 1.5f;
+        _scrollSpeed = 1.8f;
     } else {
         _scrollSpeed = 0.5f;
     }
 }
 
 void CreditsScreen::render(int xm, int ym, float a) {
-    renderBackground();
-    int w = width;
+    renderDirtBackground(0);
+
     Font* font = minecraft->font;
     float y = _scrollY;
-    const float lineHeight = font->lineHeight + 8;
+    const float lineHeight = font->lineHeight + 6;
+
     for (size_t i = 0; i < _lines.size(); ++i) {
         const std::string& line = _lines[i];
-        // use color-tag-aware drawing, centre by total width
-        float lineWidth = Gui::getColoredWidth(font, line);
-        Gui::drawColoredString(font, line, w/2 - lineWidth/2, (int)y, 255);
-        // underline hyperlink lines manually
-        if (line.find("http") != std::string::npos || line.find("discord.gg") != std::string::npos) {
-            float x0 = w/2 - lineWidth/2;
-            float y0 = y + font->lineHeight - 1;
-            this->fill(x0, y0, x0 + lineWidth, y0 + 1, 0xffffffff);
+        if (y > 25 && y < height - 35) {
+            float lineWidth = Gui::getColoredWidth(font, line);
+            Gui::drawColoredString(font, line, (width - (int)lineWidth) / 2, (int)y, 255);
+
+            if (line.find("http") != std::string::npos || line.find("discord.gg") != std::string::npos) {
+                float x0 = (width - lineWidth) / 2;
+                float y0 = y + font->lineHeight;
+                fill(x0, y0, x0 + lineWidth, y0 + 1, 0xff55ffff);
+            }
         }
         y += lineHeight;
     }
-    
+
+    // Top and bottom header/footer shadow masks
+    fill(0, 0, width, 32, 0xe0000000);
+    fill(0, height - 36, width, height, 0xe0000000);
+
+    drawCenteredString(font, "Credits", width / 2, 10, 0xffffffff);
+
     super::render(xm, ym, a);
 }
 
 void CreditsScreen::buttonClicked(Button* button) {
     if (button->id == 1) {
-        minecraft->setScreen(new OptionsScreen());
+        minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
     }
 }
 
 void CreditsScreen::mouseClicked(int x, int y, int buttonNum) {
-    // map click to a line in the scrolling text
-    const float lineHeight = minecraft->font->lineHeight + 8;
+    const float lineHeight = minecraft->font->lineHeight + 6;
     for (size_t i = 0; i < _lines.size(); ++i) {
         float lineY = _scrollY + i * lineHeight;
-        if (y >= lineY && y < lineY + lineHeight) {
+        if (y >= lineY && y < lineY + lineHeight && y > 30 && y < height - 35) {
             const std::string& line = _lines[i];
             size_t start = line.find("http");
             if (start == std::string::npos)
                 start = line.find("discord.gg");
             if (start != std::string::npos) {
-                // extract until space
                 size_t end = line.find(' ', start);
                 std::string url = line.substr(start, (end == std::string::npos) ? std::string::npos : end - start);
                 minecraft->platform()->openURL(url);
