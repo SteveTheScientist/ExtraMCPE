@@ -5,6 +5,7 @@
 #include "JoinGameScreen.h"
 #include "OptionsScreen.h"
 #include "PauseScreen.h"
+#include "CreditsScreen.h"
 #include "PrerenderTilesScreen.h" // test button
 #include "../components/ImageButton.h"
 
@@ -30,23 +31,19 @@ StartMenuScreen::~StartMenuScreen()
 	delete bHost;
 	delete bJoin;
 	delete bOptions;
+	delete bCredits;
 	delete bQuit;
 }
 
 void StartMenuScreen::init()
 {
-	if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 2){
-		bHost = new Button(    2, 0, 0, 200, 20, "Singleplayer");
-		bJoin = new Button(    3, 0, 0, 200, 20, "Multiplayer");
-		bOptions = new Button( 4, 0, 0, 200, 20, "Options...");
-		bQuit = new Button( 5, 0, 0, 200, 20, "Quit Game");
-	} else {
-		bHost = new Button(    2, 0, 0, 160, 24, "Start Game");
-		bJoin = new Button(    3, 0, 0, 160, 24, "Join Game");
-		bOptions = new Button( 4, 0, 0, 160, 24, "Options");
-		bQuit = new Button( 5, 0, 0, 160, 24, "Quit Game");
-	}
-	bJoin->active = bHost->active = bOptions->active = true;
+	bHost = new Button(    2, 0, 0, 200, 20, "Singleplayer");
+	bJoin = new Button(    3, 0, 0, 200, 20, "Multiplayer");
+	bOptions = new Button( 4, 0, 0, 98, 20, "Options...");
+	bCredits = new Button( 6, 0, 0, 98, 20, "Credits");
+	bQuit = new Button(    5, 0, 0, 200, 20, "Quit Game");
+
+	bJoin->active = bHost->active = bOptions->active = bCredits->active = bQuit->active = true;
 
 	if (minecraft->options.getStringValue(OPTIONS_USERNAME).empty()) {
 		return; // tick() will redirect to UsernameScreen
@@ -54,16 +51,15 @@ void StartMenuScreen::init()
 
 	buttons.push_back(bHost);
 	buttons.push_back(bJoin);
+	buttons.push_back(bOptions);
+	buttons.push_back(bCredits);
 	buttons.push_back(bQuit);
 
 	tabButtons.push_back(bHost);
 	tabButtons.push_back(bJoin);
+	tabButtons.push_back(bOptions);
+	tabButtons.push_back(bCredits);
 	tabButtons.push_back(bQuit);
-
-	#ifndef RPI
-		buttons.push_back(bOptions);
-		tabButtons.push_back(bOptions);
-	#endif
 
 	copyright = "\xffMojang AB";
 
@@ -90,26 +86,33 @@ void StartMenuScreen::init()
 }
 
 void StartMenuScreen::setupPositions() {
-	if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 2){
-		int yBase = (height / 2) - 15;
+	int yBase = (height / 4) + 48;
+	int centerX = width / 2;
 
-		bHost->y =	 yBase;
-		bJoin->y =	 bHost->y + 24;
-		bOptions->y = bJoin->y + 24;
-		bQuit->y = bOptions->y + 24;
-	} else {
-		int yBase = (height / 2) - 10;
-		bHost->y =	 yBase;
-		bJoin->y =	 bHost->y + 28;
-		bOptions->y = bJoin->y + 28;
-		bQuit->y = bOptions->y + 28;
-	}
+	bHost->width = 200;
+	bHost->height = 20;
+	bHost->x = centerX - 100;
+	bHost->y = yBase;
 
-	// Center buttons
-	bHost->x = (width - bHost->width) / 2;
-	bJoin->x = (width - bJoin->width) / 2;
-	bOptions->x = (width - bOptions->width) / 2;
-	bQuit->x = (width - bQuit->width) / 2;
+	bJoin->width = 200;
+	bJoin->height = 20;
+	bJoin->x = centerX - 100;
+	bJoin->y = yBase + 24;
+
+	bOptions->width = 98;
+	bOptions->height = 20;
+	bOptions->x = centerX - 100;
+	bOptions->y = yBase + 48;
+
+	bCredits->width = 98;
+	bCredits->height = 20;
+	bCredits->x = centerX + 2;
+	bCredits->y = yBase + 48;
+
+	bQuit->width = 200;
+	bQuit->height = 20;
+	bQuit->x = centerX - 100;
+	bQuit->y = yBase + 72;
 }
 
 void StartMenuScreen::tick() {
@@ -133,6 +136,10 @@ void StartMenuScreen::buttonClicked(Button* button) {
 	if (button->id == bOptions->id)
 	{
 		minecraft->setScreen(new OptionsScreen());
+	}
+	if (button->id == bCredits->id)
+	{
+		minecraft->setScreen(new CreditsScreen());
 	}
 	if (button->id == bQuit->id)
 	{

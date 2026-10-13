@@ -11,6 +11,7 @@
 Screen::Screen()
 :   passEvents(false),
 	openAnimationProgress(0.0f),
+	animTime(0.0f),
 	clickedButton(NULL),
 	tabButtonIndex(0),
 	width(1),
@@ -64,8 +65,12 @@ bool Screen::handleBackEvent( bool isDown )
 
 void Screen::tick() {
 	if (openAnimationProgress < 1.0f) {
-		openAnimationProgress += 0.2f;
+		openAnimationProgress += 0.15f;
 		if (openAnimationProgress > 1.0f) openAnimationProgress = 1.0f;
+	}
+	if (animTime < 1.0f) {
+		animTime += 0.12f;
+		if (animTime > 1.0f) animTime = 1.0f;
 	}
 	for (auto& textbox : textBoxes) {
 		textbox->tick(minecraft);
@@ -135,7 +140,10 @@ void Screen::renderBackground()
 void Screen::renderBackground( int vo )
 {
 	if (minecraft->isLevelGenerated()) {
-		fillGradient(0, 0, width, height, 0xc0101010, 0xd0101010);
+		int alpha = (int)(0xc0 * openAnimationProgress);
+		int c1 = (alpha << 24) | 0x101010;
+		int c2 = ((alpha + 0x10 < 0xf0 ? alpha + 0x10 : 0xf0) << 24) | 0x101010;
+		fillGradient(0, 0, width, height, c1, c2);
 	} else {
 		renderDirtBackground(vo);
 	}

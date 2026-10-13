@@ -63,6 +63,7 @@ public:
 	bool isInGameScreen();
 private:
 	Button bJoin;
+	Button bDirect;
 	Button bBack;
 	AvailableGamesList* gamesList;
 };

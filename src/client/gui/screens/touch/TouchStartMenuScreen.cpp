@@ -2,6 +2,7 @@
 #include "../ProgressScreen.h"
 #include "../OptionsScreen.h"
 #include "../PauseScreen.h"
+#include "../CreditsScreen.h"
 
 #include "../../Font.h"
 #include "../../components/ScrolledSelectionList.h"
@@ -23,9 +24,10 @@ namespace Touch {
 
 StartMenuScreen::StartMenuScreen()
 {
-	bHost = new Button(    2, 0, 0, 200, 20, "Start Game");
-	bJoin = new Button(    3, 0, 0, 200, 20, "Join Game");
-	bOptions = new Button( 4, 0, 0, 200, 20, "Options");
+	bHost = new Button(    2, 0, 0, 200, 20, "Singleplayer");
+	bJoin = new Button(    3, 0, 0, 200, 20, "Multiplayer");
+	bOptions = new Button( 4, 0, 0, 98, 20, "Options...");
+	bCredits = new Button( 6, 0, 0, 98, 20, "Credits");
 	bQuit = new Button(    5, 0, 0, 200, 20, "Quit Game");
 }
 
@@ -34,6 +36,7 @@ StartMenuScreen::~StartMenuScreen()
 	delete bHost;
 	delete bJoin;
 	delete bOptions;
+	delete bCredits;
 	delete bQuit;
 }
 
@@ -42,11 +45,13 @@ void StartMenuScreen::init()
 	buttons.push_back(bHost);
 	buttons.push_back(bJoin);
 	buttons.push_back(bOptions);
+	buttons.push_back(bCredits);
 	buttons.push_back(bQuit);
 
 	tabButtons.push_back(bHost);
 	tabButtons.push_back(bJoin);
 	tabButtons.push_back(bOptions);
+	tabButtons.push_back(bCredits);
 	tabButtons.push_back(bQuit);
 
 	copyright = "\xffMojang AB";
@@ -76,21 +81,33 @@ void StartMenuScreen::init()
 }
 
 void StartMenuScreen::setupPositions() {
-	int yBase = (height / 2) - 10;
-	bHost->width = bJoin->width = bOptions->width = bQuit->width = 200;
-	bHost->height = bJoin->height = bOptions->height = bQuit->height = 20;
+	int yBase = (height / 4) + 48;
+	int centerX = width / 2;
 
-	bHost->x = (width - 200) / 2;
+	bHost->width = 200;
+	bHost->height = 20;
+	bHost->x = centerX - 100;
 	bHost->y = yBase;
 
-	bJoin->x = (width - 200) / 2;
-	bJoin->y = bHost->y + 24;
+	bJoin->width = 200;
+	bJoin->height = 20;
+	bJoin->x = centerX - 100;
+	bJoin->y = yBase + 24;
 
-	bOptions->x = (width - 200) / 2;
-	bOptions->y = bJoin->y + 24;
+	bOptions->width = 98;
+	bOptions->height = 20;
+	bOptions->x = centerX - 100;
+	bOptions->y = yBase + 48;
 
-	bQuit->x = (width - 200) / 2;
-	bQuit->y = bOptions->y + 24;
+	bCredits->width = 98;
+	bCredits->height = 20;
+	bCredits->x = centerX + 2;
+	bCredits->y = yBase + 48;
+
+	bQuit->width = 200;
+	bQuit->height = 20;
+	bQuit->x = centerX - 100;
+	bQuit->y = yBase + 72;
 
 	copyrightPosX = width - minecraft->font->width(copyright) - 6;
 	versionPosX = (width - minecraft->font->width(version)) / 2;
@@ -118,6 +135,10 @@ void StartMenuScreen::buttonClicked(::Button* button) {
 	if (button->id == bOptions->id)
 	{
 		minecraft->setScreen(new OptionsScreen());
+	}
+	if (button->id == bCredits->id)
+	{
+		minecraft->setScreen(new CreditsScreen());
 	}
 	if (button->id == bQuit->id)
 	{

@@ -1,16 +1,18 @@
 #include "JoinGameScreen.h"
 #include "StartMenuScreen.h"
 #include "ProgressScreen.h"
+#include "JoinByIPScreen.h"
 #include "../Font.h"
 #include "../../../network/RakNetInstance.h"
 
 JoinGameScreen::JoinGameScreen()
-:	bJoin(  2, "Join Game"),
-	bBack(  3, "Back"),
+:	bJoin(  2, "Join Server"),
+	bDirect(4, "Direct Connect"),
+	bBack(  3, "Cancel"),
 	gamesList(NULL)
 {
 	bJoin.active = false;
-	//gamesList->yInertia = 0.5f;
+	bDirect.active = true;
 }
 
 JoinGameScreen::~JoinGameScreen()
@@ -34,6 +36,10 @@ void JoinGameScreen::buttonClicked(Button* button)
 		}
 		//minecraft->locateMultiplayer();
 		//minecraft->setScreen(new JoinGameScreen());
+	}
+	if (button->id == bDirect.id)
+	{
+		minecraft->setScreen(new JoinByIPScreen());
 	}
 	if (button->id == bBack.id)
 	{
@@ -106,30 +112,31 @@ void JoinGameScreen::tick()
 void JoinGameScreen::init()
 {
 	buttons.push_back(&bJoin);
+	buttons.push_back(&bDirect);
 	buttons.push_back(&bBack);
 
 	minecraft->raknetInstance->clearServerList();
 	gamesList = new AvailableGamesList(minecraft, width, height);
 
-#ifdef ANDROID
 	tabButtons.push_back(&bJoin);
+	tabButtons.push_back(&bDirect);
 	tabButtons.push_back(&bBack);
-#endif
 }
 
 void JoinGameScreen::setupPositions() {
 	int yBase = height - 26;
+	int centerX = width / 2;
 
-	//#ifdef ANDROID
-	bJoin.y =	yBase;
-	bBack.y =   yBase;
+	bJoin.width = bDirect.width = bBack.width = 98;
+	bJoin.height = bDirect.height = bBack.height = 20;
 
-	bBack.width = bJoin.width = 120;
-	//#endif
+	bJoin.y = yBase;
+	bDirect.y = yBase;
+	bBack.y = yBase;
 
-	// Center buttons
-	bJoin.x = width / 2 - 4 - bJoin.width;
-	bBack.x = width / 2 + 4;
+	bJoin.x = centerX - 150;
+	bDirect.x = centerX - 49;
+	bBack.x = centerX + 52;
 }
 
 void JoinGameScreen::render( int xm, int ym, float a )
@@ -144,14 +151,10 @@ void JoinGameScreen::render( int xm, int ym, float a )
 	Screen::render(xm, ym, a);
 
 	if (hasNetwork) {
-#ifdef RPI
-		std::string s = "Scanning for Local Network Games...";
-#else
-		std::string s = "Scanning for WiFi Games...";
-#endif
-		drawCenteredString(minecraft->font, s, width / 2, 8, 0xffffffff);
+		std::string title = "Play Multiplayer";
+		drawCenteredString(minecraft->font, title, width / 2, 8, 0xffffffff);
 
-		const int textWidth = minecraft->font->width(s);
+		const int textWidth = minecraft->font->width(title);
 		const int spinnerX = width/2 + textWidth / 2 + 6;
 
 		static const char* spinnerTexts[] = {"-", "\\", "|", "/"};

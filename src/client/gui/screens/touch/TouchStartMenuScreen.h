@@ -28,6 +28,7 @@ private:
 	Button* bHost;
 	Button* bJoin;
 	Button* bOptions;
+	Button* bCredits;
 	Button* bQuit;
 
 	std::string copyright;

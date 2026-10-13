@@ -226,12 +226,11 @@ void GameRenderer::render(float a) {
 		glPushMatrix2();
 		if (mc->screen->openAnimationProgress < 1.0f) {
 			float p = mc->screen->openAnimationProgress;
-			float scale = 0.92f + 0.08f * p;
-			float cx = (float)mc->screen->width / 2.0f;
-			float cy = (float)mc->screen->height / 2.0f;
-			glTranslatef2(cx, cy, 0.0f);
-			glScalef2(scale, scale, 1.0f);
-			glTranslatef2(-cx, -cy, 0.0f);
+			// Ease-out cubic for smooth slide-in
+			float t = 1.0f - p;
+			float ease = 1.0f - t * t * t;
+			float offsetY = -20.0f * (1.0f - ease);
+			glTranslatef2(0.0f, offsetY, 0.0f);
 		}
 
 		mc->screen->render(xMouse, yMouse, a);
