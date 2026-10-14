@@ -10,6 +10,14 @@
 #include "platform/input/Keyboard.h"
 #include "platform/input/Mouse.h"
 #include <algorithm>
+#include <sstream>
+
+template<typename T>
+static std::string to_str(T val) {
+    std::ostringstream ss;
+    ss << val;
+    return ss.str();
+}
 
 OptionsScreen::OptionsScreen()
 	: btnDone(NULL),
@@ -119,7 +127,7 @@ std::string OptionsScreen::getOptionText(const OptionItem& item) {
 		if (item.optionId == OPTIONS_MUSIC_VOLUME || item.optionId == OPTIONS_SOUND_VOLUME) {
 			if (pct <= 0) return item.name + ": OFF";
 		}
-		return item.name + ": " + std::to_string(pct) + "%";
+		return item.name + ": " + to_str(pct) + "%";
 	}
 
 	if (item.optionId == OPTIONS_VIEW_DISTANCE) {
