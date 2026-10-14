@@ -391,11 +391,7 @@ if [[ "$NO_JAVA" == false && "$NO_BUILD" == false ]]; then
   rm -rf "$BUILD_DIR/classes"
   ensure_dir "$BUILD_DIR/classes"
 
-  # Some JDK versions (<=8) don't support --release.
-  JAVAC_ARGS=(--release 8)
-  if "$JAVAC_CMD" -version 2>&1 | grep -qE '^javac 1\.'; then
-    JAVAC_ARGS=(-source 1.8 -target 1.8)
-  fi
+  JAVAC_ARGS=(-source 1.8 -target 1.8 -encoding UTF-8 -bootclasspath "$ANDROID_PLATFORM_DIR/android.jar")
 
   "$JAVAC_CMD" "${JAVAC_ARGS[@]}" -cp "$ANDROID_PLATFORM_DIR/android.jar" -d "$BUILD_DIR/classes" "${JAVA_SOURCES[@]}"
   echo "  javac OK"
@@ -448,8 +444,12 @@ echo "  signed -> $APK_SIGNED"
 ########################################
 log_step "Install"
 
-"$ADB" shell am force-stop "$PACKAGE_NAME" || true
-"$ADB" uninstall "$PACKAGE_NAME" || true
-"$ADB" install --no-incremental "$APK_SIGNED"
+if [[ "${ADB}" == "/bin/true" ]]; then
+  echo "  Skipping adb install (CI environment)"
+else
+  "$ADB" shell am force-stop "$PACKAGE_NAME" 2>/dev/null || true
+  "$ADB" uninstall "$PACKAGE_NAME" 2>/dev/null || true
+  "$ADB" install "$APK_SIGNED" 2>/dev/null || echo "  adb install skipped (no device connected)"
+fi
 
-echo -e "\nDone. Enjoy MCPE 0.6.1 on your device!"
+echo -e "\nDone. Enjoy ExtraMC on your device!"

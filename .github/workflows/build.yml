@@ -173,7 +173,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.ANDROID_SDK_ROOT }}
-          key: android-cmdline-tools-v36
+          key: android-cmdline-tools-${{ env.ANDROID_PLATFORM_API }}-${{ env.ANDROID_BUILD_TOOLS_VERSION }}
 
       - name: Setup Android command line tools
         if: steps.cache-android-tools.outputs.cache-hit != 'true'
