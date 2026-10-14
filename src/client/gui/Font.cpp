@@ -47,32 +47,74 @@ void Font::init( Options* options )
 	TextureId fontTexture = _textures->loadTexture(fontName);
 	const TextureData* tex = _textures->getTemporaryTextureData(fontTexture);
 
-	if (!tex)
+	if (!tex || !tex->data)
 		return;
 
 	unsigned char* rawPixels = tex->data;
+	int imgW = tex->w;
+	int imgH = tex->h;
+
+	bool usesAlpha = false;
+	int totalPixels = imgW * imgH;
+	for (int p = 0; p < totalPixels; p++) {
+		if (rawPixels[(p << 2) + 3] < 250) {
+			usesAlpha = true;
+			break;
+		}
+	}
+
+	int cellW = imgW / _cols;
+	int cellH = imgH / _rows;
+	if (cellW <= 0) cellW = 8;
+	if (cellH <= 0) cellH = 8;
 
 	const int numChars = _rows * _cols;
-	for (int i = 0; i < numChars; i++) {
+	for (int i = 0; i < numChars && i < 256; i++) {
 		int xt = i % _cols;
 		int yt = i / _cols;
 
-		int x = 7;
+		if (i == ' ') {
+			charWidths[i] = 4;
+			fcharWidths[i] = 4.0f;
+			continue;
+		}
+
+		int x = cellW - 1;
 		for (; x >= 0; x--) {
-			int xPixel = _x + xt * 8 + x;
+			int px = _x + xt * cellW + x;
 			bool emptyColumn = true;
-			for (int y = 0; y < 8 && emptyColumn; y++) {
-				int yPixel = _y + (yt * 8 + y) * tex->w;
-				unsigned char pixelalpha = rawPixels[(xPixel + yPixel) << 2];
-				if (pixelalpha > 0) emptyColumn = false;
+
+			for (int y = 0; y < cellH && emptyColumn; y++) {
+				int py = _y + yt * cellH + y;
+				if (px >= imgW || py >= imgH) continue;
+
+				int idx = (px + py * imgW) << 2;
+				unsigned char r = rawPixels[idx + 0];
+				unsigned char g = rawPixels[idx + 1];
+				unsigned char b = rawPixels[idx + 2];
+				unsigned char a = rawPixels[idx + 3];
+
+				if (usesAlpha) {
+					if (a > 32) emptyColumn = false;
+				} else {
+					if (r > 32 || g > 32 || b > 32) emptyColumn = false;
+				}
 			}
+
 			if (!emptyColumn) {
 				break;
 			}
 		}
 
-		if (i == ' ') x = 4 - 2;
-		charWidths[i] = x + 2;
+		if (x < 0) {
+			charWidths[i] = 0;
+		} else {
+			int w = x + 2;
+			if (cellW != 8 && cellW > 0) {
+				w = (w * 8) / cellW;
+			}
+			charWidths[i] = w;
+		}
 		fcharWidths[i] = (float) charWidths[i];
 	}
 
@@ -152,81 +194,12 @@ void Font::draw( const char* str, float x, float y, int color )
 
 void Font::draw( const char* str, float x, float y, int color, bool darken )
 {
-#ifdef USE_VBO
 	drawSlow(str, x, y, color, darken);
-#endif
 }
 
 void Font::draw( const std::string& str, float x, float y, int color, bool darken )
 {
-#ifdef USE_VBO
-	drawSlow(str, x, y, color, darken);
-	return;
-#endif
-
-	if (str.empty()) return;
-
-	if (darken) {
-		int oldAlpha = color & 0xff000000;
-		color = (color & 0xfcfcfc) >> 2;
-		color += oldAlpha;
-	}
-
-	_textures->loadAndBindTexture(fontName);
-	float r = ((color >> 16) & 0xff) / 255.0f;
-	float g = ((color >> 8) & 0xff) / 255.0f;
-	float b = ((color) & 0xff) / 255.0f;
-	float a = ((color >> 24) & 0xff) / 255.0f;
-	if (a == 0) a = 1;
-	glColor4f2(r, g, b, a);
-
-	static const std::string hex("0123456789abcdef");
-
-	index = 0;
-	glPushMatrix2();
-	glTranslatef2((GLfloat)x, (GLfloat)y, 0.0f);
-	for (unsigned int i = 0; i < str.length(); i++) {
-		while (str.length() > i + 1 && str[i] == '\xa7') {
-			int cc = hex.find((char)tolower(str[i + 1]));
-			if (cc < 0 || cc > 15) cc = 15;
-			lists[index++] = listPos + 256 + cc + (darken ? 16 : 0);
-
-			if (index == 1024) {
-				count = index;
-				index = 0;
-#ifndef USE_VBO
-				glCallLists(count, GL_UNSIGNED_INT, lists);
-#endif
-				count = 1024;
-			}
-
-			i += 2;
-		}
-
-		if (i < str.length()) {
-			//int ch = SharedConstants.acceptableLetters.indexOf(str.charAt(i));
-			char ch = str[i];
-			if (ch >= 0) {
-				//ib.put(listPos + ch + 32);
-				lists[index++] = listPos + ch;
-			}
-		}
-
-		if (index == 1024) {
-			count = index;
-			index = 0;
-#ifndef USE_VBO
-			glCallLists(count, GL_UNSIGNED_INT, lists);
-#endif
-			count = 1024;
-		}
-	}
-	count = index;
-	index = 0;
-#ifndef USE_VBO
-	glCallLists(count, GL_UNSIGNED_INT, lists);
-#endif
-	glPopMatrix2();
+	drawSlow(str.c_str(), x, y, color, darken);
 }
 
 int Font::width( const std::string& str )
@@ -331,13 +304,44 @@ void Font::drawSlow( const char* str, float x, float y, int color, bool darken /
 	t.begin();
 	int alpha = (0xff000000 & color) >> 24;
 	if (!alpha) alpha = 0xff;
-	t.color((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, alpha);
+
+	static const std::string hex("0123456789abcdef");
+	static const int colorCodes[16] = {
+		0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
+		0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
+		0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,
+		0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
+	};
+
+	int curColor = color;
+	int curR = (curColor >> 16) & 0xff;
+	int curG = (curColor >> 8) & 0xff;
+	int curB = curColor & 0xff;
+	t.color(curR, curG, curB, alpha);
 
 	t.addOffset((float)x, (float)y, 0);
 	float xOffset = 0;
 	float yOffset = 0;
 
-	while (unsigned char ch = *(str++)) {
+	for (int i = 0; str[i] != '\0'; i++) {
+		if (str[i] == '\xa7' && str[i + 1] != '\0') {
+			char codeChar = tolower(str[i + 1]);
+			int codeIdx = hex.find(codeChar);
+			if (codeIdx >= 0 && codeIdx < 16) {
+				int cCode = colorCodes[codeIdx];
+				if (darken) {
+					cCode = (cCode & 0xfcfcfc) >> 2;
+				}
+				curR = (cCode >> 16) & 0xff;
+				curG = (cCode >> 8) & 0xff;
+				curB = cCode & 0xff;
+				t.color(curR, curG, curB, alpha);
+			}
+			i++;
+			continue;
+		}
+
+		unsigned char ch = (unsigned char)str[i];
 		if (ch == '\n') {
 			xOffset = 0;
 			yOffset += lineHeight;
@@ -354,16 +358,19 @@ void Font::buildChar( unsigned char i, float x /*= 0*/, float y /*=0*/ )
 {
 	Tesselator& t = Tesselator::instance;
 
-	float ix = (float)((i & 15) * 8);
-	float iy = (float)((i >> 4) * 8);
+	float col = (float)(i % _cols);
+	float row = (float)(i / _cols);
+
+	float u0 = (col * 8.0f) / 128.0f;
+	float v0 = (row * 8.0f) / 128.0f;
+	float u1 = u0 + (7.99f / 128.0f);
+	float v1 = v0 + (7.99f / 128.0f);
+
 	float sw = 8.0f;
 	float sh = 8.0f;
 
-	float uo = (0.0f) / 128.0f;
-	float vo = (0.0f) / 128.0f;
-
-	t.vertexUV(x, y + sh, 0, ix / 128.0f + uo, (iy + 7.99f) / 128.0f + vo);
-	t.vertexUV(x + sw, y + sh, 0, (ix + 7.99f) / 128.0f + uo, (iy + 7.99f) / 128.0f + vo);
-	t.vertexUV(x + sw, y, 0, (ix + 7.99f) / 128.0f + uo, iy / 128.0f + vo);
-	t.vertexUV(x, y, 0, ix / 128.0f + uo, iy / 128.0f + vo);
+	t.vertexUV(x, y + sh, 0, u0, v1);
+	t.vertexUV(x + sw, y + sh, 0, u1, v1);
+	t.vertexUV(x + sw, y, 0, u1, v0);
+	t.vertexUV(x, y, 0, u0, v0);
 }
