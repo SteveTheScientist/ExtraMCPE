@@ -200,3 +200,8 @@ games/
 vcpkg_installed/
 .cache/
 conan/
+build/
+build-apk/
+*.o
+*.a
+*.so

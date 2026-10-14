@@ -10,10 +10,6 @@
 #define PIXELS_PER_MILLIMETER_MIN_VALUE 3.0f
 #define PIXELS_PER_MILLIMETER_MAX_VALUE 4.0f
 
-//package net.minecraft.client;
-
-//#include "locale/Language.h"
-
 #include <string>
 #include <cstdio>
 #include "../platform/input/Keyboard.h"
@@ -51,7 +47,6 @@ enum OptionId {
     OPTIONS_VSYNC,
     OPTIONS_FANCY_GRAPHICS,
 	OPTIONS_NORMAL_LIGHTING,
-
 
     // Cheats / debug
     OPTIONS_FLY_SPEED,
@@ -109,18 +104,15 @@ typedef std::vector<std::string> StringVector;
 class Options
 {
 public:
-    // deepfriedwaffles: for iOS, was getting compile errors saying: No member named 'sound' in 'Options' and No member named 'music' in 'Options' so I floated them here. 1.0f means full volume out of the box, but if everything is too loud, you might want to try adjusting this
     float sound = 1.0f;
     float music = 1.0f;
-    
+
     static bool debugGl;
 
-    Options(Minecraft* minecraft, const std::string& workingDirectory = "") 
+    Options(Minecraft* minecraft, const std::string& workingDirectory = "")
 	: minecraft(minecraft) {
-        // elements werent initialized so i was getting a garbage pointer and a crash
         m_options.fill(nullptr);
         initTable();
-	    // load() is deferred to init() where path is configured correctly
     }
 
     void initTable();
@@ -159,6 +151,7 @@ public:
 
     void load();
     void save();
+    void set(OptionId key, bool value);
     void set(OptionId key, int value);
     void set(OptionId key, float value);
     void set(OptionId key, const std::string& value);
@@ -172,9 +165,9 @@ public:
 
 private:
     template<typename T>
-    T* opt(OptionId key) { 
+    T* opt(OptionId key) {
         if (m_options[key] == nullptr) return nullptr;
-        return dynamic_cast<T*>(m_options[key]); 
+        return dynamic_cast<T*>(m_options[key]);
     }
 
 	std::array<Option*, OPTIONS_COUNT> m_options;

@@ -33,7 +33,7 @@ OptionString skin("skin", "Default");
 
 #ifdef RPI
 OptionString username("username", "StevePi");
-#else 
+#else
 OptionString username("username", "Steve");
 #endif
 
@@ -196,7 +196,6 @@ void Options::initTable() {
 	m_options[OPTIONS_ALLOW_SPRINT] = &allowSprint;
 	m_options[OPTIONS_RPI_CURSOR] = &rpiCursor;
 	m_options[OPTIONS_FOLIAGE_TINT] = &foliageTint;
-	// more options yay
 	m_options[OPTIONS_FOG_TYPE] = &fogType;
 
 	m_options[OPTIONS_DEBUG_STYLE] = &debugStyle;
@@ -207,6 +206,15 @@ void Options::initTable() {
 
 	m_options[OPTIONS_AUTOJUMP] = &autoJump;
 	m_options[OPTIONS_LAST_IP] = &lastIp;
+}
+
+void Options::set(OptionId key, bool value) {
+	auto option = opt<OptionBool>(key);
+
+	if (option) {
+		option->set(value ? 1 : 0);
+		notifyOptionUpdate(key, value);
+	}
 }
 
 void Options::set(OptionId key, const std::string& value) {
@@ -252,7 +260,6 @@ void Options::load() {
 		const std::string& key = optionStrings[i];
 		const std::string& value = optionStrings[i+1];
 
-		// FIXME: woah this is so slow 
 		auto opt = std::find_if(m_options.begin(), m_options.end(), [&](auto& it) {
 			return it != nullptr && it->getStringId() == key;
 		});
@@ -260,68 +267,12 @@ void Options::load() {
 		if (opt == m_options.end()) continue;
 
 		(*opt)->parse(value);
-/*
-        // //LOGI("reading key: %s (%s)\n", key.c_str(), value.c_str());
-        
-		// // Multiplayer
-		// // if (key == OptionStrings::Multiplayer_Username) username = value;
-		// if (key == OptionStrings::Multiplayer_ServerVisible) {
-		// 	m_options[OPTIONS_SERVER_VISIBLE] = readBool(value);
-		// }
-
-		// // Controls
-        // if (key == OptionStrings::Controls_Sensitivity) {
-		// 	float sens = readFloat(value);
-
-		// 	// sens is in range [0,1] with default/center at 0.5 (for aesthetics)
-        //     // We wanna map it to something like [0.3, 0.9] BUT keep 0.5 @ ~0.5...
-        //     m_options[OPTIONS_SENSITIVITY] = 0.3f + std::pow(1.1f * sens, 1.3f) * 0.42f;
-        // }
-
-		// if (key == OptionStrings::Controls_InvertMouse) {
-		// 	m_options[OPTIONS_INVERT_Y_MOUSE] = readBool(value);
-		// }
-
-		// if (key == OptionStrings::Controls_IsLefthanded) {
-		// 	m_options[OPTIONS_IS_LEFT_HANDED] = readBool(value);
-		// }
-		
-		// if (key == OptionStrings::Controls_UseTouchJoypad) {
-		// 	m_options[OPTIONS_IS_JOY_TOUCH_AREA] = readBool(value) && minecraft->useTouchscreen();
-		// }
-
-		// // Feedback
-		// if (key == OptionStrings::Controls_FeedbackVibration) {
-		// 	m_options[OPTIONS_DESTROY_VIBRATION] = readBool(value);
-		// }
-
-		// // Graphics
-		// if (key == OptionStrings::Graphics_Fancy) {
-		// 	m_options[OPTIONS_FANCY_GRAPHICS] = readBool(value);
-		// }
-
-		// // Graphics extras
-		// if (key == OptionStrings::Graphics_Vsync) {
-		// 	m_options[OPTIONS_VSYNC] = readBool(value);
-		// }
-
-		// if (key == OptionStrings::Graphics_GUIScale) {
-		// 	m_options[OPTIONS_GUI_SCALE] = readInt(value) % 5;
-		// }
-
-		// // Game
-		// if (key == OptionStrings::Game_DifficultyLevel) {
-		// 	readInt(value, difficulty);
-		// 	// Only support peaceful and normal right now
-		// 	if (difficulty != Difficulty::PEACEFUL && difficulty != Difficulty::NORMAL)
-		// 		difficulty = Difficulty::NORMAL;
-		// }*/
 	}
 }
 
 void Options::save() {
 	StringVector stringVec;
-	
+
 	for (auto& it : m_options) {
 		if (it) stringVec.push_back(it->serialize());
 	}

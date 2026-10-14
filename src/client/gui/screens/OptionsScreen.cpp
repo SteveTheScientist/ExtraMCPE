@@ -175,8 +175,7 @@ void OptionControl::toggleValue(Minecraft* minecraft) {
         int cur = minecraft->options.getIntValue(OPTIONS_DEBUG_STYLE);
         minecraft->options.set(OPTIONS_DEBUG_STYLE, (cur + 1) % 2);
     } else {
-        bool curState = minecraft->options.getBooleanValue(optionId);
-        minecraft->options.set(optionId, !curState);
+        minecraft->options.toggle(optionId);
     }
 
     updateLabel(minecraft);
