@@ -2,6 +2,7 @@
 #include "StartMenuScreen.h"
 #include "PauseScreen.h"
 #include "CreditsScreen.h"
+#include "UsernameScreen.h"
 #include "../../Minecraft.h"
 #include "../../sound/SoundEngine.h"
 #include "../../../util/Mth.h"
@@ -19,17 +20,244 @@ static std::string to_str(T val) {
     return ss.str();
 }
 
+OptionControl::OptionControl(int id, ControlType type, OptionId optId, const std::string& name, bool fullWidth, float minVal, float maxVal)
+    : super(id, 0, 0, fullWidth ? 310 : 150, 20, name),
+      controlType(type),
+      optionId(optId),
+      baseName(name),
+      isFullWidth(fullWidth),
+      minVal(minVal),
+      maxVal(maxVal),
+      isDraggingSlider(false),
+      isListeningForKey(false)
+{
+}
+
+OptionControl::~OptionControl() {
+}
+
+void OptionControl::updateLabel(Minecraft* minecraft) {
+    if (controlType == CONTROL_ACTION) {
+        if (optionId == OPTIONS_USERNAME) {
+            std::string uname = minecraft->options.getStringValue(OPTIONS_USERNAME);
+            if (uname.empty()) uname = "Steve";
+            msg = "Username: " + uname;
+            return;
+        }
+        msg = baseName;
+        return;
+    }
+
+    if (controlType == CONTROL_KEY) {
+        if (isListeningForKey) {
+            msg = baseName + ": > ??? <";
+        } else {
+            int keyVal = minecraft->options.getIntValue(optionId);
+            const char* keyName = Keyboard::getKeyName(keyVal);
+            msg = baseName + ": " + (keyName ? keyName : "NONE");
+        }
+        return;
+    }
+
+    if (controlType == CONTROL_SLIDER) {
+        float val = minecraft->options.getProgressValue(optionId);
+        int pct = (int)(val * 100.0f + 0.5f);
+        if (optionId == OPTIONS_MUSIC_VOLUME || optionId == OPTIONS_SOUND_VOLUME) {
+            if (pct <= 0) {
+                msg = baseName + ": OFF";
+                return;
+            }
+        }
+        msg = baseName + ": " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_VIEW_DISTANCE) {
+        int dist = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);
+        switch (dist) {
+            case 0: msg = "Render Distance: Far"; break;
+            case 1: msg = "Render Distance: Normal"; break;
+            case 2: msg = "Render Distance: Short"; break;
+            default: msg = "Render Distance: Tiny"; break;
+        }
+        return;
+    }
+
+    if (optionId == OPTIONS_GUI_SCALE) {
+        int scale = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
+        switch (scale) {
+            case 0: msg = "GUI Scale: Auto"; break;
+            case 1: msg = "GUI Scale: Normal"; break;
+            default: msg = "GUI Scale: Large"; break;
+        }
+        return;
+    }
+
+    if (optionId == OPTIONS_WINDOW_SCALE) {
+        int scale = minecraft->options.getIntValue(OPTIONS_WINDOW_SCALE);
+        msg = "Window Scale: " + to_str(scale + 1) + "x";
+        return;
+    }
+
+    if (optionId == OPTIONS_MENU_STYLE) {
+        int st = minecraft->options.getIntValue(OPTIONS_MENU_STYLE);
+        switch (st) {
+            case 0: msg = "Menu Style: Modern"; break;
+            case 1: msg = "Menu Style: Classic"; break;
+            default: msg = "Menu Style: Java"; break;
+        }
+        return;
+    }
+
+    if (optionId == OPTIONS_DIFFICULTY) {
+        int diff = minecraft->options.getIntValue(OPTIONS_DIFFICULTY);
+        switch (diff) {
+            case 0: msg = "Difficulty: Peaceful"; break;
+            case 1: msg = "Difficulty: Easy"; break;
+            case 2: msg = "Difficulty: Normal"; break;
+            default: msg = "Difficulty: Hard"; break;
+        }
+        return;
+    }
+
+    if (optionId == OPTIONS_FANCY_GRAPHICS) {
+        bool fancy = minecraft->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS);
+        msg = fancy ? "Graphics: Fancy" : "Graphics: Fast";
+        return;
+    }
+
+    if (optionId == OPTIONS_LIMIT_FRAMERATE) {
+        bool limit = minecraft->options.getBooleanValue(OPTIONS_LIMIT_FRAMERATE);
+        msg = limit ? "Max Framerate: 60 FPS" : "Max Framerate: Unlimited";
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_TYPE) {
+        int fog = minecraft->options.getIntValue(OPTIONS_FOG_TYPE);
+        msg = (fog == 0) ? "Fog Type: Fancy" : "Fog Type: Fast";
+        return;
+    }
+
+    if (optionId == OPTIONS_DEBUG_STYLE) {
+        int st = minecraft->options.getIntValue(OPTIONS_DEBUG_STYLE);
+        msg = (st == 0) ? "Debug HUD Style: New" : "Debug HUD Style: Classic";
+        return;
+    }
+
+    bool state = minecraft->options.getBooleanValue(optionId);
+    msg = baseName + (state ? ": ON" : ": OFF");
+}
+
+void OptionControl::toggleValue(Minecraft* minecraft) {
+    if (controlType == CONTROL_ACTION || controlType == CONTROL_KEY) return;
+
+    if (optionId == OPTIONS_VIEW_DISTANCE) {
+        int cur = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);
+        minecraft->options.set(OPTIONS_VIEW_DISTANCE, (cur + 1) % 4);
+    } else if (optionId == OPTIONS_GUI_SCALE) {
+        int cur = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
+        minecraft->options.set(OPTIONS_GUI_SCALE, (cur + 1) % 3);
+    } else if (optionId == OPTIONS_WINDOW_SCALE) {
+        int cur = minecraft->options.getIntValue(OPTIONS_WINDOW_SCALE);
+        minecraft->options.set(OPTIONS_WINDOW_SCALE, (cur + 1) % 3);
+    } else if (optionId == OPTIONS_MENU_STYLE) {
+        int cur = minecraft->options.getIntValue(OPTIONS_MENU_STYLE);
+        minecraft->options.set(OPTIONS_MENU_STYLE, (cur + 1) % 3);
+    } else if (optionId == OPTIONS_DIFFICULTY) {
+        int cur = minecraft->options.getIntValue(OPTIONS_DIFFICULTY);
+        minecraft->options.set(OPTIONS_DIFFICULTY, (cur + 1) % 4);
+    } else {
+        bool curState = minecraft->options.getBooleanValue(optionId);
+        minecraft->options.set(optionId, !curState);
+    }
+
+    updateLabel(minecraft);
+}
+
+void OptionControl::updateSliderValue(Minecraft* minecraft, int mx) {
+    float pct = (float)(mx - x) / (float)width;
+    pct = Mth::clamp(pct, 0.0f, 1.0f);
+    float newVal = minVal + pct * (maxVal - minVal);
+    minecraft->options.set(optionId, newVal);
+    updateLabel(minecraft);
+}
+
+bool OptionControl::clicked(Minecraft* minecraft, int mx, int my) {
+    if (!visible || !active) return false;
+
+    // Bounds check to ensure control isn't covered by top header bar or bottom footer bar
+    if (my < 34 || (minecraft->screen && my >= minecraft->screen->height - 34)) return false;
+
+    if (mx >= x && my >= y && mx < x + width && my < y + height) {
+        _currentlyDown = true;
+        if (controlType == CONTROL_SLIDER) {
+            isDraggingSlider = true;
+            updateSliderValue(minecraft, mx);
+        }
+        return true;
+    }
+    return false;
+}
+
+void OptionControl::released(int mx, int my) {
+    _currentlyDown = false;
+    isDraggingSlider = false;
+}
+
+void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
+    if (!visible) return;
+
+    Font* font = minecraft->font;
+    Tesselator& t = Tesselator::instance;
+
+    bool isHovered = (xm >= x && ym >= y && xm < x + width && ym < y + height);
+
+    if (controlType == CONTROL_SLIDER) {
+        minecraft->textures->loadAndBindTexture(isHovered ? "gui/Widget_slider_highlighted.png" : "gui/Widget_slider.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)x, (float)(y + height), blitOffset, 0, 1);
+        t.vertexUV((float)(x + width), (float)(y + height), blitOffset, 1, 1);
+        t.vertexUV((float)(x + width), (float)y, blitOffset, 1, 0);
+        t.vertexUV((float)x, (float)y, blitOffset, 0, 0);
+        t.draw();
+
+        float val = minecraft->options.getProgressValue(optionId);
+        float pct = Mth::clamp((val - minVal) / (maxVal - minVal), 0.0f, 1.0f);
+        float handleW = 8.0f;
+        float handleX = (float)x + ((float)width - handleW) * pct;
+        bool isHandleHovered = isHovered || isDraggingSlider;
+
+        minecraft->textures->loadAndBindTexture(isHandleHovered ? "gui/Widget_slider_handle_highlighted.png" : "gui/Widget_slider_handle.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV(handleX, (float)(y + height), blitOffset, 0, 1);
+        t.vertexUV(handleX + handleW, (float)(y + height), blitOffset, 1, 1);
+        t.vertexUV(handleX + handleW, (float)y, blitOffset, 1, 0);
+        t.vertexUV(handleX, (float)y, blitOffset, 0, 0);
+        t.draw();
+
+        drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xffffffff);
+    } else {
+        super::render(minecraft, xm, ym);
+    }
+}
+
 OptionsScreen::OptionsScreen()
 	: btnDone(NULL),
+	  m_activeKeyControl(NULL),
 	  m_scrollY(0.0f),
 	  m_maxScroll(0.0f),
-	  m_isDraggingScrollbar(false),
-	  m_activeSliderIndex(-1)
+	  m_isDraggingScrollbar(false)
 {
 }
 
 OptionsScreen::~OptionsScreen() {
 	delete btnDone;
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		delete m_controls[i];
+	}
+	m_controls.clear();
 }
 
 void OptionsScreen::init() {
@@ -37,30 +265,76 @@ void OptionsScreen::init() {
 	buttons.push_back(btnDone);
 	tabButtons.push_back(btnDone);
 
-	m_items.clear();
-	m_items.push_back({ OPTION_TYPE_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_SLIDER, OPTIONS_SOUND_VOLUME, "Sound", false, 0.0f, 1.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_VSYNC, "VSync", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_GUI_SCALE, "GUI Scale", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_AUTOJUMP, "Auto-Jump", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_DESTROY_VIBRATION, "Vibrate on Destroy", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_VIGNETTE, "Vignette", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode", false, 0.0f, 0.0f, 0 });
-	m_items.push_back({ OPTION_TYPE_ACTION, OPTIONS_COUNT, "Credits...", true, 0.0f, 0.0f, 1 });
+	m_controls.clear();
+	int idSeq = 10;
+
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username", true));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SOUND_VOLUME, "Sound", false, 0.0f, 1.0f));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_GUI_SCALE, "GUI Scale"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RENDER_DEBUG, "Render Debug"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AUTOJUMP, "Auto-Jump"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DESTROY_VIBRATION, "Vibrate on Destroy"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_USE_TOUCHSCREEN, "Touchscreen"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DIFFICULTY, "Difficulty"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RPI_CURSOR, "Custom Cursor"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_TYPE, "Fog Type"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_JOY_TOUCH_AREA, "D-Pad Touch Area"));
+
+	// Controls / Key Bindings
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_FORWARD, "Forward"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_LEFT, "Left"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_BACK, "Back"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_RIGHT, "Right"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_JUMP, "Jump"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_INVENTORY, "Inventory"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_SNEAK, "Sneak"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_DROP, "Drop Item"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_CHAT, "Chat"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_FOG, "Toggle Fog"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_USE, "Use / Place"));
+
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", true));
+
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		m_controls[i]->updateLabel(minecraft);
+		buttons.push_back(m_controls[i]);
+	}
+}
+
+void OptionsScreen::updateScrollBounds() {
+	int totalRows = (int)((m_controls.size() + 1) / 2);
+	float contentH = (float)(totalRows * 24 + 10);
+	float viewportH = (float)(height - 68);
+	m_maxScroll = std::max(0.0f, contentH - viewportH);
+	m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
 }
 
 void OptionsScreen::setupPositions() {
@@ -71,120 +345,61 @@ void OptionsScreen::setupPositions() {
 		btnDone->y = height - 28;
 	}
 
-	int totalRows = (int)((m_items.size() + 1) / 2);
-	float contentH = (float)(totalRows * 24 + 10);
-	float viewportH = (float)(height - 68);
-	m_maxScroll = std::max(0.0f, contentH - viewportH);
-	m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+	updateScrollBounds();
+
+	int centerX = width / 2;
+	int topY = 36;
+
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		OptionControl* ctrl = m_controls[i];
+		int r = (int)(i / 2);
+		int c = (int)(i % 2);
+
+		int itemX = (c == 0 || ctrl->isFullWidth) ? centerX - 155 : centerX + 5;
+		int itemW = ctrl->isFullWidth ? 310 : 150;
+		int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+
+		ctrl->x = itemX;
+		ctrl->y = itemY;
+		ctrl->width = itemW;
+		ctrl->height = 20;
+
+		// Visible within header and footer margins
+		ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+		ctrl->updateLabel(minecraft);
+	}
 }
 
 void OptionsScreen::tick() {
 	super::tick();
 
-	if (m_activeSliderIndex >= 0 && m_activeSliderIndex < (int)m_items.size()) {
-		if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
-			int xm = Mouse::getX() * width / minecraft->width;
-			int ym = Mouse::getY() * height / minecraft->height - 1;
+	int xm = Mouse::getX();
+	int ym = Mouse::getY();
+	toGUICoordinate(xm, ym);
 
-			const OptionItem& item = m_items[m_activeSliderIndex];
-			int r = m_activeSliderIndex / 2;
-			int c = m_activeSliderIndex % 2;
-			int centerX = width / 2;
-			int itemX = (c == 0 || item.isFullWidth) ? centerX - 155 : centerX + 5;
-			int itemW = item.isFullWidth ? 310 : 150;
-
-			float pct = (float)(xm - itemX) / (float)itemW;
-			pct = Mth::clamp(pct, 0.0f, 1.0f);
-			float newVal = item.minVal + pct * (item.maxVal - item.minVal);
-			minecraft->options.set(item.optionId, newVal);
-		} else {
-			m_activeSliderIndex = -1;
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		OptionControl* ctrl = m_controls[i];
+		if (ctrl->isDraggingSlider) {
+			if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+				ctrl->updateSliderValue(minecraft, xm);
+			} else {
+				ctrl->isDraggingSlider = false;
+			}
 		}
 	}
 
 	if (m_isDraggingScrollbar) {
 		if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
-			int ym = Mouse::getY() * height / minecraft->height - 1;
 			float viewportH = (float)(height - 68);
 			if (viewportH > 0 && m_maxScroll > 0) {
 				float relY = (float)(ym - 34) / (viewportH - 15);
 				m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+				setupPositions();
 			}
 		} else {
 			m_isDraggingScrollbar = false;
 		}
 	}
-}
-
-std::string OptionsScreen::getOptionText(const OptionItem& item) {
-	if (item.type == OPTION_TYPE_ACTION) {
-		return item.name;
-	}
-
-	if (item.type == OPTION_TYPE_SLIDER) {
-		float val = minecraft->options.getProgressValue(item.optionId);
-		int pct = (int)(val * 100.0f + 0.5f);
-		if (item.optionId == OPTIONS_MUSIC_VOLUME || item.optionId == OPTIONS_SOUND_VOLUME) {
-			if (pct <= 0) return item.name + ": OFF";
-		}
-		return item.name + ": " + to_str(pct) + "%";
-	}
-
-	if (item.optionId == OPTIONS_VIEW_DISTANCE) {
-		int dist = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);
-		switch (dist) {
-			case 0: return "Render Distance: Far";
-			case 1: return "Render Distance: Normal";
-			case 2: return "Render Distance: Short";
-			default: return "Render Distance: Tiny";
-		}
-	}
-
-	if (item.optionId == OPTIONS_GUI_SCALE) {
-		int scale = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
-		switch (scale) {
-			case 0: return "GUI Scale: Auto";
-			case 1: return "GUI Scale: Normal";
-			default: return "GUI Scale: Large";
-		}
-	}
-
-	if (item.optionId == OPTIONS_FANCY_GRAPHICS) {
-		bool fancy = minecraft->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS);
-		return fancy ? "Graphics: Fancy" : "Graphics: Fast";
-	}
-
-	if (item.optionId == OPTIONS_LIMIT_FRAMERATE) {
-		bool limit = minecraft->options.getBooleanValue(OPTIONS_LIMIT_FRAMERATE);
-		return limit ? "Max Framerate: 60 FPS" : "Max Framerate: Unlimited";
-	}
-
-	bool state = minecraft->options.getBooleanValue(item.optionId);
-	return item.name + (state ? ": ON" : ": OFF");
-}
-
-void OptionsScreen::toggleOption(const OptionItem& item) {
-	if (item.type == OPTION_TYPE_ACTION) {
-		if (item.actionId == 1) {
-			minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_OPTIONS));
-		}
-		return;
-	}
-
-	if (item.optionId == OPTIONS_VIEW_DISTANCE) {
-		int cur = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);
-		minecraft->options.set(OPTIONS_VIEW_DISTANCE, (cur + 1) % 4);
-		return;
-	}
-
-	if (item.optionId == OPTIONS_GUI_SCALE) {
-		int cur = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
-		minecraft->options.set(OPTIONS_GUI_SCALE, (cur + 1) % 3);
-		return;
-	}
-
-	bool curState = minecraft->options.getBooleanValue(item.optionId);
-	minecraft->options.set(item.optionId, !curState);
 }
 
 void OptionsScreen::render(int xm, int ym, float a) {
@@ -196,67 +411,13 @@ void OptionsScreen::render(int xm, int ym, float a) {
 
 	Font* font = minecraft->font;
 	Tesselator& t = Tesselator::instance;
-
 	int centerX = width / 2;
 	int topY = 34;
 	int bottomY = height - 34;
 
-	// Render items list inside central viewport area
-	for (size_t i = 0; i < m_items.size(); ++i) {
-		const OptionItem& item = m_items[i];
-		int r = (int)(i / 2);
-		int c = (int)(i % 2);
+	super::render(xm, ym, a);
 
-		int itemX = (c == 0 || item.isFullWidth) ? centerX - 155 : centerX + 5;
-		int itemW = item.isFullWidth ? 310 : 150;
-		int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
-		int itemH = 20;
-
-		// Only draw items visible within header and footer margins
-		if (itemY + itemH < topY || itemY > bottomY) {
-			continue;
-		}
-
-		bool isHovered = (xm >= itemX && ym >= itemY && xm < itemX + itemW && ym < itemY + itemH && ym >= topY && ym < bottomY);
-
-		if (item.type == OPTION_TYPE_SLIDER) {
-			// Slider track background texture
-			minecraft->textures->loadAndBindTexture(isHovered ? "gui/Widget_slider_highlighted.png" : "gui/Widget_slider.png");
-			glColor4f2(1, 1, 1, 1);
-			t.begin();
-			t.vertexUV((float)itemX, (float)(itemY + itemH), blitOffset, 0, 1);
-			t.vertexUV((float)(itemX + itemW), (float)(itemY + itemH), blitOffset, 1, 1);
-			t.vertexUV((float)(itemX + itemW), (float)itemY, blitOffset, 1, 0);
-			t.vertexUV((float)itemX, (float)itemY, blitOffset, 0, 0);
-			t.draw();
-
-			// Slider handle thumb texture
-			float val = minecraft->options.getProgressValue(item.optionId);
-			float pct = Mth::clamp((val - item.minVal) / (item.maxVal - item.minVal), 0.0f, 1.0f);
-			float handleW = 8.0f;
-			float handleX = itemX + (itemW - handleW) * pct;
-			bool isHandleHovered = isHovered || (m_activeSliderIndex == (int)i);
-
-			minecraft->textures->loadAndBindTexture(isHandleHovered ? "gui/Widget_slider_handle_highlighted.png" : "gui/Widget_slider_handle.png");
-			glColor4f2(1, 1, 1, 1);
-			t.begin();
-			t.vertexUV(handleX, (float)(itemY + itemH), blitOffset, 0, 1);
-			t.vertexUV(handleX + handleW, (float)(itemY + itemH), blitOffset, 1, 1);
-			t.vertexUV(handleX + handleW, (float)itemY, blitOffset, 1, 0);
-			t.vertexUV(handleX, (float)itemY, blitOffset, 0, 0);
-			t.draw();
-
-			std::string label = getOptionText(item);
-			drawCenteredString(font, label, itemX + itemW / 2, itemY + (itemH - 8) / 2, 0xffffffff);
-		} else {
-			// Standard button texture using Button renderer
-			std::string label = getOptionText(item);
-			Button b(0, itemX, itemY, itemW, itemH, label);
-			b.render(minecraft, xm, ym);
-		}
-	}
-
-	// Render vertical scrollbar if list exceeds viewport height
+	// Render vertical scrollbar track and thumb if content exceeds viewport
 	if (m_maxScroll > 0) {
 		int trackX = centerX + 160;
 		int trackW = 6;
@@ -287,22 +448,54 @@ void OptionsScreen::render(int xm, int ym, float a) {
 		t.draw();
 	}
 
-	// Top and bottom header/footer shadow masks
-	fill(0, 0, width, 32, 0xe0000000);
-	fill(0, height - 34, width, height, 0xe0000000);
+	// Top and bottom header/footer shadow masks with light 0x70 transparency
+	fill(0, 0, width, 32, 0x70000000);
+	fill(0, height - 34, width, height, 0x70000000);
 
 	drawCenteredString(font, "Options", width / 2, 10, 0xffffffff);
-
-	super::render(xm, ym, a);
 }
 
 void OptionsScreen::buttonClicked(Button* button) {
-	if (button->id == 100) {
+	if (button == btnDone) {
 		minecraft->options.save();
 		if (minecraft->isLevelGenerated()) {
 			minecraft->setScreen(new PauseScreen(false));
 		} else {
 			minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
+		}
+		return;
+	}
+
+	OptionControl* ctrl = dynamic_cast<OptionControl*>(button);
+	if (ctrl) {
+		if (ctrl->controlType == CONTROL_KEY) {
+			if (m_activeKeyControl && m_activeKeyControl != ctrl) {
+				m_activeKeyControl->isListeningForKey = false;
+				m_activeKeyControl->updateLabel(minecraft);
+			}
+			m_activeKeyControl = ctrl;
+			ctrl->isListeningForKey = true;
+			ctrl->updateLabel(minecraft);
+			return;
+		}
+
+		if (ctrl->controlType == CONTROL_TOGGLE) {
+			ctrl->toggleValue(minecraft);
+			minecraft->options.save();
+
+			// If scale changed, re-initialize screen so GUI coordinates immediately update
+			if (ctrl->optionId == OPTIONS_GUI_SCALE || ctrl->optionId == OPTIONS_WINDOW_SCALE) {
+				minecraft->setScreen(new OptionsScreen());
+				return;
+			}
+
+			setupPositions();
+		} else if (ctrl->controlType == CONTROL_ACTION) {
+			if (ctrl->optionId == OPTIONS_USERNAME) {
+				minecraft->setScreen(new UsernameScreen());
+			} else if (ctrl->optionId == OPTIONS_COUNT) {
+				minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_OPTIONS));
+			}
 		}
 	}
 }
@@ -314,39 +507,13 @@ void OptionsScreen::mouseClicked(int x, int y, int buttonNum) {
 		int bottomY = height - 34;
 
 		if (y >= topY && y < bottomY) {
-			// Check scrollbar hit
 			if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
 				m_isDraggingScrollbar = true;
 				float viewportH = (float)(height - 68);
 				float relY = (float)(y - 34) / (viewportH - 15);
 				m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+				setupPositions();
 				return;
-			}
-
-			// Check option items hit
-			for (size_t i = 0; i < m_items.size(); ++i) {
-				const OptionItem& item = m_items[i];
-				int r = (int)(i / 2);
-				int c = (int)(i % 2);
-
-				int itemX = (c == 0 || item.isFullWidth) ? centerX - 155 : centerX + 5;
-				int itemW = item.isFullWidth ? 310 : 150;
-				int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
-				int itemH = 20;
-
-				if (x >= itemX && y >= itemY && x < itemX + itemW && y < itemY + itemH) {
-					if (item.type == OPTION_TYPE_SLIDER) {
-						m_activeSliderIndex = (int)i;
-						float pct = (float)(x - itemX) / (float)itemW;
-						pct = Mth::clamp(pct, 0.0f, 1.0f);
-						float newVal = item.minVal + pct * (item.maxVal - item.minVal);
-						minecraft->options.set(item.optionId, newVal);
-					} else {
-						toggleOption(item);
-					}
-					minecraft->soundEngine->playUI("random.click", 1, 1);
-					return;
-				}
 			}
 		}
 	}
@@ -356,18 +523,32 @@ void OptionsScreen::mouseClicked(int x, int y, int buttonNum) {
 
 void OptionsScreen::mouseReleased(int x, int y, int buttonNum) {
 	m_isDraggingScrollbar = false;
-	m_activeSliderIndex = -1;
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		m_controls[i]->isDraggingSlider = false;
+	}
 	super::mouseReleased(x, y, buttonNum);
 }
 
 void OptionsScreen::mouseWheel(int dx, int dy, int xm, int ym) {
-	if (dy != 0) {
+	if (dy != 0 && m_maxScroll > 0) {
 		m_scrollY -= (float)dy * 12.0f;
 		m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+		setupPositions();
 	}
 }
 
 void OptionsScreen::keyPressed(int eventKey) {
+	if (m_activeKeyControl && m_activeKeyControl->isListeningForKey) {
+		if (eventKey != Keyboard::KEY_ESCAPE) {
+			minecraft->options.set(m_activeKeyControl->optionId, eventKey);
+			minecraft->options.save();
+		}
+		m_activeKeyControl->isListeningForKey = false;
+		m_activeKeyControl->updateLabel(minecraft);
+		m_activeKeyControl = NULL;
+		return;
+	}
+
 	if (eventKey == Keyboard::KEY_ESCAPE) {
 		minecraft->options.save();
 		if (minecraft->isLevelGenerated()) {

@@ -6,24 +6,35 @@
 #include <vector>
 #include <string>
 
-enum OptionItemType {
-    OPTION_TYPE_TOGGLE,
-    OPTION_TYPE_SLIDER,
-    OPTION_TYPE_ACTION
+enum ControlType {
+    CONTROL_TOGGLE,
+    CONTROL_SLIDER,
+    CONTROL_KEY,
+    CONTROL_ACTION
 };
 
-struct OptionItem {
-    OptionItemType type;
-    OptionId optionId;
-    std::string name;
-    bool isFullWidth;
+class OptionControl : public Button {
+    typedef Button super;
+public:
+    OptionControl(int id, ControlType type, OptionId optId, const std::string& name, bool fullWidth = false, float minVal = 0.0f, float maxVal = 1.0f);
+    virtual ~OptionControl();
 
-    // For sliders
+    virtual void render(Minecraft* minecraft, int xm, int ym) override;
+    virtual bool clicked(Minecraft* minecraft, int mx, int my) override;
+    virtual void released(int mx, int my) override;
+
+    void updateLabel(Minecraft* minecraft);
+    void toggleValue(Minecraft* minecraft);
+    void updateSliderValue(Minecraft* minecraft, int mx);
+
+    ControlType controlType;
+    OptionId optionId;
+    std::string baseName;
+    bool isFullWidth;
     float minVal;
     float maxVal;
-
-    // Action callback ID
-    int actionId;
+    bool isDraggingSlider;
+    bool isListeningForKey;
 };
 
 class OptionsScreen: public Screen
@@ -46,16 +57,15 @@ public:
 	virtual void keyPressed(int eventKey) override;
 
 private:
-	std::string getOptionText(const OptionItem& item);
-	void toggleOption(const OptionItem& item);
+	void updateScrollBounds();
 
 	Button* btnDone;
-	std::vector<OptionItem> m_items;
+	std::vector<OptionControl*> m_controls;
+	OptionControl* m_activeKeyControl;
 
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDraggingScrollbar;
-	int m_activeSliderIndex;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__OptionsScreen_H__*/

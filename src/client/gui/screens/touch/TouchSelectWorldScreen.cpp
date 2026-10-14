@@ -36,22 +36,25 @@ int TouchWorldSelectionList::getNumberOfItems() {
 }
 
 void TouchWorldSelectionList::selectItem( int item, bool doubleClick ) {
-	if (selectedItem < 0)
+	if (item < 0 || item >= (int)levels.size())
 		return;
 
-	const int delta = item - selectedItem;
+	if (selectedItem != item) {
+		selectedItem = item;
+		int targetX = (int)((float)(selectedItem * itemWidth) - (float)(width - itemWidth) * 0.5f);
+		td.start = xo;
+		td.stop = (float)targetX;
+		td.cur = 0;
+		td.dur = 8;
+		mode = 1;
+		tweenInited();
+		return;
+	}
 
-	if (delta == -1)
-		stepLeft();
-	if (delta == +1)
-		stepRight();
-	if (delta == 0 ) {
-		if (!hasPickedLevel) {
-			hasPickedLevel = true;
-			pickedIndex = item;
-			if (item < (int)levels.size())
-				pickedLevel = levels[item];
-		}
+	if (!hasPickedLevel) {
+		hasPickedLevel = true;
+		pickedIndex = item;
+		pickedLevel = levels[item];
 	}
 }
 
@@ -161,8 +164,11 @@ void TouchWorldSelectionList::tick()
 
 	++currentTick;
 
+	if (selectedItem < 0 && getNumberOfItems() > 0) {
+		selectedItem = 0;
+	}
+
 	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT) || dragState == 0) {
-		selectedItem = getItemAtPosition(width/2, height/2);
 		return;
 	}
 
@@ -171,7 +177,8 @@ void TouchWorldSelectionList::tick()
 			mode = 0;
 			xInertia = 0;
 			xoo = xo = td.stop;
-			selectedItem = getItemAtPosition(width/2, height/2);
+			int centerItem = getItemAtPosition(width/2, height/2);
+			if (centerItem >= 0 && selectedItem < 0) selectedItem = centerItem;
 		} else {
 			tweenInited();
 		}
@@ -182,7 +189,6 @@ void TouchWorldSelectionList::tick()
 	bool slowEnoughToBeBothered = speed < 5.0f;
 	if (!slowEnoughToBeBothered) {
 		xInertia = xInertia * .9f;
-		selectedItem = getItemAtPosition(width/2, height/2);
 		return;
 	}
 
@@ -200,7 +206,6 @@ void TouchWorldSelectionList::tick()
 			index++;
 		}
 		if (Mth::abs(diff) < 1 && speed < 0.1f) {
-			selectedItem = getItemAtPosition(width/2, height/2);
 			return;
 		}
 
@@ -211,7 +216,6 @@ void TouchWorldSelectionList::tick()
 		mode = 1;
 		tweenInited();
 	}
-	selectedItem = getItemAtPosition(width/2, height/2);
 }
 
 float TouchWorldSelectionList::getPos( float alpha )

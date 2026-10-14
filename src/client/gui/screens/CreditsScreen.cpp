@@ -93,8 +93,8 @@ void CreditsScreen::render(int xm, int ym, float a) {
     }
 
     // Top and bottom header/footer shadow masks
-    fill(0, 0, width, 32, 0xe0000000);
-    fill(0, height - 36, width, height, 0xe0000000);
+    fill(0, 0, width, 32, 0x70000000);
+    fill(0, height - 36, width, height, 0x70000000);
 
     drawCenteredString(font, "Credits", width / 2, 10, 0xffffffff);
 
