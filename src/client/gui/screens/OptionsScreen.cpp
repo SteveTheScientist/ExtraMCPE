@@ -3,6 +3,7 @@
 #include "PauseScreen.h"
 #include "CreditsScreen.h"
 #include "UsernameScreen.h"
+#include "KeyBindsScreen.h"
 #include "../../Minecraft.h"
 #include "../../sound/SoundEngine.h"
 #include "../../../util/Mth.h"
@@ -20,10 +21,11 @@ static std::string to_str(T val) {
     return ss.str();
 }
 
-OptionControl::OptionControl(int id, ControlType type, OptionId optId, const std::string& name, bool fullWidth, float minVal, float maxVal)
+OptionControl::OptionControl(int id, ControlType type, OptionId optId, const std::string& name, bool fullWidth, float minVal, float maxVal, ActionId actId)
     : super(id, 0, 0, fullWidth ? 310 : 150, 20, name),
       controlType(type),
       optionId(optId),
+      actionId(actId),
       baseName(name),
       isFullWidth(fullWidth),
       minVal(minVal),
@@ -38,7 +40,7 @@ OptionControl::~OptionControl() {
 
 void OptionControl::updateLabel(Minecraft* minecraft) {
     if (controlType == CONTROL_ACTION) {
-        if (optionId == OPTIONS_USERNAME) {
+        if (actionId == ACTION_USERNAME) {
             std::string uname = minecraft->options.getStringValue(OPTIONS_USERNAME);
             if (uname.empty()) uname = "Steve";
             msg = "Username: " + uname;
@@ -166,6 +168,12 @@ void OptionControl::toggleValue(Minecraft* minecraft) {
     } else if (optionId == OPTIONS_DIFFICULTY) {
         int cur = minecraft->options.getIntValue(OPTIONS_DIFFICULTY);
         minecraft->options.set(OPTIONS_DIFFICULTY, (cur + 1) % 4);
+    } else if (optionId == OPTIONS_FOG_TYPE) {
+        int cur = minecraft->options.getIntValue(OPTIONS_FOG_TYPE);
+        minecraft->options.set(OPTIONS_FOG_TYPE, (cur + 1) % 2);
+    } else if (optionId == OPTIONS_DEBUG_STYLE) {
+        int cur = minecraft->options.getIntValue(OPTIONS_DEBUG_STYLE);
+        minecraft->options.set(OPTIONS_DEBUG_STYLE, (cur + 1) % 2);
     } else {
         bool curState = minecraft->options.getBooleanValue(optionId);
         minecraft->options.set(optionId, !curState);
@@ -268,10 +276,15 @@ void OptionsScreen::init() {
 	m_controls.clear();
 	int idSeq = 10;
 
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username", true));
+	// Row 0: Username & Music Slider
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username", false, 0.0f, 1.0f, ACTION_USERNAME));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
+
+	// Audio & Mouse Sensitivity
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SOUND_VOLUME, "Sound", false, 0.0f, 1.0f));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
+
+	// General Controls & Display
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse"));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
@@ -308,20 +321,9 @@ void OptionsScreen::init() {
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_JOY_TOUCH_AREA, "D-Pad Touch Area"));
 
-	// Controls / Key Bindings
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_FORWARD, "Forward"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_LEFT, "Left"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_BACK, "Back"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_RIGHT, "Right"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_JUMP, "Jump"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_INVENTORY, "Inventory"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_SNEAK, "Sneak"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_DROP, "Drop Item"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_CHAT, "Chat"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_FOG, "Toggle Fog"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_KEY, OPTIONS_KEY_USE, "Use / Place"));
-
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", true));
+	// Submenus: Key Binds & Credits
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", false, 0.0f, 1.0f, ACTION_CREDITS));
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		m_controls[i]->updateLabel(minecraft);
@@ -355,8 +357,8 @@ void OptionsScreen::setupPositions() {
 		int r = (int)(i / 2);
 		int c = (int)(i % 2);
 
-		int itemX = (c == 0 || ctrl->isFullWidth) ? centerX - 155 : centerX + 5;
-		int itemW = ctrl->isFullWidth ? 310 : 150;
+		int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+		int itemW = 150;
 		int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
 
 		ctrl->x = itemX;
@@ -491,9 +493,11 @@ void OptionsScreen::buttonClicked(Button* button) {
 
 			setupPositions();
 		} else if (ctrl->controlType == CONTROL_ACTION) {
-			if (ctrl->optionId == OPTIONS_USERNAME) {
+			if (ctrl->actionId == ACTION_USERNAME) {
 				minecraft->setScreen(new UsernameScreen());
-			} else if (ctrl->optionId == OPTIONS_COUNT) {
+			} else if (ctrl->actionId == ACTION_KEYBINDS) {
+				minecraft->setScreen(new KeyBindsScreen());
+			} else if (ctrl->actionId == ACTION_CREDITS) {
 				minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_OPTIONS));
 			}
 		}

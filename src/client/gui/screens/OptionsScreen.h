@@ -13,10 +13,16 @@ enum ControlType {
     CONTROL_ACTION
 };
 
+enum ActionId {
+    ACTION_USERNAME,
+    ACTION_KEYBINDS,
+    ACTION_CREDITS
+};
+
 class OptionControl : public Button {
     typedef Button super;
 public:
-    OptionControl(int id, ControlType type, OptionId optId, const std::string& name, bool fullWidth = false, float minVal = 0.0f, float maxVal = 1.0f);
+    OptionControl(int id, ControlType type, OptionId optId, const std::string& name, bool fullWidth = false, float minVal = 0.0f, float maxVal = 1.0f, ActionId actId = ACTION_USERNAME);
     virtual ~OptionControl();
 
     virtual void render(Minecraft* minecraft, int xm, int ym) override;
@@ -29,6 +35,7 @@ public:
 
     ControlType controlType;
     OptionId optionId;
+    ActionId actionId;
     std::string baseName;
     bool isFullWidth;
     float minVal;
