@@ -68,9 +68,7 @@ void Font::init( Options* options )
 	if (cellW <= 0) cellW = 8;
 	if (cellH <= 0) cellH = 8;
 
-	// In Bedrock / Minecraft font textures, row (cellH - 1) of each glyph cell is often reserved
-	// for metadata / width marks or empty baseline padding.
-	int scanH = (cellH > 1) ? (cellH - 1) : cellH;
+	int scanH = cellH;
 
 	const int numChars = _rows * _cols;
 	for (int i = 0; i < numChars && i < 256; i++) {
@@ -118,8 +116,9 @@ void Font::init( Options* options )
 				w = (w * 8) / cellW;
 			}
 
-			// Calculate advancement width based on standard Minecraft glyph width metrics
 			if (i == 'i' || i == 'l' || i == '!' || i == '.' || i == ',' || i == ';' || i == ':' || i == '\'' || i == '|') {
+				charWidths[i] = w + 1;
+			} else if (i == 'I') {
 				charWidths[i] = w + 1;
 			} else {
 				charWidths[i] = w + 1;
@@ -183,13 +182,17 @@ void Font::init( Options* options )
 
 void Font::drawShadow( const std::string& str, float x, float y, int color )
 {
-	draw(str, x + 1, y + 1, color, true);
-	draw(str, x, y, color);
+	float px = std::floor(x + 0.5f);
+	float py = std::floor(y + 0.5f);
+	draw(str, px + 1.0f, py + 1.0f, color, true);
+	draw(str, px, py, color);
 }
 void Font::drawShadow( const char* str, float x, float y, int color )
 {
-	draw(str, x + 1, y + 1, color, true);
-	draw(str, x, y, color);
+	float px = std::floor(x + 0.5f);
+	float py = std::floor(y + 0.5f);
+	draw(str, px + 1.0f, py + 1.0f, color, true);
+	draw(str, px, py, color);
 }
 
 void Font::draw( const std::string& str, float x, float y, int color )
@@ -310,6 +313,12 @@ void Font::drawSlow( const char* str, float x, float y, int color, bool darken /
 
 	_textures->loadAndBindTexture(fontName);
 
+	// Ensure nearest filtering and edge clamping for sharp pixel rendering without UV bleeding
+	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 	Tesselator& t = Tesselator::instance;
 	t.begin();
 	int alpha = (0xff000000 & color) >> 24;
@@ -328,6 +337,10 @@ void Font::drawSlow( const char* str, float x, float y, int color, bool darken /
 	int curG = (curColor >> 8) & 0xff;
 	int curB = curColor & 0xff;
 	t.color(curR, curG, curB, alpha);
+
+	// Round text starting position to whole screen pixels
+	x = std::floor(x + 0.5f);
+	y = std::floor(y + 0.5f);
 
 	t.addOffset((float)x, (float)y, 0);
 	float xOffset = 0;
@@ -371,14 +384,12 @@ void Font::buildChar( unsigned char i, float x /*= 0*/, float y /*=0*/ )
 	float col = (float)(i % _cols);
 	float row = (float)(i / _cols);
 
-	// Each glyph tile is 8x8 in a 128x128 texture atlas.
-	// Row 7 (the bottom pixel row of the 8x8 cell) is used for glyph width metadata.
-	// To avoid rendering the bottom metadata line, mapped V range is [v0 .. v0 + 7.0f/128.0f]
-	// with screen quad height sh = 8.0f (or 7.0f). Mapped v1 excludes row 7.
-	float u0 = (col * 8.0f) / 128.0f;
-	float v0 = (row * 8.0f) / 128.0f;
-	float u1 = u0 + (7.99f / 128.0f);
-	float v1 = v0 + (7.00f / 128.0f);
+	// Exact cell boundaries in 128x128 texture atlas (16x16 grid of 8x8 cells)
+	// Half-texel inset (0.5 texels out of 128.0) prevents sampling edge texels from neighboring glyphs
+	float u0 = (col * 8.0f + 0.5f) / 128.0f;
+	float v0 = (row * 8.0f + 0.5f) / 128.0f;
+	float u1 = (col * 8.0f + 7.5f) / 128.0f;
+	float v1 = (row * 8.0f + 7.5f) / 128.0f;
 
 	float sw = 8.0f;
 	float sh = 8.0f;
