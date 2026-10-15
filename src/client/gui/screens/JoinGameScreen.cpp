@@ -124,19 +124,23 @@ void JoinGameScreen::init()
 }
 
 void JoinGameScreen::setupPositions() {
-	int yBase = height - 26;
+	int yBase = height - 28;
 	int centerX = width / 2;
 
-	bJoin.width = bDirect.width = bBack.width = 98;
+	bJoin.width = 98;
+	bDirect.width = 98;
+	bBack.width = 200;
+
 	bJoin.height = bDirect.height = bBack.height = 20;
 
+	bJoin.x = centerX - 100;
 	bJoin.y = yBase;
-	bDirect.y = yBase;
-	bBack.y = yBase;
 
-	bJoin.x = centerX - 150;
-	bDirect.x = centerX - 49;
-	bBack.x = centerX + 52;
+	bDirect.x = centerX + 2;
+	bDirect.y = yBase;
+
+	bBack.x = centerX - 100;
+	bBack.y = yBase + 24;
 }
 
 void JoinGameScreen::render( int xm, int ym, float a )
