@@ -416,7 +416,9 @@ void OptionsScreen::render(int xm, int ym, float a) {
 	int topY = 34;
 	int bottomY = height - 34;
 
-	super::render(xm, ym, a);
+	// Top and bottom header/footer shadow masks rendered behind buttons
+	fill(0, 0, width, 32, 0x70000000);
+	fill(0, height - 34, width, height, 0x70000000);
 
 	// Render vertical scrollbar track and thumb if content exceeds viewport
 	if (m_maxScroll > 0) {
@@ -449,9 +451,7 @@ void OptionsScreen::render(int xm, int ym, float a) {
 		t.draw();
 	}
 
-	// Top and bottom header/footer shadow masks with light 0x70 transparency
-	fill(0, 0, width, 32, 0x70000000);
-	fill(0, height - 34, width, height, 0x70000000);
+	super::render(xm, ym, a);
 
 	drawCenteredString(font, "Options", width / 2, 10, 0xffffffff);
 }

@@ -206,6 +206,10 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
+    // Header & Footer shadow overlays rendered behind buttons
+    fill(0, 0, width, 32, 0x70000000);
+    fill(0, height - 34, width, height, 0x70000000);
+
     // Render category titles and action labels
     int curY = (int)(38 - m_scrollY);
     for (size_t i = 0; i < m_entries.size(); ++i) {
@@ -222,8 +226,6 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
         }
         curY += 24;
     }
-
-    super::render(xm, ym, a);
 
     // Scrollbar track & thumb
     if (m_maxScroll > 0) {
@@ -256,9 +258,7 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    // Header & Footer shadow overlays
-    fill(0, 0, width, 32, 0x70000000);
-    fill(0, height - 34, width, height, 0x70000000);
+    super::render(xm, ym, a);
 
     drawCenteredString(font, "Key Binds", width / 2, 10, 0xffffffff);
 }

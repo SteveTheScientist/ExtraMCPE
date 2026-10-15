@@ -109,11 +109,11 @@ void Font::init( Options* options )
 		if (x < 0) {
 			charWidths[i] = 0;
 		} else {
-			int w = x + 2;
+			int w = x + 1;
 			if (cellW != 8 && cellW > 0) {
 				w = (w * 8) / cellW;
 			}
-			charWidths[i] = w;
+			charWidths[i] = w + 1;
 		}
 		fcharWidths[i] = (float) charWidths[i];
 	}
