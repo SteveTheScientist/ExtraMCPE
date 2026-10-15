@@ -113,7 +113,13 @@ void Font::init( Options* options )
 			if (cellW != 8 && cellW > 0) {
 				w = (w * 8) / cellW;
 			}
-			charWidths[i] = w + 1;
+			// Special-case narrow characters like 'f', 'i', 'j', 'l', 't', 'I', '!', '.', ',', etc.
+			// Standard Minecraft font widths: 'i', 'l', '!', '.', ',', ';', ':', '\'', '|' are narrower.
+			if (i == 'i' || i == 'l' || i == '!' || i == '.' || i == ',' || i == ';' || i == ':' || i == '\'' || i == '|') {
+				charWidths[i] = w;
+			} else {
+				charWidths[i] = w + 1;
+			}
 		}
 		fcharWidths[i] = (float) charWidths[i];
 	}

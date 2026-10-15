@@ -2,6 +2,7 @@
 #include "StartMenuScreen.h"
 #include "OptionsScreen.h"
 #include "CreditsScreen.h"
+#include "CustomizationsScreen.h"
 #include "../../Minecraft.h"
 #include "../../../network/RakNetInstance.h"
 #include "client/gui/components/Button.h"
@@ -10,6 +11,7 @@ PauseScreen::PauseScreen(bool wasBackPaused)
 	: visibleTime(0),
 	  wasBackPaused(wasBackPaused),
 	  bContinue(NULL),
+	  bCustomizations(NULL),
 	  bQuit(NULL),
 	  bOptions(NULL),
 	  bCredits(NULL)
@@ -18,6 +20,7 @@ PauseScreen::PauseScreen(bool wasBackPaused)
 
 PauseScreen::~PauseScreen() {
 	delete bContinue;
+	delete bCustomizations;
 	delete bQuit;
 	delete bOptions;
 	delete bCredits;
@@ -28,16 +31,19 @@ void PauseScreen::init() {
 	std::string quitText = isMP ? "Disconnect" : "Save and Quit to Title";
 
 	bContinue = new Button(1, 0, 0, 200, 20, "Back to Game");
+	bCustomizations = new Button(5, 0, 0, 200, 20, "Customizations...");
 	bOptions = new Button(2, 0, 0, 98, 20, "Options...");
 	bCredits = new Button(3, 0, 0, 98, 20, "Credits...");
 	bQuit = new Button(4, 0, 0, 200, 20, quitText);
 
 	buttons.push_back(bContinue);
+	buttons.push_back(bCustomizations);
 	buttons.push_back(bOptions);
 	buttons.push_back(bCredits);
 	buttons.push_back(bQuit);
 
 	tabButtons.push_back(bContinue);
+	tabButtons.push_back(bCustomizations);
 	tabButtons.push_back(bOptions);
 	tabButtons.push_back(bCredits);
 	tabButtons.push_back(bQuit);
@@ -50,22 +56,27 @@ void PauseScreen::setupPositions() {
 	bContinue->width = 200;
 	bContinue->height = 20;
 	bContinue->x = centerX - 100;
-	bContinue->y = centerY - 28;
+	bContinue->y = centerY - 40;
+
+	bCustomizations->width = 200;
+	bCustomizations->height = 20;
+	bCustomizations->x = centerX - 100;
+	bCustomizations->y = centerY - 16;
 
 	bOptions->width = 98;
 	bOptions->height = 20;
 	bOptions->x = centerX - 100;
-	bOptions->y = centerY - 4;
+	bOptions->y = centerY + 8;
 
 	bCredits->width = 98;
 	bCredits->height = 20;
 	bCredits->x = centerX + 2;
-	bCredits->y = centerY - 4;
+	bCredits->y = centerY + 8;
 
 	bQuit->width = 200;
 	bQuit->height = 20;
 	bQuit->x = centerX - 100;
-	bQuit->y = centerY + 20;
+	bQuit->y = centerY + 32;
 }
 
 void PauseScreen::tick() {
@@ -87,6 +98,8 @@ void PauseScreen::render(int xm, int ym, float a) {
 void PauseScreen::buttonClicked(Button* button) {
 	if (button->id == bContinue->id) {
 		minecraft->setScreen(NULL);
+	} else if (button->id == bCustomizations->id) {
+		minecraft->setScreen(new CustomizationsScreen());
 	} else if (button->id == bOptions->id) {
 		minecraft->setScreen(new OptionsScreen());
 	} else if (button->id == bCredits->id) {

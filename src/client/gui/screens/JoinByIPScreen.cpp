@@ -11,17 +11,100 @@
 #include "network/ClientSideNetworkHandler.h"
 
 JoinByIPScreen::JoinByIPScreen() :
-    tIP(0, "Server IP"),
-    bHeader(1, "Join on server"),
-	bJoin(  2, "Join Game"),
-	bBack(  3, "")
+    tName(0, "Minecraft Server"),
+    tIP(1, "Server IP"),
+	bJoin(2, "Add Server"),
+	bBack(3, "Cancel")
 {
 	bJoin.active = false;
-	//gamesList->yInertia = 0.5f;
 }
 
 JoinByIPScreen::~JoinByIPScreen()
 {
+}
+
+void JoinByIPScreen::init()
+{
+    tName.text = "Minecraft Server";
+    tIP.text = minecraft->options.getStringValue(OPTIONS_LAST_IP);
+
+	buttons.push_back(&bJoin);
+	buttons.push_back(&bBack);
+
+    textBoxes.push_back(&tName);
+    textBoxes.push_back(&tIP);
+
+	tabButtons.push_back(&bJoin);
+	tabButtons.push_back(&bBack);
+}
+
+void JoinByIPScreen::setupPositions() {
+    int centerX = width / 2;
+    int fieldW = 210;
+    int btnH = 20;
+    int fieldX = centerX - fieldW / 2;
+
+    tName.width = fieldW; tName.height = 20;
+    tName.x = fieldX; tName.y = 52;
+
+    tIP.width = fieldW; tIP.height = 20;
+    tIP.x = fieldX; tIP.y = 96;
+
+    int bottomY = height - 28;
+    int btnW = 145;
+
+    bJoin.width = btnW; bJoin.height = btnH;
+    bJoin.x = centerX - 150; bJoin.y = bottomY;
+
+    bBack.width = btnW; bBack.height = btnH;
+    bBack.x = centerX + 5; bBack.y = bottomY;
+}
+
+void JoinByIPScreen::tick()
+{
+	tName.tick(minecraft);
+	tIP.tick(minecraft);
+	bJoin.active = !tIP.text.empty();
+}
+
+void JoinByIPScreen::render( int xm, int ym, float a )
+{
+	renderDirtBackground(0);
+	glEnable2(GL_BLEND);
+
+	drawCenteredString(minecraft->font, "Add External Server", width / 2, 12, 0xffffffff);
+
+	drawString(minecraft->font, "Server Name", tName.x, tName.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
+	tName.render(minecraft, xm, ym);
+
+	drawString(minecraft->font, "Server Address", tIP.x, tIP.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
+	tIP.render(minecraft, xm, ym);
+
+	fill(0, height - 34, width, height - 33, 0xff555555);
+
+	for (unsigned int i = 0; i < buttons.size(); i++) {
+		buttons[i]->render(minecraft, xm, ym);
+	}
+
+	glDisable2(GL_BLEND);
+}
+
+void JoinByIPScreen::mouseClicked(int x, int y, int buttonNum)
+{
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        if (tName.pointInside(x, y)) {
+            tName.setFocus(minecraft);
+            tIP.loseFocus(minecraft);
+        } else if (tIP.pointInside(x, y)) {
+            tIP.setFocus(minecraft);
+            tName.loseFocus(minecraft);
+        } else {
+            tName.loseFocus(minecraft);
+            tIP.loseFocus(minecraft);
+        }
+    }
+
+    Screen::mouseClicked(x, y, buttonNum);
 }
 
 void JoinByIPScreen::buttonClicked(Button* button)
@@ -42,7 +125,7 @@ void JoinByIPScreen::buttonClicked(Button* button)
 	if (button->id == bBack.id)
 	{
 		minecraft->cancelLocateMultiplayer();
-		minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
+		minecraft->screenChooser.setScreen(SCREEN_JOINGAME);
 	}
 }
 
@@ -50,67 +133,9 @@ bool JoinByIPScreen::handleBackEvent(bool isDown)
 {
 	if (!isDown)
 	{
-		minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
+		minecraft->screenChooser.setScreen(SCREEN_JOINGAME);
 	}
 	return true;
-}
-
-void JoinByIPScreen::tick()
-{
-	Screen::tick();
-	bJoin.active = !tIP.text.empty();
-}
-
-void JoinByIPScreen::init()
-{
-    ImageDef def;
-	def.name = "gui/touchgui.png";
-	def.width = 34;
-	def.height = 26;
-
-	def.setSrc(IntRectangle(150, 0, (int)def.width, (int)def.height));
-	bBack.setImageDef(def, true);
-
-	buttons.push_back(&bJoin);
-	buttons.push_back(&bBack);
-	buttons.push_back(&bHeader);
-    
-    textBoxes.push_back(&tIP);
-#ifdef ANDROID
-	tabButtons.push_back(&bJoin);
-	tabButtons.push_back(&bBack);
-    tabButtons.push_back(&bHeader);
-#endif
-
-	tIP.text = minecraft->options.getStringValue(OPTIONS_LAST_IP);
-}
-
-void JoinByIPScreen::setupPositions() {
-    int tIpDiff = 40;
-    
-	bJoin.y   = height * 2 / 3;
-	bBack.y   = 0;
-	bHeader.y = 0;
-
-	// Center buttons
-	//bJoin.x = width / 2 - 4 - bJoin.w;
-	bBack.x = width - bBack.width;//width / 2 + 4;
-    
-    bJoin.x = (width - bJoin.width) / 2;
-	
-    bHeader.x = 0;
-	bHeader.width = width - bBack.width;
-
-    tIP.width = bJoin.width + tIpDiff;
-    tIP.height = 16;
-    tIP.x = bJoin.x - tIpDiff / 2;
-    tIP.y     = ((height - bJoin.height) / 2) - tIP.height - 4;
-}
-
-void JoinByIPScreen::render( int xm, int ym, float a )
-{
-	renderBackground();
-	Screen::render(xm, ym, a);
 }
 
 void JoinByIPScreen::keyPressed(int eventKey)

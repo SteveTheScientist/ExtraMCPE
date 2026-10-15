@@ -280,7 +280,7 @@ void SelectWorldScreen::init()
 
 void SelectWorldScreen::setupPositions() {
 	int yBase = height - 28;
-	int btnW = 84;
+	int btnW = 98;
 	int gap = 6;
 	int totalW = btnW * 3 + gap * 2;
 	int startX = (width - totalW) / 2;

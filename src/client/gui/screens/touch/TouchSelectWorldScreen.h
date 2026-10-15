@@ -105,10 +105,10 @@ private:
 	void loadLevelSource();
 	std::string getUniqueLevelName(const std::string& level);
 
-	TButton bDelete;
-	TButton bCreate;
+	Button bDelete;
+	Button bCreate;
 	THeader bHeader;
-	TButton bBack;
+	Button bBack;
 	Button bWorldView;
 	TouchWorldSelectionList* worldsList;
 	LevelSummaryList levels;

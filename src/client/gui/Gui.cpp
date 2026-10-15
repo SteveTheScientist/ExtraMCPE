@@ -1060,20 +1060,8 @@ float Gui::getColoredWidth(Font* font, const std::string& text) {
 }
 
 void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isChatting, Font* font ) {
-	//        if (minecraft.screen instanceof ChatScreen) {
-	//            max = 20;
-	//            isChatting = true;
-	//        }
-	//
-	//        glEnable(GL_BLEND);
-	//        glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//        glDisable(GL_ALPHA_TEST);
-	//
-	//        glPushMatrix2();
-	//        glTranslatef2(0, screenHeight - 48, 0);
-	//        // glScalef2(1.0f / ssc.scale, 1.0f / ssc.scale, 1);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	int baseY = screenHeight - 48;
+	int baseY = screenHeight - (isChatting ? 28 : 48);
 	int start = chatScrollOffset;
 	if (start < 0) start = 0;
 	for (unsigned int i = 0; i < max; i++) {
@@ -1093,19 +1081,16 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 			if (isChatting) alpha = 255;
 
 			if (alpha > 0) {
-				const float x = 2;
+				const float x = 4;
 				const float y = (float)(baseY - i * 9);
 				std::string msg = message.message;
-				this->fill(x, y - 1, x + MAX_MESSAGE_WIDTH, y + 8, (alpha / 2) << 24);
+				float msgW = getColoredWidth(font, msg) + 4;
+				if (msgW < 120) msgW = 120;
+				if (msgW > MAX_MESSAGE_WIDTH) msgW = MAX_MESSAGE_WIDTH;
+
+				this->fill(x - 2, y - 1, x + msgW, y + 8, (isChatting ? 0x90000000 : ((alpha / 2) << 24)));
 				glEnable(GL_BLEND);
 
-				// special-case join/leave announcements
-				int baseColor = 0xffffff;
-				if (msg.find(" joined the game") != std::string::npos ||
-					msg.find(" left the game") != std::string::npos) {
-						baseColor = 0xffff00; // yellow
-				}
-				// replace previous logic; allow full colour tags now
 				Gui::drawColoredString(font, msg, x, y, alpha);
 			}
 		}

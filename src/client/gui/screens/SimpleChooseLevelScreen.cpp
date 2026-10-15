@@ -70,7 +70,7 @@ void SimpleChooseLevelScreen::setupPositions()
     bGamemode->x = fieldX; bGamemode->y = 120;
 
     bCheats->width = fieldW; bCheats->height = btnH;
-    bCheats->x = fieldX; bCheats->y = 156;
+    bCheats->x = fieldX; bCheats->y = 144;
 
     // Bottom action buttons
     int bottomY = height - 28;
@@ -103,11 +103,6 @@ void SimpleChooseLevelScreen::render( int xm, int ym, float a )
 
     drawString(minecraft->font, "Seed for the World Generator", tSeed.x, tSeed.y - Font::DefaultLineHeight - 1, 0xffa0a0a0);
     tSeed.render(minecraft, xm, ym);
-    drawString(minecraft->font, "Leave blank for random seed", tSeed.x, tSeed.y + tSeed.height + 2, 0xff808080);
-
-    // Mode description
-    const char* modeDesc = (gamemode == GameType::Survival) ? "Mobs, health and gather resources" : "Unlimited resources and flying";
-    drawCenteredString(minecraft->font, modeDesc, width / 2, bGamemode->y + bGamemode->height + 2, 0xff808080);
 
     // Separator line above bottom buttons
     fill(0, height - 34, width, height - 33, 0xff555555);

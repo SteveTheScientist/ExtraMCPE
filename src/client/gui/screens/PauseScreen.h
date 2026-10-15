@@ -24,6 +24,7 @@ private:
 	bool wasBackPaused;
 
 	Button* bContinue;
+	Button* bCustomizations;
 	Button* bQuit;
 	Button* bOptions;
 	Button* bCredits;
