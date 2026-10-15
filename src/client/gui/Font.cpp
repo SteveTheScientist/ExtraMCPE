@@ -68,6 +68,10 @@ void Font::init( Options* options )
 	if (cellW <= 0) cellW = 8;
 	if (cellH <= 0) cellH = 8;
 
+	// In Bedrock / Minecraft font textures, row (cellH - 1) of each glyph cell is often reserved
+	// for metadata / width marks or empty baseline padding.
+	int scanH = (cellH > 1) ? (cellH - 1) : cellH;
+
 	const int numChars = _rows * _cols;
 	for (int i = 0; i < numChars && i < 256; i++) {
 		int xt = i % _cols;
@@ -84,7 +88,7 @@ void Font::init( Options* options )
 			int px = _x + xt * cellW + x;
 			bool emptyColumn = true;
 
-			for (int y = 0; y < cellH && emptyColumn; y++) {
+			for (int y = 0; y < scanH && emptyColumn; y++) {
 				int py = _y + yt * cellH + y;
 				if (px >= imgW || py >= imgH) continue;
 
@@ -113,10 +117,10 @@ void Font::init( Options* options )
 			if (cellW != 8 && cellW > 0) {
 				w = (w * 8) / cellW;
 			}
-			// Special-case narrow characters like 'f', 'i', 'j', 'l', 't', 'I', '!', '.', ',', etc.
-			// Standard Minecraft font widths: 'i', 'l', '!', '.', ',', ';', ':', '\'', '|' are narrower.
+
+			// Calculate advancement width based on standard Minecraft glyph width metrics
 			if (i == 'i' || i == 'l' || i == '!' || i == '.' || i == ',' || i == ';' || i == ':' || i == '\'' || i == '|') {
-				charWidths[i] = w;
+				charWidths[i] = w + 1;
 			} else {
 				charWidths[i] = w + 1;
 			}
@@ -367,10 +371,14 @@ void Font::buildChar( unsigned char i, float x /*= 0*/, float y /*=0*/ )
 	float col = (float)(i % _cols);
 	float row = (float)(i / _cols);
 
+	// Each glyph tile is 8x8 in a 128x128 texture atlas.
+	// Row 7 (the bottom pixel row of the 8x8 cell) is used for glyph width metadata.
+	// To avoid rendering the bottom metadata line, mapped V range is [v0 .. v0 + 7.0f/128.0f]
+	// with screen quad height sh = 8.0f (or 7.0f). Mapped v1 excludes row 7.
 	float u0 = (col * 8.0f) / 128.0f;
 	float v0 = (row * 8.0f) / 128.0f;
 	float u1 = u0 + (7.99f / 128.0f);
-	float v1 = v0 + (7.99f / 128.0f);
+	float v1 = v0 + (7.00f / 128.0f);
 
 	float sw = 8.0f;
 	float sh = 8.0f;
