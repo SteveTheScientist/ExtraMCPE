@@ -3,20 +3,27 @@
 #include "PauseScreen.h"
 #include "../../Minecraft.h"
 #include "platform/input/Keyboard.h"
+#include "platform/input/Mouse.h"
 
 CustomizationsScreen::CustomizationsScreen()
-    : btnDone(NULL)
+    : btnDone(NULL),
+      sliderFov(NULL)
 {
 }
 
 CustomizationsScreen::~CustomizationsScreen() {
     delete btnDone;
+    delete sliderFov;
 }
 
 void CustomizationsScreen::init() {
     btnDone = new Button(100, 0, 0, 200, 20, "Done");
     buttons.push_back(btnDone);
     tabButtons.push_back(btnDone);
+
+    sliderFov = new OptionControl(101, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Field of View", false, 0.0f, 1.0f);
+    sliderFov->updateLabel(minecraft);
+    buttons.push_back(sliderFov);
 }
 
 void CustomizationsScreen::setupPositions() {
@@ -25,6 +32,31 @@ void CustomizationsScreen::setupPositions() {
         btnDone->height = 20;
         btnDone->x = (width - 200) / 2;
         btnDone->y = height - 28;
+    }
+
+    if (sliderFov) {
+        sliderFov->width = 200;
+        sliderFov->height = 20;
+        sliderFov->x = (width - 200) / 2;
+        sliderFov->y = height / 2 - 10;
+        sliderFov->visible = true;
+        sliderFov->updateLabel(minecraft);
+    }
+}
+
+void CustomizationsScreen::tick() {
+    super::tick();
+
+    int xm = Mouse::getX();
+    int ym = Mouse::getY();
+    toGUICoordinate(xm, ym);
+
+    if (sliderFov && sliderFov->isDraggingSlider) {
+        if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+            sliderFov->updateSliderValue(minecraft, xm);
+        } else {
+            sliderFov->isDraggingSlider = false;
+        }
     }
 }
 
@@ -52,6 +84,17 @@ void CustomizationsScreen::buttonClicked(Button* button) {
             minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
         }
     }
+}
+
+void CustomizationsScreen::mouseClicked(int x, int y, int buttonNum) {
+    super::mouseClicked(x, y, buttonNum);
+}
+
+void CustomizationsScreen::mouseReleased(int x, int y, int buttonNum) {
+    if (sliderFov) {
+        sliderFov->isDraggingSlider = false;
+    }
+    super::mouseReleased(x, y, buttonNum);
 }
 
 void CustomizationsScreen::keyPressed(int eventKey) {

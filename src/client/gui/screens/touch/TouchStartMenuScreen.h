@@ -27,6 +27,7 @@ private:
 
 	Button* bHost;
 	Button* bJoin;
+	Button* bCustomizations;
 	Button* bOptions;
 	Button* bCredits;
 	Button* bQuit;

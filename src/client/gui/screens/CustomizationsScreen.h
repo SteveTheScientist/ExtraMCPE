@@ -3,6 +3,7 @@
 
 #include "../Screen.h"
 #include "../components/Button.h"
+#include "OptionsScreen.h"
 
 class CustomizationsScreen : public Screen {
     typedef Screen super;
@@ -12,12 +13,16 @@ public:
 
     virtual void init() override;
     virtual void setupPositions() override;
+    virtual void tick() override;
     virtual void render(int xm, int ym, float a) override;
     virtual void buttonClicked(Button* button) override;
+    virtual void mouseClicked(int x, int y, int buttonNum) override;
+    virtual void mouseReleased(int x, int y, int buttonNum) override;
     virtual void keyPressed(int eventKey) override;
 
 private:
     Button* btnDone;
+    OptionControl* sliderFov;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__CustomizationsScreen_H__*/

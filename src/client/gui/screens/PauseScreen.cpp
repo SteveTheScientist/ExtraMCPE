@@ -90,7 +90,7 @@ void PauseScreen::render(int xm, int ym, float a) {
 	int alpha2 = (int)(0xe0 * openAnimationProgress);
 	fillGradient(0, 0, width, height, (alpha1 << 24) | 0x0a0a0a, (alpha2 << 24) | 0x141414);
 
-	drawCenteredString(font, "Game Menu", width / 2, height / 2 - 50, 0xffffffff);
+	drawCenteredString(font, "Game Menu", width / 2, height / 2 - 62, 0xffffffff);
 
 	super::render(xm, ym, a);
 }
