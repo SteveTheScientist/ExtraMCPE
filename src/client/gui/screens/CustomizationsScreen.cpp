@@ -1,4 +1,5 @@
 #include "CustomizationsScreen.h"
+#include "CloudsScreen.h"
 #include "StartMenuScreen.h"
 #include "PauseScreen.h"
 #include "../../Minecraft.h"
@@ -44,6 +45,7 @@ void CustomizationsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -193,6 +195,10 @@ void CustomizationsScreen::buttonClicked(Button* button) {
             ctrl->toggleValue(minecraft);
             minecraft->options.save();
             setupPositions();
+        } else if (ctrl->controlType == CONTROL_ACTION) {
+            if (ctrl->actionId == ACTION_CLOUDS) {
+                minecraft->setScreen(new CloudsScreen());
+            }
         }
     }
 }

@@ -138,6 +138,23 @@ private:
 
 //    /*public*/ std::vector<TileEntity*> renderableTileEntities;
     Textures* textures;
+
+    struct CloudVertex {
+        float x, y, z;
+        float u, v;
+        float ny;
+        float shade;
+    };
+
+    std::vector<CloudVertex> m_cloudVertices;
+    int m_cachedXCell;
+    int m_cachedZCell;
+    float m_cachedThickness;
+    bool m_cachedFlatShading;
+    bool m_cachedTallClouds;
+    int* m_cloudPixels;
+    int m_cloudTexW;
+    int m_cloudTexH;
 //    /*private*/ TileRenderer tileRenderer;
 //    /*private*/ IntBuffer occlusionCheckIds;
 };

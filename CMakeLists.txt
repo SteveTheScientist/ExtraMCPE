@@ -413,3 +413,6 @@ endif()
 
 message(STATUS "Compiling with the flags:")
 message(STATUS "  PLATFORM=" ${PLATFORM_CPP})
+
+add_executable(test_clouds test/test_clouds.cpp)
+target_include_directories(test_clouds PUBLIC "${CMAKE_SOURCE_DIR}/src")

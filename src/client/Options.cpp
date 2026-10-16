@@ -82,6 +82,12 @@ OptionInt menuStyle("menuStyle",0, 0, 2);
 
 OptionBool windowScale("windowScale", false);
 
+OptionBool tallClouds("tall_clouds", true);
+OptionFloat cloudThickness("cloud_thickness", 2.5f, 1.0f, 4.0f);
+OptionFloat cloudFade("cloud_fade", 1.0f, 0.0f, 1.0f);
+OptionFloat cloudOpacity("cloud_opacity", 0.8f, 0.4f, 1.0f);
+OptionBool cloudFlatShading("cloud_flat_shading", true);
+
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
 OptionInt keyBack("key.back", Keyboard::KEY_S);
@@ -206,6 +212,12 @@ void Options::initTable() {
 
 	m_options[OPTIONS_AUTOJUMP] = &autoJump;
 	m_options[OPTIONS_LAST_IP] = &lastIp;
+
+	m_options[OPTIONS_TALL_CLOUDS] = &tallClouds;
+	m_options[OPTIONS_CLOUD_THICKNESS] = &cloudThickness;
+	m_options[OPTIONS_CLOUD_FADE] = &cloudFade;
+	m_options[OPTIONS_CLOUD_OPACITY] = &cloudOpacity;
+	m_options[OPTIONS_CLOUD_FLAT_SHADING] = &cloudFlatShading;
 }
 
 void Options::set(OptionId key, bool value) {

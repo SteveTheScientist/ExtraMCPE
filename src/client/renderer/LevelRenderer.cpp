@@ -1,4 +1,5 @@
 #include "LevelRenderer.h"
+#include "CloudUtils.h"
 
 #include "DirtyChunkSorter.h"
 #include "DistanceChunkSorter.h"
@@ -66,7 +67,15 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 	ticks(0),
 	skyList(0), starList(0), darkList(0),
 	tileRenderer(NULL),
-	destroyProgress(0)
+	destroyProgress(0),
+	m_cachedXCell(-999999),
+	m_cachedZCell(-999999),
+	m_cachedThickness(-1.0f),
+	m_cachedFlatShading(false),
+	m_cachedTallClouds(false),
+	m_cloudPixels(NULL),
+	m_cloudTexW(0),
+	m_cloudTexH(0)
 {
 #ifdef OPENGL_ES
 	int maxChunksWidth = 2 * LevelConstants::LEVEL_WIDTH / CHUNK_SIZE + 1;
@@ -94,6 +103,9 @@ LevelRenderer::~LevelRenderer()
 	tileRenderer = NULL;
 
 	deleteChunks();
+
+	delete[] m_cloudPixels;
+	m_cloudPixels = NULL;
 
 #ifdef OPENGL_ES
 	glDeleteBuffers(numListsOrBuffers, chunkBuffers);
@@ -131,7 +143,7 @@ void LevelRenderer::generateSky() {
 	yy = (float) (-16);
 	t.begin();
 
-	// pretty much the same thing as the sky one above except uses inverted values to generate the void plane. 
+	// pretty much the same thing as the sky one above except uses inverted values to generate the void plane.
 
 	voidVertexCount = 0;
 	for (int xx = -s * d; xx <= s * d; xx += s) {
@@ -188,7 +200,7 @@ void LevelRenderer::allChanged()
 #ifndef __APPLE__
 	bool tint = mc->options.getBooleanValue(OPTIONS_FOLIAGE_TINT);
 	bool sideTint = mc->options.getBooleanValue(OPTIONS_TINTED_SIDE);
-#else 
+#else
 	bool tint = false, sideTint = false;
 #endif
 	FoliageColor::setUseTint(tint);
@@ -350,7 +362,7 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 			level->dimension->FogType = currentFogType; // use new fog stuff
 		}
 
-		allChanged(); 
+		allChanged();
 	}
 	bool SmoothLightState = mc->options.getBooleanValue(OPTIONS_AMBIENT_OCCLUSION);
 	if (SmoothLightState != mc->useAmbientOcclusion){
@@ -367,7 +379,7 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 		FoliageColor::setUseTint(tint);
 		GrassColor::setUseTint(tint);
 
-		allChanged(); 
+		allChanged();
 	}
 
 
@@ -379,7 +391,7 @@ int LevelRenderer::render( Mob* player, int layer, float alpha )
 
 		TileRenderer::setUseTint(sideTint);
 
-		allChanged(); 
+		allChanged();
 	}
 
 
@@ -1161,7 +1173,7 @@ void LevelRenderer::renderSky(float alpha) {
 		glDisable(GL_FOG);
 	glDisable(GL_ALPHA_TEST);
 
-	// re ported this again from beta 1.6.6, thanks to the mcpe 0.1 decomp team's code for some bit of help about the void layer - shredder 
+	// re ported this again from beta 1.6.6, thanks to the mcpe 0.1 decomp team's code for some bit of help about the void layer - shredder
 
 	// Sunrise
 	if (mc->options.getBooleanValue(OPTIONS_BEAUTIFUL_SKY)) {
@@ -1225,7 +1237,7 @@ void LevelRenderer::renderSky(float alpha) {
 		t.vertexUV(ss, -100.0f, -ss, 0.0f, 0.0f);
 		t.vertexUV(-ss, -100.0f, -ss, 1.0f, 0.0f);
 		t.draw();
-	
+
 
 	glDisable(GL_TEXTURE_2D);
 
@@ -1237,7 +1249,7 @@ void LevelRenderer::renderSky(float alpha) {
 	}
 	}
 
-	
+
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
@@ -1260,8 +1272,20 @@ void LevelRenderer::renderSky(float alpha) {
 	}
 }
 
+static bool isCloudCell(int u, int v, const int* pixels, int w, int h) {
+	if (!pixels || w <= 0 || h <= 0) return true;
+	u = (u % w + w) % w;
+	v = (v % h + h) % h;
+	int pixel = pixels[v * w + u];
+	int a = (pixel >> 24) & 0xff;
+	return a > 128;
+}
+
 void LevelRenderer::renderClouds( float alpha ) {
-	//if (!mc->level->dimension->isNaturalDimension()) return;
+	if (mc->options.getBooleanValue(OPTIONS_TALL_CLOUDS)) {
+		renderAdvancedClouds(alpha);
+		return;
+	}
 	if (mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS) && mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
 		renderAdvancedClouds(alpha);
 		return;
@@ -1273,7 +1297,6 @@ void LevelRenderer::renderClouds( float alpha ) {
 	int d = 256 / s;
 	Tesselator& t = Tesselator::instance;
 
-	//glBindTexture(GL_TEXTURE_2D, texturesloadTexture("/environment/clouds.png"));
 	textures->loadAndBindTexture("environment/clouds.png");
 
 	glEnable(GL_BLEND);
@@ -1294,7 +1317,7 @@ void LevelRenderer::renderClouds( float alpha ) {
 	xo -= xOffs * 2048;
 	zo -= zOffs * 2048;
 
-	float yy = /*level.dimension.getCloudHeight()*/ 128 - yOffs + 0.33f;//mc->player->y + 1;
+	float yy = 128 - yOffs + 0.33f;
 	float uo = (float) (xo * scale);
 	float vo = (float) (zo * scale);
 	t.begin();
@@ -1315,8 +1338,145 @@ void LevelRenderer::renderClouds( float alpha ) {
 }
 
 void LevelRenderer::renderAdvancedClouds(float alpha) {
+	bool tallClouds = mc->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
+	if (!tallClouds) {
+		glDisable(GL_CULL_FACE);
 
-	// ported from java beta, tesselation code for the 3d clouds, renders broken if mcpe sky rendering option is used - shredder
+		float px = mc->player->xOld + (mc->player->x - mc->player->xOld) * alpha;
+		float py = mc->player->yOld + (mc->player->y - mc->player->yOld) * alpha;
+		float pz = mc->player->zOld + (mc->player->z - mc->player->zOld) * alpha;
+
+		Tesselator& t = Tesselator::instance;
+		float ss = 12.0f;
+		float h = 4.0f;
+
+		float cloudTime = (float)ticks + alpha;
+
+		float xo = (px + cloudTime * 0.03f) / ss;
+		float zo = pz / ss + 0.33f;
+
+		float yy = 108.0f - py + 0.33f;
+
+		int xWraps = Mth::floor(xo / 2048.0);
+		int zWraps = Mth::floor(zo / 2048.0);
+		xo -= xWraps * 2048;
+		zo -= zWraps * 2048;
+
+		textures->loadAndBindTexture("environment/clouds.png");
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		Vec3 cc = level->getCloudColor(alpha);
+		float cr = cc.x;
+		float cg = cc.y;
+		float cb = cc.z;
+
+		float uvScale = 1.0f / 256.0f;
+		float uo = (float)Mth::floor(xo) * uvScale;
+		float vo = (float)Mth::floor(zo) * uvScale;
+
+		float xOffs = (float)(xo - Mth::floor(xo));
+		float zOffs = (float)(zo - Mth::floor(zo));
+
+		int D = 8;
+		int radius = 3;
+		float e = 1.0f / 1024.0f;
+
+		glPushMatrix();
+		glScalef(ss, 1.0f, ss);
+
+		for (int pass = 0; pass < 2; pass++) {
+
+			if (pass == 0) glColorMask(false, false, false, false);
+			else glColorMask(true, true, true, true);
+
+			for (int xPos = -radius + 1; xPos <= radius; xPos++) {
+				for (int zPos = -radius + 1; zPos <= radius; zPos++) {
+					t.begin();
+					float xx = (float)(xPos * D);
+					float zz = (float)(zPos * D);
+					float xp = xx - xOffs;
+					float zp = zz - zOffs;
+
+
+					if (yy > -h - 1.0f) {
+						t.color(cr * 0.7f, cg * 0.7f, cb * 0.7f, 0.8f);
+						t.normal(0.0f, -1.0f, 0.0f);
+						t.vertexUV(xp + 0, yy + 0, zp + D, (xx + 0) * uvScale + uo, (zz + D) * uvScale + vo);
+						t.vertexUV(xp + D, yy + 0, zp + D, (xx + D) * uvScale + uo, (zz + D) * uvScale + vo);
+						t.vertexUV(xp + D, yy + 0, zp + 0, (xx + D) * uvScale + uo, (zz + 0) * uvScale + vo);
+						t.vertexUV(xp + 0, yy + 0, zp + 0, (xx + 0) * uvScale + uo, (zz + 0) * uvScale + vo);
+					}
+
+
+					if (yy <= h + 1.0f) {
+						t.color(cr, cg, cb, 0.8f);
+						t.normal(0.0f, 1.0f, 0.0f);
+						t.vertexUV(xp + 0, yy + h - e, zp + D, (xx + 0) * uvScale + uo, (zz + D) * uvScale + vo);
+						t.vertexUV(xp + D, yy + h - e, zp + D, (xx + D) * uvScale + uo, (zz + D) * uvScale + vo);
+						t.vertexUV(xp + D, yy + h - e, zp + 0, (xx + D) * uvScale + uo, (zz + 0) * uvScale + vo);
+						t.vertexUV(xp + 0, yy + h - e, zp + 0, (xx + 0) * uvScale + uo, (zz + 0) * uvScale + vo);
+					}
+
+					t.color(cr * 0.9f, cg * 0.9f, cb * 0.9f, 0.8f);
+
+
+					if (xPos > -1) {
+						t.normal(-1.0f, 0.0f, 0.0f);
+						for (int i = 0; i < D; i++) {
+							t.vertexUV(xp + i + 0, yy + 0, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
+							t.vertexUV(xp + i + 0, yy + h, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
+							t.vertexUV(xp + i + 0, yy + h, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
+							t.vertexUV(xp + i + 0, yy + 0, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
+						}
+					}
+					if (xPos <= 1) {
+						t.normal(1.0f, 0.0f, 0.0f);
+						for (int i = 0; i < D; i++) {
+							t.vertexUV(xp + i + 1 - e, yy + 0, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
+							t.vertexUV(xp + i + 1 - e, yy + h, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
+							t.vertexUV(xp + i + 1 - e, yy + h, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
+							t.vertexUV(xp + i + 1 - e, yy + 0, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
+						}
+					}
+
+					t.color(cr * 0.8f, cg * 0.8f, cb * 0.8f, 0.8f);
+
+
+					if (zPos > -1) {
+						t.normal(0.0f, 0.0f, -1.0f);
+						for (int i = 0; i < D; i++) {
+							t.vertexUV(xp + 0, yy + h, zp + i + 0, (xx + 0) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
+							t.vertexUV(xp + D, yy + h, zp + i + 0, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
+							t.vertexUV(xp + D, yy + 0, zp + i + 0, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
+							t.vertexUV(xp + 0, yy + 0, zp + i + 0, (xx + 0) * uvScale + uo, (zz + 0) * uvScale + vo);
+						}
+					}
+					if (zPos <= 1) {
+						t.normal(0.0f, 0.0f, 1.0f);
+						for (int i = 0; i < D; i++) {
+							t.vertexUV(xp + 0, yy + h, zp + i + 1 - e, (xx + 0) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
+							t.vertexUV(xp + D, yy + h, zp + i + 1 - e, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
+							t.vertexUV(xp + D, yy + 0, zp + i + 1 - e, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
+							t.vertexUV(xp + 0, yy + 0, zp + i + 1 - e, (xx + 0) * uvScale + uo, (zz + 0) * uvScale + vo);
+						}
+					}
+					t.endOverrideAndDraw();
+				}
+			}
+		}
+
+		glPopMatrix();
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		glDisable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
+		return;
+	}
+
+	float thicknessScale = mc->options.getProgressValue(OPTIONS_CLOUD_THICKNESS);
+	float cloudFade = mc->options.getProgressValue(OPTIONS_CLOUD_FADE);
+	float opacity = mc->options.getProgressValue(OPTIONS_CLOUD_OPACITY);
+	bool flatShading = mc->options.getBooleanValue(OPTIONS_CLOUD_FLAT_SHADING);
 
 	glDisable(GL_CULL_FACE);
 
@@ -1325,8 +1485,8 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	float pz = mc->player->zOld + (mc->player->z - mc->player->zOld) * alpha;
 
 	Tesselator& t = Tesselator::instance;
-	float ss = 12.0f; 
-	float h = 4.0f;  
+	float ss = 12.0f;
+	float h = 4.0f * thicknessScale;
 
 	float cloudTime = (float)ticks + alpha;
 
@@ -1340,108 +1500,154 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	xo -= xWraps * 2048;
 	zo -= zWraps * 2048;
 
-	textures->loadAndBindTexture("environment/clouds.png");
+	int xCell = Mth::floor(xo);
+	int zCell = Mth::floor(zo);
+	float xOffs = (float)(xo - xCell);
+	float zOffs = (float)(zo - zCell);
+
+	TextureId cloudTexId = textures->loadAndBindTexture("environment/clouds.png");
+
+	if (!m_cloudPixels) {
+		m_cloudPixels = textures->loadTexturePixels(cloudTexId, "environment/clouds.png");
+		const TextureData* texData = textures->getTemporaryTextureData(cloudTexId);
+		if (texData) {
+			m_cloudTexW = texData->w;
+			m_cloudTexH = texData->h;
+		} else {
+			m_cloudTexW = 256;
+			m_cloudTexH = 256;
+		}
+	}
+
+	bool needsRebuild = (xCell != m_cachedXCell || zCell != m_cachedZCell ||
+	                     thicknessScale != m_cachedThickness ||
+	                     flatShading != m_cachedFlatShading ||
+	                     tallClouds != m_cachedTallClouds);
+
+	if (needsRebuild) {
+		m_cloudVertices.clear();
+
+		int D = 8;
+		int radius = 3;
+		float e = 1.0f / 1024.0f;
+		float uvScale = 1.0f / 256.0f;
+
+		for (int xPos = -radius + 1; xPos <= radius; xPos++) {
+			for (int zPos = -radius + 1; zPos <= radius; zPos++) {
+				int xx = xPos * D;
+				int zz = zPos * D;
+
+				for (int i = 0; i < D; i++) {
+					for (int j = 0; j < D; j++) {
+						int texX = xx + i + xCell;
+						int texZ = zz + j + zCell;
+
+						if (!isCloudCell(texX, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH))
+							continue;
+
+						float gridX = (float)(xx + i);
+						float gridZ = (float)(zz + j);
+
+						float u0 = (float)texX * uvScale;
+						float u1 = (float)(texX + 1) * uvScale;
+						float v0 = (float)texZ * uvScale;
+						float v1 = (float)(texZ + 1) * uvScale;
+
+						// Bottom Face
+						float shadeB = flatShading ? 1.0f : 0.7f;
+						m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 1.0f, u0, v1, 0.0f, shadeB});
+						m_cloudVertices.push_back({gridX + 1.0f, 0.0f, gridZ + 1.0f, u1, v1, 0.0f, shadeB});
+						m_cloudVertices.push_back({gridX + 1.0f, 0.0f, gridZ + 0.0f, u1, v0, 0.0f, shadeB});
+						m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 0.0f, u0, v0, 0.0f, shadeB});
+
+						// Top Face
+						float shadeT = 1.0f;
+						m_cloudVertices.push_back({gridX + 0.0f, h - e, gridZ + 1.0f, u0, v1, 1.0f, shadeT});
+						m_cloudVertices.push_back({gridX + 1.0f, h - e, gridZ + 1.0f, u1, v1, 1.0f, shadeT});
+						m_cloudVertices.push_back({gridX + 1.0f, h - e, gridZ + 0.0f, u1, v0, 1.0f, shadeT});
+						m_cloudVertices.push_back({gridX + 0.0f, h - e, gridZ + 0.0f, u0, v0, 1.0f, shadeT});
+
+						// West (-X) Face
+						if (!isCloudCell(texX - 1, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+							float shadeW = flatShading ? 1.0f : 0.9f;
+							float uSide = (float)texX * uvScale + 0.5f * uvScale;
+							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 1.0f, uSide, v1, 0.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 1.0f, uSide, v1, 1.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 0.0f, uSide, v0, 1.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 0.0f, uSide, v0, 0.0f, shadeW});
+						}
+
+						// East (+X) Face
+						if (!isCloudCell(texX + 1, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+							float shadeE = flatShading ? 1.0f : 0.9f;
+							float uSide = (float)texX * uvScale + 0.5f * uvScale;
+							m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, gridZ + 1.0f, uSide, v1, 0.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, h, gridZ + 1.0f, uSide, v1, 1.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, h, gridZ + 0.0f, uSide, v0, 1.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, gridZ + 0.0f, uSide, v0, 0.0f, shadeE});
+						}
+
+						// North (-Z) Face
+						if (!isCloudCell(texX, texZ - 1, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+							float shadeN = flatShading ? 1.0f : 0.8f;
+							float vSide = (float)texZ * uvScale + 0.5f * uvScale;
+							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 0.0f, u0, vSide, 1.0f, shadeN});
+							m_cloudVertices.push_back({gridX + 1.0f, h, gridZ + 0.0f, u1, vSide, 1.0f, shadeN});
+							m_cloudVertices.push_back({gridX + 1.0f, 0.0f, gridZ + 0.0f, u1, vSide, 0.0f, shadeN});
+							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 0.0f, u0, vSide, 0.0f, shadeN});
+						}
+
+						// South (+Z) Face
+						if (!isCloudCell(texX, texZ + 1, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+							float shadeS = flatShading ? 1.0f : 0.8f;
+							float vSide = (float)texZ * uvScale + 0.5f * uvScale;
+							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 1.0f - e, u0, vSide, 1.0f, shadeS});
+							m_cloudVertices.push_back({gridX + 1.0f, h, gridZ + 1.0f - e, u1, vSide, 1.0f, shadeS});
+							m_cloudVertices.push_back({gridX + 1.0f, 0.0f, gridZ + 1.0f - e, u1, vSide, 0.0f, shadeS});
+							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 1.0f - e, u0, vSide, 0.0f, shadeS});
+						}
+					}
+				}
+			}
+		}
+
+		m_cachedXCell = xCell;
+		m_cachedZCell = zCell;
+		m_cachedThickness = thicknessScale;
+		m_cachedFlatShading = flatShading;
+		m_cachedTallClouds = tallClouds;
+	}
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Vec3 cc = level->getCloudColor(alpha);
-	float cr = cc.x;
-	float cg = cc.y;
-	float cb = cc.z;
+	float cr = (float)cc.x;
+	float cg = (float)cc.y;
+	float cb = (float)cc.z;
 
-	float uvScale = 1.0f / 256.0f;
-	float uo = (float)Mth::floor(xo) * uvScale;
-	float vo = (float)Mth::floor(zo) * uvScale;
-
-	float xOffs = (float)(xo - Mth::floor(xo));
-	float zOffs = (float)(zo - Mth::floor(zo));
-
-	int D = 8;      
-	int radius = 3;  
-	float e = 1.0f / 1024.0f; 
+	float rel = 108.0f - py;
+	float alphaBottom = cloudAlpha(0.0f, rel, 0.8f, opacity, cloudFade);
+	float alphaTop = cloudAlpha(1.0f, rel, 0.8f, opacity, cloudFade);
 
 	glPushMatrix();
 	glScalef(ss, 1.0f, ss);
+	glTranslatef(-xOffs, yy, -zOffs);
 
 	for (int pass = 0; pass < 2; pass++) {
-
 		if (pass == 0) glColorMask(false, false, false, false);
 		else glColorMask(true, true, true, true);
 
-		for (int xPos = -radius + 1; xPos <= radius; xPos++) {
-			for (int zPos = -radius + 1; zPos <= radius; zPos++) {
-				t.begin();
-				float xx = (float)(xPos * D);
-				float zz = (float)(zPos * D);
-				float xp = xx - xOffs;
-				float zp = zz - zOffs;
-
-
-				if (yy > -h - 1.0f) {
-					t.color(cr * 0.7f, cg * 0.7f, cb * 0.7f, 0.8f);
-					t.normal(0.0f, -1.0f, 0.0f);
-					t.vertexUV(xp + 0, yy + 0, zp + D, (xx + 0) * uvScale + uo, (zz + D) * uvScale + vo);
-					t.vertexUV(xp + D, yy + 0, zp + D, (xx + D) * uvScale + uo, (zz + D) * uvScale + vo);
-					t.vertexUV(xp + D, yy + 0, zp + 0, (xx + D) * uvScale + uo, (zz + 0) * uvScale + vo);
-					t.vertexUV(xp + 0, yy + 0, zp + 0, (xx + 0) * uvScale + uo, (zz + 0) * uvScale + vo);
-				}
-
-
-				if (yy <= h + 1.0f) {
-					t.color(cr, cg, cb, 0.8f);
-					t.normal(0.0f, 1.0f, 0.0f);
-					t.vertexUV(xp + 0, yy + h - e, zp + D, (xx + 0) * uvScale + uo, (zz + D) * uvScale + vo);
-					t.vertexUV(xp + D, yy + h - e, zp + D, (xx + D) * uvScale + uo, (zz + D) * uvScale + vo);
-					t.vertexUV(xp + D, yy + h - e, zp + 0, (xx + D) * uvScale + uo, (zz + 0) * uvScale + vo);
-					t.vertexUV(xp + 0, yy + h - e, zp + 0, (xx + 0) * uvScale + uo, (zz + 0) * uvScale + vo);
-				}
-
-				t.color(cr * 0.9f, cg * 0.9f, cb * 0.9f, 0.8f);
-
-
-				if (xPos > -1) {
-					t.normal(-1.0f, 0.0f, 0.0f);
-					for (int i = 0; i < D; i++) {
-						t.vertexUV(xp + i + 0, yy + 0, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
-						t.vertexUV(xp + i + 0, yy + h, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
-						t.vertexUV(xp + i + 0, yy + h, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
-						t.vertexUV(xp + i + 0, yy + 0, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
-					}
-				}
-				if (xPos <= 1) {
-					t.normal(1.0f, 0.0f, 0.0f);
-					for (int i = 0; i < D; i++) {
-						t.vertexUV(xp + i + 1 - e, yy + 0, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
-						t.vertexUV(xp + i + 1 - e, yy + h, zp + D, (xx + i + 0.5f) * uvScale + uo, (zz + D) * uvScale + vo);
-						t.vertexUV(xp + i + 1 - e, yy + h, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
-						t.vertexUV(xp + i + 1 - e, yy + 0, zp + 0, (xx + i + 0.5f) * uvScale + uo, (zz + 0) * uvScale + vo);
-					}
-				}
-
-				t.color(cr * 0.8f, cg * 0.8f, cb * 0.8f, 0.8f);
-
-
-				if (zPos > -1) {
-					t.normal(0.0f, 0.0f, -1.0f);
-					for (int i = 0; i < D; i++) {
-						t.vertexUV(xp + 0, yy + h, zp + i + 0, (xx + 0) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-						t.vertexUV(xp + D, yy + h, zp + i + 0, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-						t.vertexUV(xp + D, yy + 0, zp + i + 0, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-						t.vertexUV(xp + 0, yy + 0, zp + i + 0, (xx + 0) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-					}
-				}
-				if (zPos <= 1) {
-					t.normal(0.0f, 0.0f, 1.0f);
-					for (int i = 0; i < D; i++) {
-						t.vertexUV(xp + 0, yy + h, zp + i + 1 - e, (xx + 0) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-						t.vertexUV(xp + D, yy + h, zp + i + 1 - e, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-						t.vertexUV(xp + D, yy + 0, zp + i + 1 - e, (xx + D) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-						t.vertexUV(xp + 0, yy + 0, zp + i + 1 - e, (xx + 0) * uvScale + uo, (zz + i + 0.5f) * uvScale + vo);
-					}
-				}
-				t.endOverrideAndDraw();
+		t.begin();
+		for (size_t idx = 0; idx < m_cloudVertices.size(); idx += 4) {
+			for (size_t k = 0; k < 4; k++) {
+				const CloudVertex& cv = m_cloudVertices[idx + k];
+				float aVert = (cv.ny <= 0.0f) ? alphaBottom : alphaTop;
+				t.color(cr * cv.shade, cg * cv.shade, cb * cv.shade, aVert);
+				t.vertexUV(cv.x, cv.y, cv.z, cv.u, cv.v);
 			}
 		}
+		t.endOverrideAndDraw();
 	}
 
 	glPopMatrix();
@@ -1616,6 +1822,11 @@ void LevelRenderer::onGraphicsReset()
 	generateStars();
 	generateSky();
 
+	delete[] m_cloudPixels;
+	m_cloudPixels = NULL;
+	m_cachedXCell = -999999;
+	m_cachedZCell = -999999;
+
 	// Get new buffers
 #ifdef OPENGL_ES
 	glGenBuffers2(numListsOrBuffers, chunkBuffers);
@@ -1667,7 +1878,7 @@ void LevelRenderer::takePicture( TripodCamera* cam, Entity* entity )
 }
 
 void LevelRenderer::levelEvent(Player* player, int type, int x, int y, int z, int data) {
-	switch (type) {    
+	switch (type) {
 	case LevelEvent::SOUND_OPEN_DOOR:
 		if (Mth::random() < 0.5f) {
 			level->playSound(x + 0.5f, y + 0.5f, z + 0.5f, "random.door_open", 1, level->random.nextFloat() * 0.1f + 0.9f);

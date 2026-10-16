@@ -146,6 +146,41 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_TALL_CLOUDS) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
+        msg = "Tall Clouds: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_CLOUD_THICKNESS) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CLOUD_THICKNESS);
+        std::ostringstream ss;
+        ss.precision(1);
+        ss << std::fixed << "Cloud Thickness: " << val << "x";
+        msg = ss.str();
+        return;
+    }
+
+    if (optionId == OPTIONS_CLOUD_FADE) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CLOUD_FADE);
+        int pct = (int)(val * 100.0f + 0.5f);
+        msg = "Cloud Fade: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CLOUD_OPACITY) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CLOUD_OPACITY);
+        int pct = (int)(val * 100.0f + 0.5f);
+        msg = "Cloud Opacity: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CLOUD_FLAT_SHADING) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_CLOUD_FLAT_SHADING);
+        msg = "Flat Shading: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
     bool state = minecraft->options.getBooleanValue(optionId);
     msg = baseName + (state ? ": ON" : ": OFF");
 }
