@@ -186,12 +186,36 @@ void Font::loadFontProviders()
         }
     }
 
+    // Helper to append a Unicode codepoint as UTF-8 bytes to a std::string
+    auto appendUTF8 = [](std::string& str, uint32_t cp) {
+        if (cp == 0) {
+            // Replace codepoint 0 (NUL) with a placeholder character (0xFFFD / 0x0001) to prevent NUL string termination
+            cp = 0x0001;
+        }
+        if (cp < 0x80) {
+            str += (char)cp;
+        } else if (cp < 0x800) {
+            str += (char)(0xC0 | (cp >> 6));
+            str += (char)(0x80 | (cp & 0x3F));
+        } else if (cp < 0x10000) {
+            str += (char)(0xE0 | (cp >> 12));
+            str += (char)(0x80 | ((cp >> 6) & 0x3F));
+            str += (char)(0x80 | (cp & 0x3F));
+        } else {
+            str += (char)(0xF0 | (cp >> 18));
+            str += (char)(0x80 | ((cp >> 12) & 0x3F));
+            str += (char)(0x80 | ((cp >> 6) & 0x3F));
+            str += (char)(0x80 | (cp & 0x3F));
+        }
+    };
+
     // Built-in default provider using ascii.png (height 8, ascent 7)
     std::vector<std::string> asciiGrid;
     for (int r = 0; r < 16; r++) {
         std::string line = "";
         for (int c = 0; c < 16; c++) {
-            line += (char)(r * 16 + c);
+            uint32_t cp = (uint32_t)(r * 16 + c);
+            appendUTF8(line, cp);
         }
         asciiGrid.push_back(line);
     }
