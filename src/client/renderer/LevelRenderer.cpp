@@ -72,6 +72,7 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 	m_cachedZCell(-999999),
 	m_cachedThickness(-1.0f),
 	m_cachedCloudY(-1.0f),
+	m_cachedRoundness(-1.0f),
 	m_cachedFlatShading(false),
 	m_cachedTallClouds(false),
 	m_cloudPixels(NULL),
@@ -1479,6 +1480,8 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	float opacity = mc->options.getProgressValue(OPTIONS_CLOUD_OPACITY);
 	bool flatShading = mc->options.getBooleanValue(OPTIONS_CLOUD_FLAT_SHADING);
 	float cloudY = mc->options.getProgressValue(OPTIONS_CLOUD_Y_LEVEL);
+	float roundness = mc->options.getProgressValue(OPTIONS_CLOUD_ROUNDNESS);
+	float rOffs = roundness * 0.35f;
 
 	glDisable(GL_CULL_FACE);
 
@@ -1524,6 +1527,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	bool needsRebuild = (xCell != m_cachedXCell || zCell != m_cachedZCell ||
 	                     thicknessScale != m_cachedThickness ||
 	                     cloudY != m_cachedCloudY ||
+	                     roundness != m_cachedRoundness ||
 	                     flatShading != m_cachedFlatShading ||
 	                     tallClouds != m_cachedTallClouds);
 
@@ -1556,6 +1560,23 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 						float v0 = (float)texZ * uvScale;
 						float v1 = (float)(texZ + 1) * uvScale;
 
+						bool hasW = !isCloudCell(texX - 1, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH);
+						bool hasE = !isCloudCell(texX + 1, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH);
+						bool hasN = !isCloudCell(texX, texZ - 1, m_cloudPixels, m_cloudTexW, m_cloudTexH);
+						bool hasS = !isCloudCell(texX, texZ + 1, m_cloudPixels, m_cloudTexW, m_cloudTexH);
+
+						float zStartW = (hasN && rOffs > 0.001f) ? gridZ + rOffs : gridZ + 0.0f;
+						float zEndW   = (hasS && rOffs > 0.001f) ? gridZ + 1.0f - rOffs : gridZ + 1.0f;
+
+						float zStartE = (hasN && rOffs > 0.001f) ? gridZ + rOffs : gridZ + 0.0f;
+						float zEndE   = (hasS && rOffs > 0.001f) ? gridZ + 1.0f - rOffs : gridZ + 1.0f;
+
+						float xStartN = (hasW && rOffs > 0.001f) ? gridX + rOffs : gridX + 0.0f;
+						float xEndN   = (hasE && rOffs > 0.001f) ? gridX + 1.0f - rOffs : gridX + 1.0f;
+
+						float xStartS = (hasW && rOffs > 0.001f) ? gridX + rOffs : gridX + 0.0f;
+						float xEndS   = (hasE && rOffs > 0.001f) ? gridX + 1.0f - rOffs : gridX + 1.0f;
+
 						// Bottom Face
 						float shadeB = flatShading ? 1.0f : 0.7f;
 						m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 1.0f, u0, v1, 0.0f, shadeB});
@@ -1571,43 +1592,75 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 						m_cloudVertices.push_back({gridX + 0.0f, h - e, gridZ + 0.0f, u0, v0, 1.0f, shadeT});
 
 						// West (-X) Face
-						if (!isCloudCell(texX - 1, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+						if (hasW) {
 							float shadeW = flatShading ? 1.0f : 0.9f;
 							float uSide = (float)texX * uvScale + 0.5f * uvScale;
-							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 1.0f, uSide, v1, 0.0f, shadeW});
-							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 1.0f, uSide, v1, 1.0f, shadeW});
-							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 0.0f, uSide, v0, 1.0f, shadeW});
-							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 0.0f, uSide, v0, 0.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, zEndW, uSide, v1, 0.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, h, zEndW, uSide, v1, 1.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, h, zStartW, uSide, v0, 1.0f, shadeW});
+							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, zStartW, uSide, v0, 0.0f, shadeW});
 						}
 
 						// East (+X) Face
-						if (!isCloudCell(texX + 1, texZ, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+						if (hasE) {
 							float shadeE = flatShading ? 1.0f : 0.9f;
 							float uSide = (float)texX * uvScale + 0.5f * uvScale;
-							m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, gridZ + 1.0f, uSide, v1, 0.0f, shadeE});
-							m_cloudVertices.push_back({gridX + 1.0f - e, h, gridZ + 1.0f, uSide, v1, 1.0f, shadeE});
-							m_cloudVertices.push_back({gridX + 1.0f - e, h, gridZ + 0.0f, uSide, v0, 1.0f, shadeE});
-							m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, gridZ + 0.0f, uSide, v0, 0.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, zEndE, uSide, v1, 0.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, h, zEndE, uSide, v1, 1.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, h, zStartE, uSide, v0, 1.0f, shadeE});
+							m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, zStartE, uSide, v0, 0.0f, shadeE});
 						}
 
 						// North (-Z) Face
-						if (!isCloudCell(texX, texZ - 1, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+						if (hasN) {
 							float shadeN = flatShading ? 1.0f : 0.8f;
 							float vSide = (float)texZ * uvScale + 0.5f * uvScale;
-							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 0.0f, u0, vSide, 1.0f, shadeN});
-							m_cloudVertices.push_back({gridX + 1.0f, h, gridZ + 0.0f, u1, vSide, 1.0f, shadeN});
-							m_cloudVertices.push_back({gridX + 1.0f, 0.0f, gridZ + 0.0f, u1, vSide, 0.0f, shadeN});
-							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 0.0f, u0, vSide, 0.0f, shadeN});
+							m_cloudVertices.push_back({xStartN, h, gridZ, u0, vSide, 1.0f, shadeN});
+							m_cloudVertices.push_back({xEndN, h, gridZ, u1, vSide, 1.0f, shadeN});
+							m_cloudVertices.push_back({xEndN, 0.0f, gridZ, u1, vSide, 0.0f, shadeN});
+							m_cloudVertices.push_back({xStartN, 0.0f, gridZ, u0, vSide, 0.0f, shadeN});
 						}
 
 						// South (+Z) Face
-						if (!isCloudCell(texX, texZ + 1, m_cloudPixels, m_cloudTexW, m_cloudTexH)) {
+						if (hasS) {
 							float shadeS = flatShading ? 1.0f : 0.8f;
 							float vSide = (float)texZ * uvScale + 0.5f * uvScale;
-							m_cloudVertices.push_back({gridX + 0.0f, h, gridZ + 1.0f - e, u0, vSide, 1.0f, shadeS});
-							m_cloudVertices.push_back({gridX + 1.0f, h, gridZ + 1.0f - e, u1, vSide, 1.0f, shadeS});
-							m_cloudVertices.push_back({gridX + 1.0f, 0.0f, gridZ + 1.0f - e, u1, vSide, 0.0f, shadeS});
-							m_cloudVertices.push_back({gridX + 0.0f, 0.0f, gridZ + 1.0f - e, u0, vSide, 0.0f, shadeS});
+							m_cloudVertices.push_back({xStartS, h, gridZ + 1.0f - e, u0, vSide, 1.0f, shadeS});
+							m_cloudVertices.push_back({xEndS, h, gridZ + 1.0f - e, u1, vSide, 1.0f, shadeS});
+							m_cloudVertices.push_back({xEndS, 0.0f, gridZ + 1.0f - e, u1, vSide, 0.0f, shadeS});
+							m_cloudVertices.push_back({xStartS, 0.0f, gridZ + 1.0f - e, u0, vSide, 0.0f, shadeS});
+						}
+
+						// Corner Chamfers
+						if (rOffs > 0.001f) {
+							float uC = (float)texX * uvScale + 0.5f * uvScale;
+							float vC = (float)texZ * uvScale + 0.5f * uvScale;
+							float shadeC = flatShading ? 1.0f : 0.85f;
+
+							if (hasW && hasN) {
+								m_cloudVertices.push_back({gridX + rOffs, 0.0f, gridZ, uC, vC, 0.0f, shadeC});
+								m_cloudVertices.push_back({gridX + rOffs, h, gridZ, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX, h, gridZ + rOffs, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX, 0.0f, gridZ + rOffs, uC, vC, 0.0f, shadeC});
+							}
+							if (hasE && hasN) {
+								m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, gridZ + rOffs, uC, vC, 0.0f, shadeC});
+								m_cloudVertices.push_back({gridX + 1.0f - e, h, gridZ + rOffs, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX + 1.0f - rOffs, h, gridZ, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX + 1.0f - rOffs, 0.0f, gridZ, uC, vC, 0.0f, shadeC});
+							}
+							if (hasW && hasS) {
+								m_cloudVertices.push_back({gridX, 0.0f, gridZ + 1.0f - rOffs, uC, vC, 0.0f, shadeC});
+								m_cloudVertices.push_back({gridX, h, gridZ + 1.0f - rOffs, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX + rOffs, h, gridZ + 1.0f - e, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX + rOffs, 0.0f, gridZ + 1.0f - e, uC, vC, 0.0f, shadeC});
+							}
+							if (hasE && hasS) {
+								m_cloudVertices.push_back({gridX + 1.0f - rOffs, 0.0f, gridZ + 1.0f - e, uC, vC, 0.0f, shadeC});
+								m_cloudVertices.push_back({gridX + 1.0f - rOffs, h, gridZ + 1.0f - e, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX + 1.0f - e, h, gridZ + 1.0f - rOffs, uC, vC, 1.0f, shadeC});
+								m_cloudVertices.push_back({gridX + 1.0f - e, 0.0f, gridZ + 1.0f - rOffs, uC, vC, 0.0f, shadeC});
+							}
 						}
 					}
 				}
@@ -1618,6 +1671,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 		m_cachedZCell = zCell;
 		m_cachedThickness = thicknessScale;
 		m_cachedCloudY = cloudY;
+		m_cachedRoundness = roundness;
 		m_cachedFlatShading = flatShading;
 		m_cachedTallClouds = tallClouds;
 	}

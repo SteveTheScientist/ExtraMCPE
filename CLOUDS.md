@@ -19,13 +19,19 @@ This document describes the recreated cloud rendering system and its customizati
   * Geometry mesh is cached and rebuilt **only** when the camera crosses a grid cell boundary ($xCell$ or $zCell$) or when cloud options change.
   * Zero per-frame heap allocations are made during cloud rendering. Smooth scrolling and camera translation are handled via matrix transform `glTranslatef(-xOffs, yy, -zOffs)`.
   * Outer boundary faces touching empty texture cells are generated; hidden inner faces between adjacent cloud cells are omitted to prevent double blending.
+  * Convex outer cloud corners are chamfered/rounded according to the `Cloud Roundness` setting.
   * Translucent depth pre-pass is preserved to prevent alpha sorting artifacts.
 
 ---
 
-## Customizations Menu & Cloud Options
+## Options Menu & Cloud Customization Sub-Screen
 
-The **Customizations...** menu contains the **Clouds...** sub-screen button. When **Tall Clouds** is enabled, the **Beta Sky** option in the Options menu is automatically disabled (`active = false`).
+* **Options Menu Organization:** Options buttons and toggles are organized into clean, categorized sub-screens:
+  * **Controls & Input...** (`ControlsOptionsScreen`)
+  * **Graphics & Visuals...** (`GraphicsOptionsScreen`)
+  * **Interface & Game...** (`InterfaceOptionsScreen`)
+* **Customizations Menu:** Contains the **Clouds...** sub-screen button (`CloudsScreen`).
+* **Beta Sky Interaction:** When **Tall Clouds** is enabled, the **Beta Sky** toggle in the Options menu is automatically disabled (`active = false`) and displays the disabled button texture.
 
 All cloud settings are saved in `options.txt`:
 
@@ -36,6 +42,7 @@ All cloud settings are saved in `options.txt`:
 | **Cloud Thickness** | `1.0x` to `4.0x` | `2.5x` (`2.5`) | `options.cloud_thickness` | Multiplier for vertical cloud thickness (`thicknessScale`). Clouds grow upward from the configured base height. |
 | **Cloud Fade** | `0%` to `100%` | `100%` (`1.0`) | `options.cloud_fade` | Strength of view-dependent vertical alpha fade. 100% enables full vertical gradient, 0% applies uniform opacity. |
 | **Cloud Opacity** | `40%` to `100%` | `80%` (`0.8`) | `options.cloud_opacity` | Cloud base opacity constant (represented as $0.8$ constant in formula). |
+| **Cloud Roundness** | `0%` to `100%` | `30%` (`0.3`) | `options.cloud_roundness` | Adjusts chamfer rounding on outer convex cloud corners. |
 | **Flat Shading** | `ON` / `OFF` | `ON` (`true`) | `options.cloud_flat_shading` | Uses uniform $1.0\times$ brightness on top, bottom, and side faces when `ON`. Restores darker bottom/side shading when `OFF`. |
 | **Reset Clouds** | Action Button | N/A | N/A | Resets all cloud customization options to their default values live. |
 
@@ -65,7 +72,7 @@ $$\alpha_{faded} = \text{max}(0, \text{baseAlpha} \times (\text{opacity} - fade)
 ### Tested
 * **Mathematical Accuracy:** Verified all test cases in `cloudAlpha` via the unit test binary `test_clouds`.
 * **Desktop Build & Compilation:** Compiled and linked the desktop C++ binary (`MinecraftPE`) using CMake with zero errors.
-* **Option Persistence & UI Integration:** Verified `Options.cpp` serialization/parsing, slider label formatting, `CloudsScreen` menu navigation, disabled Beta Sky state, cleaned Customizations menu, and build file updates.
+* **Option Persistence & UI Integration:** Verified `Options.cpp` serialization/parsing, slider label formatting, `CloudsScreen` menu navigation, categorized sub-screens, disabled Beta Sky state, cleaned Customizations menu, and build file updates.
 
 ### Untested
 * **On-Device Physical Rendering:** Visual testing on an actual physical Android/iOS device with touch inputs or mobile GPU drivers (headless build environment without attached physical device).

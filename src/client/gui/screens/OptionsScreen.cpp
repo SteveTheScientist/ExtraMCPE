@@ -188,6 +188,13 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_CLOUD_ROUNDNESS) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CLOUD_ROUNDNESS);
+        int pct = (int)(val * 100.0f + 0.5f);
+        msg = "Cloud Roundness: " + to_str(pct) + "%";
+        return;
+    }
+
     if (optionId == OPTIONS_BETA_SKY) {
         bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
         active = !tallOn;
@@ -326,52 +333,20 @@ void OptionsScreen::init() {
 	m_controls.clear();
 	int idSeq = 10;
 
-	// Row 0: Username & Music Slider
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username", false, 0.0f, 1.0f, ACTION_USERNAME));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
+	// Submenu Navigation
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls & Input...", false, 0.0f, 1.0f, ACTION_CONTROLS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics & Visuals...", false, 0.0f, 1.0f, ACTION_GRAPHICS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface & Game...", false, 0.0f, 1.0f, ACTION_INTERFACE));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username...", false, 0.0f, 1.0f, ACTION_USERNAME));
 
-	// Audio & Mouse Sensitivity
+	// Primary Audio & Controls Sliders
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SOUND_VOLUME, "Sound", false, 0.0f, 1.0f));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
-
-	// General Controls & Display
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse"));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_GUI_SCALE, "GUI Scale"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RENDER_DEBUG, "Render Debug"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AUTOJUMP, "Auto-Jump"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DESTROY_VIBRATION, "Vibrate on Destroy"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_USE_TOUCHSCREEN, "Touchscreen"));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DIFFICULTY, "Difficulty"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RPI_CURSOR, "Custom Cursor"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_TYPE, "Fog Type"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_JOY_TOUCH_AREA, "D-Pad Touch Area"));
 
-	// Submenus: Key Binds & Credits
+	// Submenus
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", false, 0.0f, 1.0f, ACTION_CREDITS));
 
@@ -549,6 +524,12 @@ void OptionsScreen::buttonClicked(Button* button) {
 				minecraft->setScreen(new KeyBindsScreen());
 			} else if (ctrl->actionId == ACTION_CREDITS) {
 				minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_OPTIONS));
+			} else if (ctrl->actionId == ACTION_CONTROLS) {
+				minecraft->setScreen(new ControlsOptionsScreen());
+			} else if (ctrl->actionId == ACTION_GRAPHICS) {
+				minecraft->setScreen(new GraphicsOptionsScreen());
+			} else if (ctrl->actionId == ACTION_INTERFACE) {
+				minecraft->setScreen(new InterfaceOptionsScreen());
 			}
 		}
 	}
@@ -610,6 +591,170 @@ void OptionsScreen::keyPressed(int eventKey) {
 		} else {
 			minecraft->screenChooser.setScreen(SCREEN_STARTMENU);
 		}
+		return;
+	}
+	super::keyPressed(eventKey);
+}
+
+//
+// ControlsOptionsScreen
+//
+void ControlsOptionsScreen::init() {
+	btnDone = new Button(100, 0, 0, 200, 20, "Done");
+	buttons.push_back(btnDone);
+	tabButtons.push_back(btnDone);
+
+	m_controls.clear();
+	int idSeq = 1100;
+
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AUTOJUMP, "Auto-Jump"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_USE_TOUCHSCREEN, "Touchscreen"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_JOY_TOUCH_AREA, "D-Pad Touch Area"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
+
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		m_controls[i]->updateLabel(minecraft);
+		buttons.push_back(m_controls[i]);
+	}
+}
+
+void ControlsOptionsScreen::render(int xm, int ym, float a) {
+	super::render(xm, ym, a);
+	Font* font = minecraft->font;
+	fill(0, 0, width, 32, 0x70000000);
+	drawCenteredString(font, "Controls & Input", width / 2, 10, 0xffffffff);
+}
+
+void ControlsOptionsScreen::buttonClicked(Button* button) {
+	if (button == btnDone) {
+		minecraft->options.save();
+		minecraft->setScreen(new OptionsScreen());
+		return;
+	}
+	super::buttonClicked(button);
+}
+
+void ControlsOptionsScreen::keyPressed(int eventKey) {
+	if (eventKey == Keyboard::KEY_ESCAPE) {
+		minecraft->options.save();
+		minecraft->setScreen(new OptionsScreen());
+		return;
+	}
+	super::keyPressed(eventKey);
+}
+
+//
+// GraphicsOptionsScreen
+//
+void GraphicsOptionsScreen::init() {
+	btnDone = new Button(100, 0, 0, 200, 20, "Done");
+	buttons.push_back(btnDone);
+	tabButtons.push_back(btnDone);
+
+	m_controls.clear();
+	int idSeq = 1200;
+
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_TYPE, "Fog Type"));
+
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		m_controls[i]->updateLabel(minecraft);
+		buttons.push_back(m_controls[i]);
+	}
+}
+
+void GraphicsOptionsScreen::render(int xm, int ym, float a) {
+	super::render(xm, ym, a);
+	Font* font = minecraft->font;
+	fill(0, 0, width, 32, 0x70000000);
+	drawCenteredString(font, "Graphics & Visuals", width / 2, 10, 0xffffffff);
+}
+
+void GraphicsOptionsScreen::buttonClicked(Button* button) {
+	if (button == btnDone) {
+		minecraft->options.save();
+		minecraft->setScreen(new OptionsScreen());
+		return;
+	}
+	super::buttonClicked(button);
+}
+
+void GraphicsOptionsScreen::keyPressed(int eventKey) {
+	if (eventKey == Keyboard::KEY_ESCAPE) {
+		minecraft->options.save();
+		minecraft->setScreen(new OptionsScreen());
+		return;
+	}
+	super::keyPressed(eventKey);
+}
+
+//
+// InterfaceOptionsScreen
+//
+void InterfaceOptionsScreen::init() {
+	btnDone = new Button(100, 0, 0, 200, 20, "Done");
+	buttons.push_back(btnDone);
+	tabButtons.push_back(btnDone);
+
+	m_controls.clear();
+	int idSeq = 1300;
+
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_GUI_SCALE, "GUI Scale"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DESTROY_VIBRATION, "Vibrate on Destroy"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RPI_CURSOR, "Custom Cursor"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
+
+	for (size_t i = 0; i < m_controls.size(); ++i) {
+		m_controls[i]->updateLabel(minecraft);
+		buttons.push_back(m_controls[i]);
+	}
+}
+
+void InterfaceOptionsScreen::render(int xm, int ym, float a) {
+	super::render(xm, ym, a);
+	Font* font = minecraft->font;
+	fill(0, 0, width, 32, 0x70000000);
+	drawCenteredString(font, "Interface & Game", width / 2, 10, 0xffffffff);
+}
+
+void InterfaceOptionsScreen::buttonClicked(Button* button) {
+	if (button == btnDone) {
+		minecraft->options.save();
+		minecraft->setScreen(new OptionsScreen());
+		return;
+	}
+	super::buttonClicked(button);
+}
+
+void InterfaceOptionsScreen::keyPressed(int eventKey) {
+	if (eventKey == Keyboard::KEY_ESCAPE) {
+		minecraft->options.save();
+		minecraft->setScreen(new OptionsScreen());
 		return;
 	}
 	super::keyPressed(eventKey);

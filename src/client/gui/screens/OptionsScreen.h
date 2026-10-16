@@ -17,7 +17,10 @@ enum ActionId {
     ACTION_USERNAME,
     ACTION_KEYBINDS,
     ACTION_CREDITS,
-    ACTION_CLOUDS
+    ACTION_CLOUDS,
+    ACTION_CONTROLS,
+    ACTION_GRAPHICS,
+    ACTION_INTERFACE
 };
 
 class OptionControl : public Button {
@@ -64,7 +67,7 @@ public:
 	virtual void mouseWheel(int dx, int dy, int xm, int ym) override;
 	virtual void keyPressed(int eventKey) override;
 
-private:
+protected:
 	void updateScrollBounds();
 
 	Button* btnDone;
@@ -74,6 +77,33 @@ private:
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDraggingScrollbar;
+};
+
+class ControlsOptionsScreen : public OptionsScreen {
+    typedef OptionsScreen super;
+public:
+    virtual void init() override;
+    virtual void render(int xm, int ym, float a) override;
+    virtual void buttonClicked(Button* button) override;
+    virtual void keyPressed(int eventKey) override;
+};
+
+class GraphicsOptionsScreen : public OptionsScreen {
+    typedef OptionsScreen super;
+public:
+    virtual void init() override;
+    virtual void render(int xm, int ym, float a) override;
+    virtual void buttonClicked(Button* button) override;
+    virtual void keyPressed(int eventKey) override;
+};
+
+class InterfaceOptionsScreen : public OptionsScreen {
+    typedef OptionsScreen super;
+public:
+    virtual void init() override;
+    virtual void render(int xm, int ym, float a) override;
+    virtual void buttonClicked(Button* button) override;
+    virtual void keyPressed(int eventKey) override;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__OptionsScreen_H__*/

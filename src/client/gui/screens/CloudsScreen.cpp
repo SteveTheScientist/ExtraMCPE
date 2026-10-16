@@ -40,6 +40,7 @@ void CloudsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_OPACITY, "Cloud Opacity", false, 0.4f, 1.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_CLOUD_FLAT_SHADING, "Flat Shading"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_Y_LEVEL, "Cloud Height", false, 32.0f, 192.0f));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_ROUNDNESS, "Cloud Roundness", false, 0.0f, 1.0f));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -203,6 +204,7 @@ void CloudsScreen::buttonClicked(Button* button) {
         minecraft->options.set(OPTIONS_CLOUD_OPACITY, 0.8f);
         minecraft->options.set(OPTIONS_CLOUD_FLAT_SHADING, true);
         minecraft->options.set(OPTIONS_CLOUD_Y_LEVEL, 108.0f);
+        minecraft->options.set(OPTIONS_CLOUD_ROUNDNESS, 0.3f);
         minecraft->options.save();
 
         for (size_t i = 0; i < m_controls.size(); ++i) {
