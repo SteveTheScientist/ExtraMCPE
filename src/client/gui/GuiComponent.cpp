@@ -16,7 +16,7 @@ GuiComponent::~GuiComponent()
 
 void GuiComponent::drawCenteredString( Font* font, const std::string& str, int x, int y, int color )
 {
-	font->drawShadow(str, (float)(x - font->width(str) / 2), (float)(y - font->height(str) / 2), color);
+	font->drawShadow(str, (float)(x - font->width(str) / 2), (float)y, color);
 }
 
 void GuiComponent::drawString( Font* font, const std::string& str, int x, int y, int color )
