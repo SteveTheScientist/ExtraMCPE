@@ -23,13 +23,14 @@ This document describes the recreated cloud rendering system and its customizati
 
 ---
 
-## Options Menu & Cloud Customization Sub-Screen
+## Customizations & Options Sub-Screens
 
 * **Options Menu Organization:** Options buttons and toggles are organized into clean, categorized sub-screens:
   * **Controls & Input...** (`ControlsOptionsScreen`)
   * **Graphics & Visuals...** (`GraphicsOptionsScreen`)
   * **Interface & Game...** (`InterfaceOptionsScreen`)
-* **Customizations Menu:** Contains the **Clouds...** sub-screen button (`CloudsScreen`).
+* **Customizations Menu:** Contains the **Clouds...** sub-screen button (`CloudsScreen`) alongside all restored customization toggles.
+* **Button Styling:** Action and sub-menu entry buttons ("Controls & Input...", "Graphics & Visuals...", "Interface & Game...", "Username...", "Key Binds...", "Credits...", "Clouds...") use full 310px width.
 * **Beta Sky Interaction:** When **Tall Clouds** is enabled, the **Beta Sky** toggle in the Options menu is automatically disabled (`active = false`) and displays the disabled button texture.
 
 All cloud settings are saved in `options.txt`:
@@ -70,7 +71,7 @@ $$\alpha_{faded} = \text{max}(0, \text{baseAlpha} \times (\text{opacity} - fade)
 ### Tested
 * **Mathematical Accuracy:** Verified all test cases in `cloudAlpha` via the unit test binary `test_clouds`.
 * **Desktop Build & Compilation:** Compiled and linked the desktop C++ binary (`MinecraftPE`) using CMake with zero errors.
-* **Option Persistence & UI Integration:** Verified `Options.cpp` serialization/parsing, slider label formatting, `CloudsScreen` menu navigation, categorized sub-screens, disabled Beta Sky state, cleaned Customizations menu, and build file updates.
+* **Option Persistence & UI Integration:** Verified `Options.cpp` serialization/parsing, slider label formatting, `CloudsScreen` menu navigation, categorized sub-screens, disabled Beta Sky state, restored Customizations menu toggles, 310px button styling, and build file updates.
 
 ### Untested
 * **On-Device Physical Rendering:** Visual testing on an actual physical Android/iOS device with touch inputs or mobile GPU drivers (headless build environment without attached physical device).

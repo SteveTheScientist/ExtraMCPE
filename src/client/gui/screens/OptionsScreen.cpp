@@ -340,9 +340,9 @@ void OptionsScreen::init() {
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DIFFICULTY, "Difficulty"));
 
-	// Submenus
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", false, 0.0f, 1.0f, ACTION_CREDITS));
+	// Submenus (Full width 310px)
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", true, 0.0f, 1.0f, ACTION_KEYBINDS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", true, 0.0f, 1.0f, ACTION_CREDITS));
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		m_controls[i]->updateLabel(minecraft);

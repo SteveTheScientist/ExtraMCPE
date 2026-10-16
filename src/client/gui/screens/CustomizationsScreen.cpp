@@ -36,6 +36,16 @@ void CustomizationsScreen::init() {
 
     // Customization Options
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", true, 0.0f, 1.0f, ACTION_CLOUDS));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "3rd Person View"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
