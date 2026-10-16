@@ -1161,6 +1161,12 @@
 		F99D34302F736BAD00DC153E /* ConsoleScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D342E2F736BAD00DC153E /* ConsoleScreen.cpp */; };
 		F99D34332F736BDA00DC153E /* CreditsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34322F736BDA00DC153E /* CreditsScreen.cpp */; };
 		F99D34342F736BDA00DC153E /* CreditsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34322F736BDA00DC153E /* CreditsScreen.cpp */; };
+		F99D34412F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */; };
+		F99D34422F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */; };
+		F99D34452F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */; };
+		F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */; };
+		F99D34492F736BDA00DC153E /* CloudsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34482F736BDA00DC153E /* CloudsScreen.cpp */; };
+		F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34482F736BDA00DC153E /* CloudsScreen.cpp */; };
 		F99D34372F736C1000DC153E /* JoinByIPScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */; };
 		F99D34382F736C1000DC153E /* JoinByIPScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */; };
 		F99D343B2F736C3B00DC153E /* UsernameScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D343A2F736C3B00DC153E /* UsernameScreen.cpp */; };
@@ -2466,6 +2472,12 @@
 		F99D342E2F736BAD00DC153E /* ConsoleScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ConsoleScreen.cpp; path = ../../src/client/gui/screens/ConsoleScreen.cpp; sourceTree = "<group>"; };
 		F99D34312F736BDA00DC153E /* CreditsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CreditsScreen.h; path = ../../src/client/gui/screens/CreditsScreen.h; sourceTree = "<group>"; };
 		F99D34322F736BDA00DC153E /* CreditsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CreditsScreen.cpp; path = ../../src/client/gui/screens/CreditsScreen.cpp; sourceTree = "<group>"; };
+		F99D343F2F736BDA00DC153E /* CustomizationsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CustomizationsScreen.h; path = ../../src/client/gui/screens/CustomizationsScreen.h; sourceTree = "<group>"; };
+		F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CustomizationsScreen.cpp; path = ../../src/client/gui/screens/CustomizationsScreen.cpp; sourceTree = "<group>"; };
+		F99D34432F736BDA00DC153E /* KeyBindsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = KeyBindsScreen.h; path = ../../src/client/gui/screens/KeyBindsScreen.h; sourceTree = "<group>"; };
+		F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = KeyBindsScreen.cpp; path = ../../src/client/gui/screens/KeyBindsScreen.cpp; sourceTree = "<group>"; };
+		F99D34472F736BDA00DC153E /* CloudsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CloudsScreen.h; path = ../../src/client/gui/screens/CloudsScreen.h; sourceTree = "<group>"; };
+		F99D34482F736BDA00DC153E /* CloudsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CloudsScreen.cpp; path = ../../src/client/gui/screens/CloudsScreen.cpp; sourceTree = "<group>"; };
 		F99D34352F736C1000DC153E /* JoinByIPScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JoinByIPScreen.h; path = ../../src/client/gui/screens/JoinByIPScreen.h; sourceTree = "<group>"; };
 		F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = JoinByIPScreen.cpp; path = ../../src/client/gui/screens/JoinByIPScreen.cpp; sourceTree = "<group>"; };
 		F99D34392F736C3B00DC153E /* UsernameScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UsernameScreen.h; path = ../../src/client/gui/screens/UsernameScreen.h; sourceTree = "<group>"; };
@@ -4382,6 +4394,12 @@
 				F99D342E2F736BAD00DC153E /* ConsoleScreen.cpp */,
 				F99D34312F736BDA00DC153E /* CreditsScreen.h */,
 				F99D34322F736BDA00DC153E /* CreditsScreen.cpp */,
+				F99D343F2F736BDA00DC153E /* CustomizationsScreen.h */,
+				F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */,
+				F99D34432F736BDA00DC153E /* KeyBindsScreen.h */,
+				F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */,
+				F99D34472F736BDA00DC153E /* CloudsScreen.h */,
+				F99D34482F736BDA00DC153E /* CloudsScreen.cpp */,
 				F99D34352F736C1000DC153E /* JoinByIPScreen.h */,
 				F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */,
 				F99D34392F736C3B00DC153E /* UsernameScreen.h */,
@@ -5387,6 +5405,9 @@
 				D5251E2C1538192700FC82C8 /* RakString.cpp in Sources */,
 				D5251E2E1538192700FC82C8 /* RakThread.cpp in Sources */,
 				F99D34332F736BDA00DC153E /* CreditsScreen.cpp in Sources */,
+				F99D34412F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */,
+				F99D34452F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
+				F99D34492F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
 				D5251E301538192700FC82C8 /* RakWString.cpp in Sources */,
 				D5251E321538192700FC82C8 /* Rand.cpp in Sources */,
 				D5251E341538192700FC82C8 /* rdlmalloc.cpp in Sources */,
@@ -5767,6 +5788,9 @@
 				D5251E431538192700FC82C8 /* SHA1.cpp in Sources */,
 				D5251E451538192700FC82C8 /* SignaledEvent.cpp in Sources */,
 				F99D34342F736BDA00DC153E /* CreditsScreen.cpp in Sources */,
+				F99D34422F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */,
+				F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
+				F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
 				D5251E471538192700FC82C8 /* SimpleMutex.cpp in Sources */,
 				D5251E491538192700FC82C8 /* SocketLayer.cpp in Sources */,
 				D5251E4B1538192700FC82C8 /* StringCompressor.cpp in Sources */,
