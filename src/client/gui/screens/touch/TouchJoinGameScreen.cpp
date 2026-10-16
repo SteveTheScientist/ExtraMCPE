@@ -78,7 +78,7 @@ void JoinGameScreen::init()
 }
 
 void JoinGameScreen::setupPositions() {
-	int yBase = height - 28;
+	int yBase = height - 48;
 	int centerX = width / 2;
 
 	bJoin.width = 98;
@@ -95,6 +95,10 @@ void JoinGameScreen::setupPositions() {
 
 	bBack.x = centerX - 100;
 	bBack.y = yBase + 24;
+
+	if (gamesList) {
+		gamesList->setupPositions(width, height, 32, height - 52);
+	}
 }
 
 void JoinGameScreen::buttonClicked(Button* button)
