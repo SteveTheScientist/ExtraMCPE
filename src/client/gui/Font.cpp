@@ -10,35 +10,6 @@
 #include <iostream>
 #include <algorithm>
 #include <cassert>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#if defined(ANDROID) || defined(__ANDROID__)
-#include <android/log.h>
-#define LOG_TAG "ExtraMC_Font"
-#define LOGD(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#else
-#define LOGD(...) printf(__VA_ARGS__)
-#endif
-
-#define DEBUG_FONT
-
-#ifdef DEBUG_FONT
-static void logFontDebug(const std::string& msg) {
-    LOGD("%s\n", msg.c_str());
-
-    const char* path = "/sdcard/Android/data/com.steve.extra/files/font_debug.txt";
-    mkdir("/sdcard/Android", 0777);
-    mkdir("/sdcard/Android/data", 0777);
-    mkdir("/sdcard/Android/data/com.steve.extra", 0777);
-    mkdir("/sdcard/Android/data/com.steve.extra/files", 0777);
-
-    std::ofstream ofs(path, std::ios::app);
-    if (ofs.is_open()) {
-        ofs << msg << std::endl;
-    }
-}
-#endif
 
 Font::Font(Options* options, const std::string& name, Textures* textures)
 :   options(options),
@@ -114,14 +85,6 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
     TextureId tid = _textures->loadTexture(cleanPath);
     const TextureData* tex = _textures->getTemporaryTextureData(tid);
 
-#ifdef DEBUG_FONT
-    std::ostringstream ss;
-    ss << "addBitmapProvider loading path: '" << cleanPath << "', tid=" << tid
-       << ", getTemporaryTextureData " << (tex ? "OK" : "NULL")
-       << ", data " << ((tex && tex->data) ? "OK" : "NULL");
-    logFontDebug(ss.str());
-#endif
-
     if (!tex || !tex->data) return;
 
     int imgW = tex->w;
@@ -143,32 +106,6 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
     if (cellW <= 0 || cellH <= 0) return;
 
     float scale = (float)heightVal / (float)cellH;
-
-#ifdef DEBUG_FONT
-    std::ostringstream ss2;
-    ss2 << "Texture metrics: imgW=" << imgW << ", imgH=" << imgH
-        << ", rows=" << rows << ", cols=" << cols
-        << ", cellW=" << cellW << ", cellH=" << cellH
-        << ", scale=" << scale;
-    logFontDebug(ss2.str());
-
-    // Find first 20 non-zero-alpha pixels
-    std::ostringstream alphaSS;
-    alphaSS << "First non-zero alpha pixels: ";
-    int nonZeroCount = 0;
-    int totalP = imgW * imgH;
-    for (int p = 0; p < totalP && nonZeroCount < 20; p++) {
-        unsigned char a = tex->data[(p << 2) + 3];
-        if (a > 0) {
-            alphaSS << (int)a << " ";
-            nonZeroCount++;
-        }
-    }
-    if (nonZeroCount == 0) {
-        alphaSS << "none found";
-    }
-    logFontDebug(alphaSS.str());
-#endif
 
     for (int r = 0; r < rows; r++) {
         const char* linePtr = charGrid[r].c_str();
@@ -302,12 +239,6 @@ void Font::loadFontProviders()
         glyphMap[' '] = spaceInfo;
     }
 
-#ifdef DEBUG_FONT
-    std::ostringstream ssG;
-    ssG << "Registered glyphs count in glyphMap: " << glyphMap.size();
-    logFontDebug(ssG.str());
-#endif
-
     // Unit test assertions per Step 3 / Step 5 spec:
     assert(glyphMap[' '].advance == 4);
     for (int ch = 0x21; ch <= 0x7E; ch++) {
@@ -370,21 +301,6 @@ void Font::draw(const std::string& str, float x, float y, int color, bool darken
 void Font::renderString(const char* str, float x, float y, int color, bool darken)
 {
     if (!str || !*str) return;
-
-#ifdef DEBUG_FONT
-    static bool loggedFirstRenderString = false;
-    if (!loggedFirstRenderString) {
-        loggedFirstRenderString = true;
-        const char* pFirst = str;
-        uint32_t firstCP = decodeUTF8(pFirst);
-        const GlyphInfo* gFirst = getGlyph(firstCP);
-
-        std::ostringstream ssR;
-        ssR << "First renderString text: '" << str << "', first codepoint: " << firstCP
-            << ", getGlyph: " << (gFirst ? "OK" : "NULL");
-        logFontDebug(ssR.str());
-    }
-#endif
 
     if (darken) {
         int oldAlpha = color & 0xFF000000;

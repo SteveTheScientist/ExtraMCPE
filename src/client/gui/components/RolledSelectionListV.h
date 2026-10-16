@@ -14,6 +14,7 @@ class RolledSelectionListV : public GuiComponent
 public:
 	RolledSelectionListV(Minecraft* minecraft, int width, int height, int x0, int x1, int y0, int y1, int itemHeight);
 
+	virtual void setupPositions(int _width, int _height, int _y0, int _y1);
 	virtual int getItemAtPosition(int x, int y);
 
 	virtual bool capYPosition();

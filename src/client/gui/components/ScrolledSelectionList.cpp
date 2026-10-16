@@ -30,6 +30,16 @@ ScrolledSelectionList::ScrolledSelectionList( Minecraft* _minecraft, int _width,
 {
 }
 
+void ScrolledSelectionList::setupPositions( int _width, int _height, int _y0, int _y1 )
+{
+	width = _width;
+	height = _height;
+	x0 = 0.0f;
+	x1 = (float)_width;
+	y0 = (float)_y0;
+	y1 = (float)_y1;
+}
+
 void ScrolledSelectionList::setRenderSelection( bool _renderSelection )
 {
 	renderSelection = _renderSelection;
