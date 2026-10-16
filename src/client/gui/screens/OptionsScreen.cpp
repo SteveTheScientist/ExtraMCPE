@@ -181,12 +181,28 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_CLOUD_Y_LEVEL) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CLOUD_Y_LEVEL);
+        int yLvl = (int)(val + 0.5f);
+        msg = "Cloud Height: " + to_str(yLvl);
+        return;
+    }
+
+    if (optionId == OPTIONS_BETA_SKY) {
+        bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
+        active = !tallOn;
+    }
+
     bool state = minecraft->options.getBooleanValue(optionId);
     msg = baseName + (state ? ": ON" : ": OFF");
 }
 
 void OptionControl::toggleValue(Minecraft* minecraft) {
     if (controlType == CONTROL_ACTION || controlType == CONTROL_KEY) return;
+
+    if (optionId == OPTIONS_BETA_SKY && minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS)) {
+        return;
+    }
 
     if (optionId == OPTIONS_VIEW_DISTANCE) {
         int cur = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);

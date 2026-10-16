@@ -150,6 +150,7 @@ private:
     int m_cachedXCell;
     int m_cachedZCell;
     float m_cachedThickness;
+    float m_cachedCloudY;
     bool m_cachedFlatShading;
     bool m_cachedTallClouds;
     int* m_cloudPixels;

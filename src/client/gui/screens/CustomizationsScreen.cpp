@@ -35,17 +35,7 @@ void CustomizationsScreen::init() {
     int idSeq = 200;
 
     // Customization Options
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "3rd Person View"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", true, 0.0f, 1.0f, ACTION_CLOUDS));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -76,20 +66,35 @@ void CustomizationsScreen::setupPositions() {
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         OptionControl* ctrl = m_controls[i];
-        int r = (int)(i / 2);
-        int c = (int)(i % 2);
+        if (ctrl->isFullWidth) {
+            int r = (int)(i / 2);
+            int itemX = centerX - 155;
+            int itemW = 310;
+            int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
 
-        int itemX = (c == 0) ? centerX - 155 : centerX + 5;
-        int itemW = 150;
-        int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+            ctrl->x = itemX;
+            ctrl->y = itemY;
+            ctrl->width = itemW;
+            ctrl->height = 20;
 
-        ctrl->x = itemX;
-        ctrl->y = itemY;
-        ctrl->width = itemW;
-        ctrl->height = 20;
+            ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+            ctrl->updateLabel(minecraft);
+        } else {
+            int r = (int)(i / 2);
+            int c = (int)(i % 2);
 
-        ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
-        ctrl->updateLabel(minecraft);
+            int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+            int itemW = 150;
+            int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+
+            ctrl->x = itemX;
+            ctrl->y = itemY;
+            ctrl->width = itemW;
+            ctrl->height = 20;
+
+            ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+            ctrl->updateLabel(minecraft);
+        }
     }
 }
 

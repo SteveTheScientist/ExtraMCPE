@@ -71,6 +71,7 @@ LevelRenderer::LevelRenderer( Minecraft* mc)
 	m_cachedXCell(-999999),
 	m_cachedZCell(-999999),
 	m_cachedThickness(-1.0f),
+	m_cachedCloudY(-1.0f),
 	m_cachedFlatShading(false),
 	m_cachedTallClouds(false),
 	m_cloudPixels(NULL),
@@ -1477,6 +1478,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	float cloudFade = mc->options.getProgressValue(OPTIONS_CLOUD_FADE);
 	float opacity = mc->options.getProgressValue(OPTIONS_CLOUD_OPACITY);
 	bool flatShading = mc->options.getBooleanValue(OPTIONS_CLOUD_FLAT_SHADING);
+	float cloudY = mc->options.getProgressValue(OPTIONS_CLOUD_Y_LEVEL);
 
 	glDisable(GL_CULL_FACE);
 
@@ -1493,7 +1495,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	float xo = (px + cloudTime * 0.03f) / ss;
 	float zo = pz / ss + 0.33f;
 
-	float yy = 108.0f - py + 0.33f;
+	float yy = cloudY - py + 0.33f;
 
 	int xWraps = Mth::floor(xo / 2048.0);
 	int zWraps = Mth::floor(zo / 2048.0);
@@ -1521,6 +1523,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 
 	bool needsRebuild = (xCell != m_cachedXCell || zCell != m_cachedZCell ||
 	                     thicknessScale != m_cachedThickness ||
+	                     cloudY != m_cachedCloudY ||
 	                     flatShading != m_cachedFlatShading ||
 	                     tallClouds != m_cachedTallClouds);
 
@@ -1614,6 +1617,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 		m_cachedXCell = xCell;
 		m_cachedZCell = zCell;
 		m_cachedThickness = thicknessScale;
+		m_cachedCloudY = cloudY;
 		m_cachedFlatShading = flatShading;
 		m_cachedTallClouds = tallClouds;
 	}
@@ -1626,9 +1630,9 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	float cg = (float)cc.y;
 	float cb = (float)cc.z;
 
-	float rel = 108.0f - py;
-	float alphaBottom = cloudAlpha(0.0f, rel, 0.8f, opacity, cloudFade);
-	float alphaTop = cloudAlpha(1.0f, rel, 0.8f, opacity, cloudFade);
+	float rel = cloudY - py;
+	float alphaBottom = cloudAlpha(0.0f, rel, 1.0f, opacity, cloudFade);
+	float alphaTop = cloudAlpha(1.0f, rel, 1.0f, opacity, cloudFade);
 
 	glPushMatrix();
 	glScalef(ss, 1.0f, ss);
