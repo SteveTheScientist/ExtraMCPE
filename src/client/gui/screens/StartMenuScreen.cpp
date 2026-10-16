@@ -66,8 +66,6 @@ void StartMenuScreen::init()
 	tabButtons.push_back(bCredits);
 	tabButtons.push_back(bQuit);
 
-	copyright = "\xffMojang AB";
-
 	std::string versionString = Common::getGameVersionString();
 
 	std::string _username = minecraft->options.getStringValue(OPTIONS_USERNAME);
@@ -198,8 +196,6 @@ void StartMenuScreen::render( int xm, int ym, float a )
 		t.vertexUV(x-wh, y+0, blitOffset, 0, 0);
 		t.draw();
 	}
-
-	drawString(font, copyright, width - font->width(copyright) - 6, height - 12, 0xddffffff);
 
 	glEnable2(GL_BLEND);
 	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

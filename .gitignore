@@ -206,5 +206,3 @@ build-apk/
 *.a
 *.so
 build/
-*.png
-*.jpg

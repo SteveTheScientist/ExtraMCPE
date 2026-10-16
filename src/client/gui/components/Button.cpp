@@ -72,12 +72,12 @@ int Button::getYImage( bool hovered )
 void Button::renderFace(Minecraft* mc, int xm, int ym) {
 	Font* font = mc->font;
 	if (!active) {
-		drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xffa0a0a0);
+		drawCenteredString(font, msg, x + width / 2, y + (height - Font::DefaultLineHeight) / 2, 0xffa0a0a0);
 	} else {
 		if (hovered(mc, xm, ym) || selected) {
-			drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xffffa0);
+			drawCenteredString(font, msg, x + width / 2, y + (height - Font::DefaultLineHeight) / 2, 0xffffa0);
 		} else {
-			drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xe0e0e0);
+			drawCenteredString(font, msg, x + width / 2, y + (height - Font::DefaultLineHeight) / 2, 0xe0e0e0);
 		}
 	}
 }
@@ -194,7 +194,7 @@ void THeader::render( Minecraft* minecraft, int xm, int ym ) {
 	int xx = x + width/2;
 	if (xText != -99999)
 		xx = xText;
-	drawCenteredString(font, msg, xx, y + (height - 8) / 2, 0xe0e0e0);
+	drawCenteredString(font, msg, xx, y + (height - Font::DefaultLineHeight) / 2, 0xe0e0e0);
 }
 
 void THeader::renderBg( Minecraft* minecraft, int xm, int ym )

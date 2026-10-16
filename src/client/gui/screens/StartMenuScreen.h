@@ -30,9 +30,6 @@ private:
 	Button* bCredits;
 	Button* bQuit;
 
-	std::string copyright;
-	int copyrightPosX;
-
 	std::string version;
 	int versionPosX;
 

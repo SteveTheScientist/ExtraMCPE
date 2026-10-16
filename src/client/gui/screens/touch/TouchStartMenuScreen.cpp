@@ -59,8 +59,6 @@ void StartMenuScreen::init()
 	tabButtons.push_back(bCredits);
 	tabButtons.push_back(bQuit);
 
-	copyright = "\xffMojang AB";
-
 	std::string versionString = Common::getGameVersionString();
 
 	std::string _username = minecraft->options.getStringValue(OPTIONS_USERNAME);
@@ -119,7 +117,6 @@ void StartMenuScreen::setupPositions() {
 	bQuit->x = centerX - 100;
 	bQuit->y = yBase + 96;
 
-	copyrightPosX = width - minecraft->font->width(copyright) - 6;
 	versionPosX = (width - minecraft->font->width(version)) / 2;
 }
 
@@ -200,8 +197,6 @@ void StartMenuScreen::render( int xm, int ym, float a )
 			t.vertexUV(x-wh, y+0, blitOffset, 0, 0);
 		t.draw();
 	}
-
-	drawString(font, copyright, width - font->width(copyright) - 6, height - 12, 0xddffffff);
 
 	Screen::render(xm, ym, a);
     glDisable2(GL_BLEND);
