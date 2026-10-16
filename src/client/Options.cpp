@@ -88,7 +88,6 @@ OptionFloat cloudFade("cloud_fade", 1.0f, 0.0f, 1.0f);
 OptionFloat cloudOpacity("cloud_opacity", 0.8f, 0.4f, 1.0f);
 OptionBool cloudFlatShading("cloud_flat_shading", true);
 OptionFloat cloudYLevel("cloud_y_level", 108.0f, 32.0f, 192.0f);
-OptionFloat cloudRoundness("cloud_roundness", 0.3f, 0.0f, 1.0f);
 
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
@@ -221,7 +220,6 @@ void Options::initTable() {
 	m_options[OPTIONS_CLOUD_OPACITY] = &cloudOpacity;
 	m_options[OPTIONS_CLOUD_FLAT_SHADING] = &cloudFlatShading;
 	m_options[OPTIONS_CLOUD_Y_LEVEL] = &cloudYLevel;
-	m_options[OPTIONS_CLOUD_ROUNDNESS] = &cloudRoundness;
 }
 
 void Options::set(OptionId key, bool value) {

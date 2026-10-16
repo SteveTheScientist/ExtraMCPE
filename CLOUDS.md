@@ -19,7 +19,6 @@ This document describes the recreated cloud rendering system and its customizati
   * Geometry mesh is cached and rebuilt **only** when the camera crosses a grid cell boundary ($xCell$ or $zCell$) or when cloud options change.
   * Zero per-frame heap allocations are made during cloud rendering. Smooth scrolling and camera translation are handled via matrix transform `glTranslatef(-xOffs, yy, -zOffs)`.
   * Outer boundary faces touching empty texture cells are generated; hidden inner faces between adjacent cloud cells are omitted to prevent double blending.
-  * Convex outer cloud corners are chamfered/rounded according to the `Cloud Roundness` setting.
   * Translucent depth pre-pass is preserved to prevent alpha sorting artifacts.
 
 ---
@@ -42,7 +41,6 @@ All cloud settings are saved in `options.txt`:
 | **Cloud Thickness** | `1.0x` to `4.0x` | `2.5x` (`2.5`) | `options.cloud_thickness` | Multiplier for vertical cloud thickness (`thicknessScale`). Clouds grow upward from the configured base height. |
 | **Cloud Fade** | `0%` to `100%` | `100%` (`1.0`) | `options.cloud_fade` | Strength of view-dependent vertical alpha fade. 100% enables full vertical gradient, 0% applies uniform opacity. |
 | **Cloud Opacity** | `40%` to `100%` | `80%` (`0.8`) | `options.cloud_opacity` | Cloud base opacity constant (represented as $0.8$ constant in formula). |
-| **Cloud Roundness** | `0%` to `100%` | `30%` (`0.3`) | `options.cloud_roundness` | Adjusts chamfer rounding on outer convex cloud corners. |
 | **Flat Shading** | `ON` / `OFF` | `ON` (`true`) | `options.cloud_flat_shading` | Uses uniform $1.0\times$ brightness on top, bottom, and side faces when `ON`. Restores darker bottom/side shading when `OFF`. |
 | **Reset Clouds** | Action Button | N/A | N/A | Resets all cloud customization options to their default values live. |
 

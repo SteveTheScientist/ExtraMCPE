@@ -188,12 +188,6 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-    if (optionId == OPTIONS_CLOUD_ROUNDNESS) {
-        float val = minecraft->options.getProgressValue(OPTIONS_CLOUD_ROUNDNESS);
-        int pct = (int)(val * 100.0f + 0.5f);
-        msg = "Cloud Roundness: " + to_str(pct) + "%";
-        return;
-    }
 
     if (optionId == OPTIONS_BETA_SKY) {
         bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
@@ -333,11 +327,11 @@ void OptionsScreen::init() {
 	m_controls.clear();
 	int idSeq = 10;
 
-	// Submenu Navigation
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls & Input...", false, 0.0f, 1.0f, ACTION_CONTROLS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics & Visuals...", false, 0.0f, 1.0f, ACTION_GRAPHICS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface & Game...", false, 0.0f, 1.0f, ACTION_INTERFACE));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username...", false, 0.0f, 1.0f, ACTION_USERNAME));
+	// Submenu Navigation (Full width 310px matching Customizations "Clouds..." button)
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls & Input...", true, 0.0f, 1.0f, ACTION_CONTROLS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics & Visuals...", true, 0.0f, 1.0f, ACTION_GRAPHICS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface & Game...", true, 0.0f, 1.0f, ACTION_INTERFACE));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username...", true, 0.0f, 1.0f, ACTION_USERNAME));
 
 	// Primary Audio & Controls Sliders
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
@@ -379,21 +373,35 @@ void OptionsScreen::setupPositions() {
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		OptionControl* ctrl = m_controls[i];
-		int r = (int)(i / 2);
-		int c = (int)(i % 2);
+		if (ctrl->isFullWidth) {
+			int r = (int)(i / 2);
+			int itemX = centerX - 155;
+			int itemW = 310;
+			int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
 
-		int itemX = (c == 0) ? centerX - 155 : centerX + 5;
-		int itemW = 150;
-		int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+			ctrl->x = itemX;
+			ctrl->y = itemY;
+			ctrl->width = itemW;
+			ctrl->height = 20;
 
-		ctrl->x = itemX;
-		ctrl->y = itemY;
-		ctrl->width = itemW;
-		ctrl->height = 20;
+			ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+			ctrl->updateLabel(minecraft);
+		} else {
+			int r = (int)(i / 2);
+			int c = (int)(i % 2);
 
-		// Visible within header and footer margins
-		ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
-		ctrl->updateLabel(minecraft);
+			int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+			int itemW = 150;
+			int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+
+			ctrl->x = itemX;
+			ctrl->y = itemY;
+			ctrl->width = itemW;
+			ctrl->height = 20;
+
+			ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+			ctrl->updateLabel(minecraft);
+		}
 	}
 }
 
@@ -599,163 +607,727 @@ void OptionsScreen::keyPressed(int eventKey) {
 //
 // ControlsOptionsScreen
 //
+ControlsOptionsScreen::ControlsOptionsScreen()
+    : btnDone(NULL),
+      m_activeKeyControl(NULL),
+      m_scrollY(0.0f),
+      m_maxScroll(0.0f),
+      m_isDraggingScrollbar(false)
+{
+}
+
+ControlsOptionsScreen::~ControlsOptionsScreen() {
+    delete btnDone;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        delete m_controls[i];
+    }
+    m_controls.clear();
+}
+
 void ControlsOptionsScreen::init() {
-	btnDone = new Button(100, 0, 0, 200, 20, "Done");
-	buttons.push_back(btnDone);
-	tabButtons.push_back(btnDone);
+    btnDone = new Button(100, 0, 0, 200, 20, "Done");
+    buttons.push_back(btnDone);
+    tabButtons.push_back(btnDone);
 
-	m_controls.clear();
-	int idSeq = 1100;
+    m_controls.clear();
+    int idSeq = 1100;
 
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AUTOJUMP, "Auto-Jump"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_USE_TOUCHSCREEN, "Touchscreen"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_JOY_TOUCH_AREA, "D-Pad Touch Area"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_INVERT_Y_MOUSE, "Invert Mouse"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AUTOJUMP, "Auto-Jump"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_USE_TOUCHSCREEN, "Touchscreen"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_JOY_TOUCH_AREA, "D-Pad Touch Area"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
 
-	for (size_t i = 0; i < m_controls.size(); ++i) {
-		m_controls[i]->updateLabel(minecraft);
-		buttons.push_back(m_controls[i]);
-	}
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        m_controls[i]->updateLabel(minecraft);
+        buttons.push_back(m_controls[i]);
+    }
+}
+
+void ControlsOptionsScreen::updateScrollBounds() {
+    int totalRows = (int)((m_controls.size() + 1) / 2);
+    float contentH = (float)(totalRows * 24 + 10);
+    float viewportH = (float)(height - 68);
+    m_maxScroll = std::max(0.0f, contentH - viewportH);
+    m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+}
+
+void ControlsOptionsScreen::setupPositions() {
+    if (btnDone) {
+        btnDone->width = 200;
+        btnDone->height = 20;
+        btnDone->x = (width - 200) / 2;
+        btnDone->y = height - 28;
+    }
+
+    updateScrollBounds();
+
+    int centerX = width / 2;
+    int topY = 36;
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        int r = (int)(i / 2);
+        int c = (int)(i % 2);
+
+        int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+        int itemW = 150;
+        int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+
+        ctrl->x = itemX;
+        ctrl->y = itemY;
+        ctrl->width = itemW;
+        ctrl->height = 20;
+
+        ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+        ctrl->updateLabel(minecraft);
+    }
+}
+
+void ControlsOptionsScreen::tick() {
+    super::tick();
+
+    int xm = Mouse::getX();
+    int ym = Mouse::getY();
+    toGUICoordinate(xm, ym);
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        if (ctrl->isDraggingSlider) {
+            if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+                ctrl->updateSliderValue(minecraft, xm);
+            } else {
+                ctrl->isDraggingSlider = false;
+            }
+        }
+    }
+
+    if (m_isDraggingScrollbar) {
+        if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+            float viewportH = (float)(height - 68);
+            if (viewportH > 0 && m_maxScroll > 0) {
+                float relY = (float)(ym - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+            }
+        } else {
+            m_isDraggingScrollbar = false;
+        }
+    }
 }
 
 void ControlsOptionsScreen::render(int xm, int ym, float a) {
-	super::render(xm, ym, a);
-	Font* font = minecraft->font;
-	fill(0, 0, width, 32, 0x70000000);
-	drawCenteredString(font, "Controls & Input", width / 2, 10, 0xffffffff);
+    if (minecraft->isLevelGenerated()) {
+        renderBackground();
+    } else {
+        renderDirtBackground(0);
+    }
+
+    Font* font = minecraft->font;
+    Tesselator& t = Tesselator::instance;
+    int centerX = width / 2;
+    int topY = 34;
+    int bottomY = height - 34;
+
+    fill(0, 0, width, 32, 0x70000000);
+    fill(0, height - 34, width, height, 0x70000000);
+
+    if (m_maxScroll > 0) {
+        int trackX = centerX + 160;
+        int trackW = 6;
+        int trackY = topY + 2;
+        int trackH = bottomY - topY - 4;
+
+        minecraft->textures->loadAndBindTexture("gui/Widget_scroller_background.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)trackX, (float)(trackY + trackH), blitOffset, 0, 1);
+        t.vertexUV((float)(trackX + trackW), (float)(trackY + trackH), blitOffset, 1, 1);
+        t.vertexUV((float)(trackX + trackW), (float)trackY, blitOffset, 1, 0);
+        t.vertexUV((float)trackX, (float)trackY, blitOffset, 0, 0);
+        t.draw();
+
+        int thumbW = 12;
+        int thumbH = 15;
+        int thumbX = centerX + 157;
+        int thumbY = trackY + (int)((trackH - thumbH) * (m_scrollY / m_maxScroll));
+
+        minecraft->textures->loadAndBindTexture("gui/Scroller.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)thumbX, (float)(thumbY + thumbH), blitOffset, 0, 1);
+        t.vertexUV((float)(thumbX + thumbW), (float)(thumbY + thumbH), blitOffset, 1, 1);
+        t.vertexUV((float)(thumbX + thumbW), (float)thumbY, blitOffset, 1, 0);
+        t.vertexUV((float)thumbX, (float)thumbY, blitOffset, 0, 0);
+        t.draw();
+    }
+
+    super::render(xm, ym, a);
+
+    drawCenteredString(font, "Controls & Input", width / 2, 10, 0xffffffff);
 }
 
 void ControlsOptionsScreen::buttonClicked(Button* button) {
-	if (button == btnDone) {
-		minecraft->options.save();
-		minecraft->setScreen(new OptionsScreen());
-		return;
-	}
-	super::buttonClicked(button);
+    if (button == btnDone) {
+        minecraft->options.save();
+        minecraft->setScreen(new OptionsScreen());
+        return;
+    }
+
+    OptionControl* ctrl = dynamic_cast<OptionControl*>(button);
+    if (ctrl) {
+        if (ctrl->controlType == CONTROL_KEY) {
+            if (m_activeKeyControl && m_activeKeyControl != ctrl) {
+                m_activeKeyControl->isListeningForKey = false;
+                m_activeKeyControl->updateLabel(minecraft);
+            }
+            m_activeKeyControl = ctrl;
+            ctrl->isListeningForKey = true;
+            ctrl->updateLabel(minecraft);
+            return;
+        }
+
+        if (ctrl->controlType == CONTROL_TOGGLE) {
+            ctrl->toggleValue(minecraft);
+            minecraft->options.save();
+            setupPositions();
+        } else if (ctrl->controlType == CONTROL_ACTION) {
+            if (ctrl->actionId == ACTION_KEYBINDS) {
+                minecraft->setScreen(new KeyBindsScreen());
+            }
+        }
+    }
+}
+
+void ControlsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        int centerX = width / 2;
+        int topY = 34;
+        int bottomY = height - 34;
+
+        if (y >= topY && y < bottomY) {
+            if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
+                m_isDraggingScrollbar = true;
+                float viewportH = (float)(height - 68);
+                float relY = (float)(y - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+                return;
+            }
+        }
+    }
+
+    super::mouseClicked(x, y, buttonNum);
+}
+
+void ControlsOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
+    m_isDraggingScrollbar = false;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        m_controls[i]->isDraggingSlider = false;
+    }
+    super::mouseReleased(x, y, buttonNum);
+}
+
+void ControlsOptionsScreen::mouseWheel(int dx, int dy, int xm, int ym) {
+    if (dy != 0 && m_maxScroll > 0) {
+        m_scrollY -= (float)dy * 12.0f;
+        m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+        setupPositions();
+    }
 }
 
 void ControlsOptionsScreen::keyPressed(int eventKey) {
-	if (eventKey == Keyboard::KEY_ESCAPE) {
-		minecraft->options.save();
-		minecraft->setScreen(new OptionsScreen());
-		return;
-	}
-	super::keyPressed(eventKey);
+    if (m_activeKeyControl && m_activeKeyControl->isListeningForKey) {
+        if (eventKey != Keyboard::KEY_ESCAPE) {
+            minecraft->options.set(m_activeKeyControl->optionId, eventKey);
+            minecraft->options.save();
+        }
+        m_activeKeyControl->isListeningForKey = false;
+        m_activeKeyControl->updateLabel(minecraft);
+        m_activeKeyControl = NULL;
+        return;
+    }
+
+    if (eventKey == Keyboard::KEY_ESCAPE) {
+        minecraft->options.save();
+        minecraft->setScreen(new OptionsScreen());
+        return;
+    }
+    super::keyPressed(eventKey);
 }
 
 //
 // GraphicsOptionsScreen
 //
+GraphicsOptionsScreen::GraphicsOptionsScreen()
+    : btnDone(NULL),
+      m_scrollY(0.0f),
+      m_maxScroll(0.0f),
+      m_isDraggingScrollbar(false)
+{
+}
+
+GraphicsOptionsScreen::~GraphicsOptionsScreen() {
+    delete btnDone;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        delete m_controls[i];
+    }
+    m_controls.clear();
+}
+
 void GraphicsOptionsScreen::init() {
-	btnDone = new Button(100, 0, 0, 200, 20, "Done");
-	buttons.push_back(btnDone);
-	tabButtons.push_back(btnDone);
+    btnDone = new Button(100, 0, 0, 200, 20, "Done");
+    buttons.push_back(btnDone);
+    tabButtons.push_back(btnDone);
 
-	m_controls.clear();
-	int idSeq = 1200;
+    m_controls.clear();
+    int idSeq = 1200;
 
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_TYPE, "Fog Type"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_TYPE, "Fog Type"));
 
-	for (size_t i = 0; i < m_controls.size(); ++i) {
-		m_controls[i]->updateLabel(minecraft);
-		buttons.push_back(m_controls[i]);
-	}
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        m_controls[i]->updateLabel(minecraft);
+        buttons.push_back(m_controls[i]);
+    }
+}
+
+void GraphicsOptionsScreen::updateScrollBounds() {
+    int totalRows = (int)((m_controls.size() + 1) / 2);
+    float contentH = (float)(totalRows * 24 + 10);
+    float viewportH = (float)(height - 68);
+    m_maxScroll = std::max(0.0f, contentH - viewportH);
+    m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+}
+
+void GraphicsOptionsScreen::setupPositions() {
+    if (btnDone) {
+        btnDone->width = 200;
+        btnDone->height = 20;
+        btnDone->x = (width - 200) / 2;
+        btnDone->y = height - 28;
+    }
+
+    updateScrollBounds();
+
+    int centerX = width / 2;
+    int topY = 36;
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        int r = (int)(i / 2);
+        int c = (int)(i % 2);
+
+        int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+        int itemW = 150;
+        int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+
+        ctrl->x = itemX;
+        ctrl->y = itemY;
+        ctrl->width = itemW;
+        ctrl->height = 20;
+
+        ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+        ctrl->updateLabel(minecraft);
+    }
+}
+
+void GraphicsOptionsScreen::tick() {
+    super::tick();
+
+    int xm = Mouse::getX();
+    int ym = Mouse::getY();
+    toGUICoordinate(xm, ym);
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        if (ctrl->isDraggingSlider) {
+            if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+                ctrl->updateSliderValue(minecraft, xm);
+            } else {
+                ctrl->isDraggingSlider = false;
+            }
+        }
+    }
+
+    if (m_isDraggingScrollbar) {
+        if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+            float viewportH = (float)(height - 68);
+            if (viewportH > 0 && m_maxScroll > 0) {
+                float relY = (float)(ym - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+            }
+        } else {
+            m_isDraggingScrollbar = false;
+        }
+    }
 }
 
 void GraphicsOptionsScreen::render(int xm, int ym, float a) {
-	super::render(xm, ym, a);
-	Font* font = minecraft->font;
-	fill(0, 0, width, 32, 0x70000000);
-	drawCenteredString(font, "Graphics & Visuals", width / 2, 10, 0xffffffff);
+    if (minecraft->isLevelGenerated()) {
+        renderBackground();
+    } else {
+        renderDirtBackground(0);
+    }
+
+    Font* font = minecraft->font;
+    Tesselator& t = Tesselator::instance;
+    int centerX = width / 2;
+    int topY = 34;
+    int bottomY = height - 34;
+
+    fill(0, 0, width, 32, 0x70000000);
+    fill(0, height - 34, width, height, 0x70000000);
+
+    if (m_maxScroll > 0) {
+        int trackX = centerX + 160;
+        int trackW = 6;
+        int trackY = topY + 2;
+        int trackH = bottomY - topY - 4;
+
+        minecraft->textures->loadAndBindTexture("gui/Widget_scroller_background.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)trackX, (float)(trackY + trackH), blitOffset, 0, 1);
+        t.vertexUV((float)(trackX + trackW), (float)(trackY + trackH), blitOffset, 1, 1);
+        t.vertexUV((float)(trackX + trackW), (float)trackY, blitOffset, 1, 0);
+        t.vertexUV((float)trackX, (float)trackY, blitOffset, 0, 0);
+        t.draw();
+
+        int thumbW = 12;
+        int thumbH = 15;
+        int thumbX = centerX + 157;
+        int thumbY = trackY + (int)((trackH - thumbH) * (m_scrollY / m_maxScroll));
+
+        minecraft->textures->loadAndBindTexture("gui/Scroller.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)thumbX, (float)(thumbY + thumbH), blitOffset, 0, 1);
+        t.vertexUV((float)(thumbX + thumbW), (float)(thumbY + thumbH), blitOffset, 1, 1);
+        t.vertexUV((float)(thumbX + thumbW), (float)thumbY, blitOffset, 1, 0);
+        t.vertexUV((float)thumbX, (float)thumbY, blitOffset, 0, 0);
+        t.draw();
+    }
+
+    super::render(xm, ym, a);
+
+    drawCenteredString(font, "Graphics & Visuals", width / 2, 10, 0xffffffff);
 }
 
 void GraphicsOptionsScreen::buttonClicked(Button* button) {
-	if (button == btnDone) {
-		minecraft->options.save();
-		minecraft->setScreen(new OptionsScreen());
-		return;
-	}
-	super::buttonClicked(button);
+    if (button == btnDone) {
+        minecraft->options.save();
+        minecraft->setScreen(new OptionsScreen());
+        return;
+    }
+
+    OptionControl* ctrl = dynamic_cast<OptionControl*>(button);
+    if (ctrl) {
+        if (ctrl->controlType == CONTROL_TOGGLE) {
+            ctrl->toggleValue(minecraft);
+            minecraft->options.save();
+            setupPositions();
+        }
+    }
+}
+
+void GraphicsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        int centerX = width / 2;
+        int topY = 34;
+        int bottomY = height - 34;
+
+        if (y >= topY && y < bottomY) {
+            if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
+                m_isDraggingScrollbar = true;
+                float viewportH = (float)(height - 68);
+                float relY = (float)(y - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+                return;
+            }
+        }
+    }
+
+    super::mouseClicked(x, y, buttonNum);
+}
+
+void GraphicsOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
+    m_isDraggingScrollbar = false;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        m_controls[i]->isDraggingSlider = false;
+    }
+    super::mouseReleased(x, y, buttonNum);
+}
+
+void GraphicsOptionsScreen::mouseWheel(int dx, int dy, int xm, int ym) {
+    if (dy != 0 && m_maxScroll > 0) {
+        m_scrollY -= (float)dy * 12.0f;
+        m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+        setupPositions();
+    }
 }
 
 void GraphicsOptionsScreen::keyPressed(int eventKey) {
-	if (eventKey == Keyboard::KEY_ESCAPE) {
-		minecraft->options.save();
-		minecraft->setScreen(new OptionsScreen());
-		return;
-	}
-	super::keyPressed(eventKey);
+    if (eventKey == Keyboard::KEY_ESCAPE) {
+        minecraft->options.save();
+        minecraft->setScreen(new OptionsScreen());
+        return;
+    }
+    super::keyPressed(eventKey);
 }
 
 //
 // InterfaceOptionsScreen
 //
+InterfaceOptionsScreen::InterfaceOptionsScreen()
+    : btnDone(NULL),
+      m_scrollY(0.0f),
+      m_maxScroll(0.0f),
+      m_isDraggingScrollbar(false)
+{
+}
+
+InterfaceOptionsScreen::~InterfaceOptionsScreen() {
+    delete btnDone;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        delete m_controls[i];
+    }
+    m_controls.clear();
+}
+
 void InterfaceOptionsScreen::init() {
-	btnDone = new Button(100, 0, 0, 200, 20, "Done");
-	buttons.push_back(btnDone);
-	tabButtons.push_back(btnDone);
+    btnDone = new Button(100, 0, 0, 200, 20, "Done");
+    buttons.push_back(btnDone);
+    tabButtons.push_back(btnDone);
 
-	m_controls.clear();
-	int idSeq = 1300;
+    m_controls.clear();
+    int idSeq = 1300;
 
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_GUI_SCALE, "GUI Scale"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DESTROY_VIBRATION, "Vibrate on Destroy"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RPI_CURSOR, "Custom Cursor"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_GUI_SCALE, "GUI Scale"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DESTROY_VIBRATION, "Vibrate on Destroy"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RPI_CURSOR, "Custom Cursor"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
 
-	for (size_t i = 0; i < m_controls.size(); ++i) {
-		m_controls[i]->updateLabel(minecraft);
-		buttons.push_back(m_controls[i]);
-	}
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        m_controls[i]->updateLabel(minecraft);
+        buttons.push_back(m_controls[i]);
+    }
+}
+
+void InterfaceOptionsScreen::updateScrollBounds() {
+    int totalRows = (int)((m_controls.size() + 1) / 2);
+    float contentH = (float)(totalRows * 24 + 10);
+    float viewportH = (float)(height - 68);
+    m_maxScroll = std::max(0.0f, contentH - viewportH);
+    m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+}
+
+void InterfaceOptionsScreen::setupPositions() {
+    if (btnDone) {
+        btnDone->width = 200;
+        btnDone->height = 20;
+        btnDone->x = (width - 200) / 2;
+        btnDone->y = height - 28;
+    }
+
+    updateScrollBounds();
+
+    int centerX = width / 2;
+    int topY = 36;
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        int r = (int)(i / 2);
+        int c = (int)(i % 2);
+
+        int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+        int itemW = 150;
+        int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+
+        ctrl->x = itemX;
+        ctrl->y = itemY;
+        ctrl->width = itemW;
+        ctrl->height = 20;
+
+        ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
+        ctrl->updateLabel(minecraft);
+    }
+}
+
+void InterfaceOptionsScreen::tick() {
+    super::tick();
+
+    int xm = Mouse::getX();
+    int ym = Mouse::getY();
+    toGUICoordinate(xm, ym);
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        if (ctrl->isDraggingSlider) {
+            if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+                ctrl->updateSliderValue(minecraft, xm);
+            } else {
+                ctrl->isDraggingSlider = false;
+            }
+        }
+    }
+
+    if (m_isDraggingScrollbar) {
+        if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+            float viewportH = (float)(height - 68);
+            if (viewportH > 0 && m_maxScroll > 0) {
+                float relY = (float)(ym - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+            }
+        } else {
+            m_isDraggingScrollbar = false;
+        }
+    }
 }
 
 void InterfaceOptionsScreen::render(int xm, int ym, float a) {
-	super::render(xm, ym, a);
-	Font* font = minecraft->font;
-	fill(0, 0, width, 32, 0x70000000);
-	drawCenteredString(font, "Interface & Game", width / 2, 10, 0xffffffff);
+    if (minecraft->isLevelGenerated()) {
+        renderBackground();
+    } else {
+        renderDirtBackground(0);
+    }
+
+    Font* font = minecraft->font;
+    Tesselator& t = Tesselator::instance;
+    int centerX = width / 2;
+    int topY = 34;
+    int bottomY = height - 34;
+
+    fill(0, 0, width, 32, 0x70000000);
+    fill(0, height - 34, width, height, 0x70000000);
+
+    if (m_maxScroll > 0) {
+        int trackX = centerX + 160;
+        int trackW = 6;
+        int trackY = topY + 2;
+        int trackH = bottomY - topY - 4;
+
+        minecraft->textures->loadAndBindTexture("gui/Widget_scroller_background.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)trackX, (float)(trackY + trackH), blitOffset, 0, 1);
+        t.vertexUV((float)(trackX + trackW), (float)(trackY + trackH), blitOffset, 1, 1);
+        t.vertexUV((float)(trackX + trackW), (float)trackY, blitOffset, 1, 0);
+        t.vertexUV((float)trackX, (float)trackY, blitOffset, 0, 0);
+        t.draw();
+
+        int thumbW = 12;
+        int thumbH = 15;
+        int thumbX = centerX + 157;
+        int thumbY = trackY + (int)((trackH - thumbH) * (m_scrollY / m_maxScroll));
+
+        minecraft->textures->loadAndBindTexture("gui/Scroller.png");
+        glColor4f2(1, 1, 1, 1);
+        t.begin();
+        t.vertexUV((float)thumbX, (float)(thumbY + thumbH), blitOffset, 0, 1);
+        t.vertexUV((float)(thumbX + thumbW), (float)(thumbY + thumbH), blitOffset, 1, 1);
+        t.vertexUV((float)(thumbX + thumbW), (float)thumbY, blitOffset, 1, 0);
+        t.vertexUV((float)thumbX, (float)thumbY, blitOffset, 0, 0);
+        t.draw();
+    }
+
+    super::render(xm, ym, a);
+
+    drawCenteredString(font, "Interface & Game", width / 2, 10, 0xffffffff);
 }
 
 void InterfaceOptionsScreen::buttonClicked(Button* button) {
-	if (button == btnDone) {
-		minecraft->options.save();
-		minecraft->setScreen(new OptionsScreen());
-		return;
-	}
-	super::buttonClicked(button);
+    if (button == btnDone) {
+        minecraft->options.save();
+        minecraft->setScreen(new OptionsScreen());
+        return;
+    }
+
+    OptionControl* ctrl = dynamic_cast<OptionControl*>(button);
+    if (ctrl) {
+        if (ctrl->controlType == CONTROL_TOGGLE) {
+            ctrl->toggleValue(minecraft);
+            minecraft->options.save();
+
+            if (ctrl->optionId == OPTIONS_GUI_SCALE || ctrl->optionId == OPTIONS_WINDOW_SCALE) {
+                minecraft->setScreen(new InterfaceOptionsScreen());
+                return;
+            }
+
+            setupPositions();
+        }
+    }
+}
+
+void InterfaceOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        int centerX = width / 2;
+        int topY = 34;
+        int bottomY = height - 34;
+
+        if (y >= topY && y < bottomY) {
+            if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
+                m_isDraggingScrollbar = true;
+                float viewportH = (float)(height - 68);
+                float relY = (float)(y - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+                return;
+            }
+        }
+    }
+
+    super::mouseClicked(x, y, buttonNum);
+}
+
+void InterfaceOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
+    m_isDraggingScrollbar = false;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        m_controls[i]->isDraggingSlider = false;
+    }
+    super::mouseReleased(x, y, buttonNum);
+}
+
+void InterfaceOptionsScreen::mouseWheel(int dx, int dy, int xm, int ym) {
+    if (dy != 0 && m_maxScroll > 0) {
+        m_scrollY -= (float)dy * 12.0f;
+        m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+        setupPositions();
+    }
 }
 
 void InterfaceOptionsScreen::keyPressed(int eventKey) {
-	if (eventKey == Keyboard::KEY_ESCAPE) {
-		minecraft->options.save();
-		minecraft->setScreen(new OptionsScreen());
-		return;
-	}
-	super::keyPressed(eventKey);
+    if (eventKey == Keyboard::KEY_ESCAPE) {
+        minecraft->options.save();
+        minecraft->setScreen(new OptionsScreen());
+        return;
+    }
+    super::keyPressed(eventKey);
 }

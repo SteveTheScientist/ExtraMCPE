@@ -79,31 +79,83 @@ protected:
 	bool m_isDraggingScrollbar;
 };
 
-class ControlsOptionsScreen : public OptionsScreen {
-    typedef OptionsScreen super;
+class ControlsOptionsScreen : public Screen {
+    typedef Screen super;
 public:
+    ControlsOptionsScreen();
+    virtual ~ControlsOptionsScreen();
+
     virtual void init() override;
+    virtual void setupPositions() override;
+    virtual void tick() override;
     virtual void render(int xm, int ym, float a) override;
     virtual void buttonClicked(Button* button) override;
+    virtual void mouseClicked(int x, int y, int buttonNum) override;
+    virtual void mouseReleased(int x, int y, int buttonNum) override;
+    virtual void mouseWheel(int dx, int dy, int xm, int ym) override;
     virtual void keyPressed(int eventKey) override;
+
+private:
+    void updateScrollBounds();
+
+    Button* btnDone;
+    std::vector<OptionControl*> m_controls;
+    OptionControl* m_activeKeyControl;
+    float m_scrollY;
+    float m_maxScroll;
+    bool m_isDraggingScrollbar;
 };
 
-class GraphicsOptionsScreen : public OptionsScreen {
-    typedef OptionsScreen super;
+class GraphicsOptionsScreen : public Screen {
+    typedef Screen super;
 public:
+    GraphicsOptionsScreen();
+    virtual ~GraphicsOptionsScreen();
+
     virtual void init() override;
+    virtual void setupPositions() override;
+    virtual void tick() override;
     virtual void render(int xm, int ym, float a) override;
     virtual void buttonClicked(Button* button) override;
+    virtual void mouseClicked(int x, int y, int buttonNum) override;
+    virtual void mouseReleased(int x, int y, int buttonNum) override;
+    virtual void mouseWheel(int dx, int dy, int xm, int ym) override;
     virtual void keyPressed(int eventKey) override;
+
+private:
+    void updateScrollBounds();
+
+    Button* btnDone;
+    std::vector<OptionControl*> m_controls;
+    float m_scrollY;
+    float m_maxScroll;
+    bool m_isDraggingScrollbar;
 };
 
-class InterfaceOptionsScreen : public OptionsScreen {
-    typedef OptionsScreen super;
+class InterfaceOptionsScreen : public Screen {
+    typedef Screen super;
 public:
+    InterfaceOptionsScreen();
+    virtual ~InterfaceOptionsScreen();
+
     virtual void init() override;
+    virtual void setupPositions() override;
+    virtual void tick() override;
     virtual void render(int xm, int ym, float a) override;
     virtual void buttonClicked(Button* button) override;
+    virtual void mouseClicked(int x, int y, int buttonNum) override;
+    virtual void mouseReleased(int x, int y, int buttonNum) override;
+    virtual void mouseWheel(int dx, int dy, int xm, int ym) override;
     virtual void keyPressed(int eventKey) override;
+
+private:
+    void updateScrollBounds();
+
+    Button* btnDone;
+    std::vector<OptionControl*> m_controls;
+    float m_scrollY;
+    float m_maxScroll;
+    bool m_isDraggingScrollbar;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__OptionsScreen_H__*/
