@@ -55,6 +55,7 @@ public:
 
 private:
     void loadFontProviders();
+    void addBitmapProvider(const std::string& relativeTexPath, int heightVal, int ascentVal, const std::vector<std::string>& charGrid);
     void renderString(const char* str, float x, float y, int color, bool darken);
     const GlyphInfo* getGlyph(uint32_t codepoint) const;
 
