@@ -8,6 +8,7 @@
 #include "../../util/SmoothFloat.h"
 #include "../../world/phys/Vec3.h"
 #include "../gui/components/ImageButton.h"
+#include "EnhancedFog.h"
 
 class Minecraft;
 class Entity;
@@ -43,7 +44,7 @@ private:
 	void setupFog(int i);
 
 	void tickFov();
-	
+
 
 	void bobHurt(float a);
 	void bobView(float a);
@@ -112,6 +113,13 @@ private:
 	// Scissor area that Minecraft::screen defines
 	bool useScreenScissor;
 	IntRectangle screenScissorArea;
+
+	EnhancedFog m_enhancedFogModule;
+	bool m_useEnhancedFogThisFrame;
+	Color3f m_enhancedFogColor;
+	float m_enhancedFogStart;
+	float m_enhancedFogEnd;
+	float m_lastFrameTimeSec;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_RENDERER__GameRenderer_H__*/
