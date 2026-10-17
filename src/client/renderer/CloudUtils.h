@@ -44,8 +44,6 @@ struct CloudModeResolution {
     bool betaSky;
     bool tallCloudsEnabled;
     bool betaSkyEnabled;
-    std::string tallCloudsHint;
-    std::string betaSkyHint;
 };
 
 inline CloudModeResolution resolveCloudModes(bool tallClouds, bool betaSky, bool beautifulSkies) {
@@ -53,33 +51,12 @@ inline CloudModeResolution resolveCloudModes(bool tallClouds, bool betaSky, bool
     res.tallClouds = tallClouds;
     res.betaSky = betaSky;
 
-    if (res.tallClouds && res.betaSky) {
-        res.tallClouds = false;
+    if (res.tallClouds) {
+        res.betaSky = false;
     }
 
     res.tallCloudsEnabled = !res.betaSky;
-    if (!res.tallCloudsEnabled) {
-        res.tallCloudsHint = "Disabled while Beta Sky is ON";
-    } else {
-        res.tallCloudsHint = "";
-    }
-
-    bool betaByTall = res.tallClouds;
-    bool betaByBeautiful = beautifulSkies;
-
-    if (!betaByTall && !betaByBeautiful) {
-        res.betaSkyEnabled = true;
-        res.betaSkyHint = "";
-    } else {
-        res.betaSkyEnabled = false;
-        if (betaByTall && betaByBeautiful) {
-            res.betaSkyHint = "Disabled (Tall Clouds & Beautiful Sky)";
-        } else if (betaByTall) {
-            res.betaSkyHint = "Disabled while Tall Clouds is ON";
-        } else {
-            res.betaSkyHint = "Disabled while Beautiful Sky is ON";
-        }
-    }
+    res.betaSkyEnabled = !res.tallClouds && !beautifulSkies;
 
     return res;
 }

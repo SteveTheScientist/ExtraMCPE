@@ -46,7 +46,6 @@ public:
     float maxVal;
     bool isDraggingSlider;
     bool isListeningForKey;
-    std::string hintText;
 };
 
 class OptionsScreen: public Screen

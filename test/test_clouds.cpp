@@ -81,32 +81,26 @@ int main() {
     CloudModeResolution r1 = resolveCloudModes(true, false, true);
     assert(r1.tallClouds == true && r1.betaSky == false);
     assert(r1.tallCloudsEnabled == true && r1.betaSkyEnabled == false);
-    assert(r1.tallCloudsHint.empty());
-    assert(r1.betaSkyHint == "Disabled (Tall Clouds & Beautiful Sky)");
 
     // Case 2: Turn Beta Sky ON (Tall Clouds OFF, Beautiful Sky OFF)
     CloudModeResolution r2 = resolveCloudModes(false, true, false);
     assert(r2.tallClouds == false && r2.betaSky == true);
     assert(r2.tallCloudsEnabled == false && r2.betaSkyEnabled == true);
-    assert(r2.tallCloudsHint == "Disabled while Beta Sky is ON");
-    assert(r2.betaSkyHint.empty());
 
-    // Case 3: Old options file with both ON (Tall Clouds ON, Beta Sky ON, Beautiful Sky OFF)
+    // Case 3: Options with both ON -> Beta Sky forced OFF when Tall Clouds is ON
     CloudModeResolution r3 = resolveCloudModes(true, true, false);
-    assert(r3.tallClouds == false && r3.betaSky == true);
-    assert(r3.tallCloudsEnabled == false && r3.betaSkyEnabled == true);
+    assert(r3.tallClouds == true && r3.betaSky == false);
+    assert(r3.tallCloudsEnabled == true && r3.betaSkyEnabled == false);
 
     // Case 4: Both OFF, Beautiful Sky OFF
     CloudModeResolution r4 = resolveCloudModes(false, false, false);
     assert(r4.tallClouds == false && r4.betaSky == false);
     assert(r4.tallCloudsEnabled == true && r4.betaSkyEnabled == true);
-    assert(r4.tallCloudsHint.empty() && r4.betaSkyHint.empty());
 
     // Case 5: Both OFF, Beautiful Sky ON
     CloudModeResolution r5 = resolveCloudModes(false, false, true);
     assert(r5.tallClouds == false && r5.betaSky == false);
     assert(r5.tallCloudsEnabled == true && r5.betaSkyEnabled == false);
-    assert(r5.betaSkyHint == "Disabled while Beautiful Sky is ON");
 
     std::cout << "All cloudAlpha, getCloudFacesDrawn, and resolveCloudModes unit tests passed successfully!" << std::endl;
     return 0;

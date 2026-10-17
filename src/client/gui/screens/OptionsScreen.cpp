@@ -155,7 +155,6 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
     if (optionId == OPTIONS_TALL_CLOUDS) {
         msg = "Tall Clouds: " + std::string(res.tallClouds ? "ON" : "OFF");
         active = res.tallCloudsEnabled;
-        hintText = res.tallCloudsHint;
         return;
     }
 
@@ -198,13 +197,11 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
     if (optionId == OPTIONS_BETA_SKY) {
         msg = "Beta Sky: " + std::string(res.betaSky ? "ON" : "OFF");
         active = res.betaSkyEnabled;
-        hintText = res.betaSkyHint;
         return;
     }
 
     bool state = minecraft->options.getBooleanValue(optionId);
     msg = baseName + (state ? ": ON" : ": OFF");
-    hintText = "";
 }
 
 void OptionControl::toggleValue(Minecraft* minecraft) {
@@ -331,9 +328,6 @@ void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
         drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xffffffff);
     } else {
         super::render(minecraft, xm, ym);
-        if (!active && !hintText.empty()) {
-            drawCenteredString(font, hintText, x + width / 2, y + height + 2, 0xffffa0a0);
-        }
     }
 }
 
@@ -375,7 +369,6 @@ void OptionsScreen::init() {
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls...", false, 0.0f, 1.0f, ACTION_CONTROLS));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface...", false, 0.0f, 1.0f, ACTION_INTERFACE));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", false, 0.0f, 1.0f, ACTION_CREDITS));
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		m_controls[i]->updateLabel(minecraft);
@@ -599,8 +592,6 @@ void OptionsScreen::buttonClicked(Button* button) {
 				minecraft->setScreen(new UsernameScreen());
 			} else if (ctrl->actionId == ACTION_KEYBINDS) {
 				minecraft->setScreen(new KeyBindsScreen());
-			} else if (ctrl->actionId == ACTION_CREDITS) {
-				minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_OPTIONS));
 			} else if (ctrl->actionId == ACTION_CONTROLS) {
 				minecraft->setScreen(new ControlsOptionsScreen());
 			} else if (ctrl->actionId == ACTION_GRAPHICS) {
