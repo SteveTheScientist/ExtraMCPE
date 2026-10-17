@@ -188,6 +188,35 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_ENHANCED_FOG) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_ENHANCED_FOG);
+        msg = "Enhanced Fog: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_START_PCT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_FOG_START_PCT);
+        int pct = (int)(val + 0.5f);
+        msg = "Fog Start: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_END_PCT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_FOG_END_PCT);
+        int pct = (int)(val + 0.5f);
+        msg = "Fog End: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_TRANSITION_SPEED) {
+        float val = minecraft->options.getProgressValue(OPTIONS_FOG_TRANSITION_SPEED);
+        std::ostringstream ss;
+        ss.precision(1);
+        ss << std::fixed << "Transition Speed: " << val;
+        msg = ss.str();
+        return;
+    }
+
     if (optionId == OPTIONS_BETA_SKY) {
         bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
         active = !tallOn;

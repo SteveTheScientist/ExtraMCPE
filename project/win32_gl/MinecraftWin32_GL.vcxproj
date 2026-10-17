@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -105,6 +105,7 @@
     <ClCompile Include="..\..\src\client\gui\screens\IngameBlockSelectionScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\JoinGameScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\OptionsScreen.cpp" />
+    <ClCompile Include="..\..\src\client\gui\screens\FogScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\PauseScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\ProgressScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\RenameMPLevelScreen.cpp" />
@@ -338,6 +339,7 @@
     <ClInclude Include="..\..\src\client\gui\screens\IngameBlockSelectionScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\JoinGameScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\OptionsScreen.h" />
+    <ClInclude Include="..\..\src\client\gui\screens\FogScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\ProgressScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\RenameMPLevelScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\SelectWorldScreen.h" />
