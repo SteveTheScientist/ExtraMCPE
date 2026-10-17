@@ -284,14 +284,6 @@ void Options::load() {
 		(*opt)->parse(value);
 	}
 
-	bool tc = getBooleanValue(OPTIONS_TALL_CLOUDS);
-	bool bs = getBooleanValue(OPTIONS_BETA_SKY);
-	bool bts = getBooleanValue(OPTIONS_BEAUTIFUL_SKY);
-	CloudModeResolution res = resolveCloudModes(tc, bs, bts);
-	if (res.tallClouds != tc || res.betaSky != bs) {
-		set(OPTIONS_TALL_CLOUDS, res.tallClouds);
-		set(OPTIONS_BETA_SKY, res.betaSky);
-	}
 }
 
 void Options::save() {

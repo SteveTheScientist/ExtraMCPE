@@ -1498,27 +1498,24 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 	float alphaBottom = cloudAlpha(0.0f, rel, 1.0f, opacity, cloudFade);
 	float alphaTop = cloudAlpha(1.0f, rel, 1.0f, opacity, cloudFade);
 
+	glDepthMask(GL_FALSE);
 	glPushMatrix();
 	glScalef(ss, 1.0f, ss);
 	glTranslatef(-xOffs, yy, -zOffs);
 
-	for (int pass = 0; pass < 2; pass++) {
-		if (pass == 0) glColorMask(false, false, false, false);
-		else glColorMask(true, true, true, true);
-
-		t.begin();
-		for (size_t idx = 0; idx < m_cloudVertices.size(); idx += 4) {
-			for (size_t k = 0; k < 4; k++) {
-				const CloudVertex& cv = m_cloudVertices[idx + k];
-				float aVert = (cv.ny <= 0.0f) ? alphaBottom : alphaTop;
-				t.color(cr * cv.shade, cg * cv.shade, cb * cv.shade, aVert);
-				t.vertexUV(cv.x, cv.y, cv.z, cv.u, cv.v);
-			}
+	t.begin();
+	for (size_t idx = 0; idx < m_cloudVertices.size(); idx += 4) {
+		for (size_t k = 0; k < 4; k++) {
+			const CloudVertex& cv = m_cloudVertices[idx + k];
+			float aVert = (cv.ny <= 0.0f) ? alphaBottom : alphaTop;
+			t.color(cr * cv.shade, cg * cv.shade, cb * cv.shade, aVert);
+			t.vertexUV(cv.x, cv.y, cv.z, cv.u, cv.v);
 		}
-		t.endOverrideAndDraw();
 	}
+	t.endOverrideAndDraw();
 
 	glPopMatrix();
+	glDepthMask(GL_TRUE);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);

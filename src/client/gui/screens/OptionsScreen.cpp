@@ -147,14 +147,10 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-    bool tc = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
-    bool bs = minecraft->options.getBooleanValue(OPTIONS_BETA_SKY);
-    bool bts = minecraft->options.getBooleanValue(OPTIONS_BEAUTIFUL_SKY);
-    CloudModeResolution res = resolveCloudModes(tc, bs, bts);
-
     if (optionId == OPTIONS_TALL_CLOUDS) {
-        msg = "Tall Clouds: " + std::string(res.tallClouds ? "ON" : "OFF");
-        active = res.tallCloudsEnabled;
+        bool state = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
+        msg = "Tall Clouds: " + std::string(state ? "ON" : "OFF");
+        active = true;
         return;
     }
 
@@ -195,8 +191,9 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
     }
 
     if (optionId == OPTIONS_BETA_SKY) {
-        msg = "Beta Sky: " + std::string(res.betaSky ? "ON" : "OFF");
-        active = res.betaSkyEnabled;
+        bool state = minecraft->options.getBooleanValue(OPTIONS_BETA_SKY);
+        msg = "Beta Sky: " + std::string(state ? "ON" : "OFF");
+        active = true;
         return;
     }
 
@@ -206,34 +203,6 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
 
 void OptionControl::toggleValue(Minecraft* minecraft) {
     if (controlType == CONTROL_ACTION || controlType == CONTROL_KEY) return;
-
-    bool tc = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
-    bool bs = minecraft->options.getBooleanValue(OPTIONS_BETA_SKY);
-    bool bts = minecraft->options.getBooleanValue(OPTIONS_BEAUTIFUL_SKY);
-
-    if (optionId == OPTIONS_TALL_CLOUDS) {
-        tc = !tc;
-        if (tc) bs = false;
-        minecraft->options.set(OPTIONS_TALL_CLOUDS, tc);
-        minecraft->options.set(OPTIONS_BETA_SKY, bs);
-        updateLabel(minecraft);
-        return;
-    } else if (optionId == OPTIONS_BETA_SKY) {
-        bs = !bs;
-        if (bs) tc = false;
-        minecraft->options.set(OPTIONS_TALL_CLOUDS, tc);
-        minecraft->options.set(OPTIONS_BETA_SKY, bs);
-        updateLabel(minecraft);
-        return;
-    } else if (optionId == OPTIONS_BEAUTIFUL_SKY) {
-        bts = !bts;
-        minecraft->options.set(OPTIONS_BEAUTIFUL_SKY, bts);
-        CloudModeResolution res = resolveCloudModes(tc, bs, bts);
-        minecraft->options.set(OPTIONS_TALL_CLOUDS, res.tallClouds);
-        minecraft->options.set(OPTIONS_BETA_SKY, res.betaSky);
-        updateLabel(minecraft);
-        return;
-    }
 
     if (optionId == OPTIONS_VIEW_DISTANCE) {
         int cur = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);

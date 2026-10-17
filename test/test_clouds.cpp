@@ -76,32 +76,6 @@ int main() {
     CloudDrawnFaces f_far_above = getCloudFacesDrawn(200.0f, 128.0f, 10.0f);
     assert(f_far_above.drawTop && f_far_above.drawBottom && f_far_above.drawSides);
 
-    // 7. Test resolveCloudModes pure function
-    // Case 1: Default state (Tall Clouds ON, Beta Sky OFF, Beautiful Sky ON)
-    CloudModeResolution r1 = resolveCloudModes(true, false, true);
-    assert(r1.tallClouds == true && r1.betaSky == false);
-    assert(r1.tallCloudsEnabled == true && r1.betaSkyEnabled == false);
-
-    // Case 2: Turn Beta Sky ON (Tall Clouds OFF, Beautiful Sky OFF)
-    CloudModeResolution r2 = resolveCloudModes(false, true, false);
-    assert(r2.tallClouds == false && r2.betaSky == true);
-    assert(r2.tallCloudsEnabled == false && r2.betaSkyEnabled == true);
-
-    // Case 3: Options with both ON -> Beta Sky forced OFF when Tall Clouds is ON
-    CloudModeResolution r3 = resolveCloudModes(true, true, false);
-    assert(r3.tallClouds == true && r3.betaSky == false);
-    assert(r3.tallCloudsEnabled == true && r3.betaSkyEnabled == false);
-
-    // Case 4: Both OFF, Beautiful Sky OFF
-    CloudModeResolution r4 = resolveCloudModes(false, false, false);
-    assert(r4.tallClouds == false && r4.betaSky == false);
-    assert(r4.tallCloudsEnabled == true && r4.betaSkyEnabled == true);
-
-    // Case 5: Both OFF, Beautiful Sky ON
-    CloudModeResolution r5 = resolveCloudModes(false, false, true);
-    assert(r5.tallClouds == false && r5.betaSky == false);
-    assert(r5.tallCloudsEnabled == true && r5.betaSkyEnabled == false);
-
-    std::cout << "All cloudAlpha, getCloudFacesDrawn, and resolveCloudModes unit tests passed successfully!" << std::endl;
+    std::cout << "All cloudAlpha and getCloudFacesDrawn unit tests passed successfully!" << std::endl;
     return 0;
 }

@@ -390,7 +390,8 @@ void GameRenderer::renderLevel(float a) {
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix2();
 		glLoadIdentity2();
-		gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 2.0f, renderDistance * 512.0f);
+		float cloudFar = mc->options.getBooleanValue(OPTIONS_BETA_SKY) ? renderDistance * 2.0f : renderDistance;
+		gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, cloudFar);
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix2();
 
@@ -972,7 +973,8 @@ void GameRenderer::prepareAndRenderClouds( LevelRenderer* levelRenderer, float a
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix2();
 	glLoadIdentity2();
-	gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 2, renderDistance * 512);
+	float cloudFar = mc->options.getBooleanValue(OPTIONS_BETA_SKY) ? renderDistance * 2.0f : renderDistance;
+	gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, cloudFar);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix2();
 	setupFog(0);

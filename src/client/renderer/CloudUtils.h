@@ -39,26 +39,5 @@ inline CloudDrawnFaces getCloudFacesDrawn(float cameraY, float cloudBaseY, float
     return faces;
 }
 
-struct CloudModeResolution {
-    bool tallClouds;
-    bool betaSky;
-    bool tallCloudsEnabled;
-    bool betaSkyEnabled;
-};
-
-inline CloudModeResolution resolveCloudModes(bool tallClouds, bool betaSky, bool beautifulSkies) {
-    CloudModeResolution res;
-    res.tallClouds = tallClouds;
-    res.betaSky = betaSky;
-
-    if (res.tallClouds) {
-        res.betaSky = false;
-    }
-
-    res.tallCloudsEnabled = !res.betaSky;
-    res.betaSkyEnabled = !res.tallClouds && !beautifulSkies;
-
-    return res;
-}
 
 #endif /* NET_MINECRAFT_CLIENT_RENDERER__CloudUtils_H__ */
