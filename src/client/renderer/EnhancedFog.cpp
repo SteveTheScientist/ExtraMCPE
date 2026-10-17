@@ -98,10 +98,41 @@ void EnhancedFog::calculateFogDistances(float renderDistance, float startPct, fl
     outEnd = renderDistance * (endPct / 100.0f);
 }
 
-void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float dt, const FogSettings& settings) {
+Color3f EnhancedFog::applySunsetTint(Color3f fogCol, float td, bool enabled, bool isBetaSky) {
+    if (!enabled || isBetaSky) {
+        return fogCol;
+    }
+
+    float cosVal = Mth::cos(td * Mth::PI * 2.0f);
+    float factor = 1.0f - std::abs(cosVal); // 1.0 at sunrise/sunset, 0.0 at midday/midnight
+    factor = Mth::clamp(factor, 0.0f, 1.0f);
+
+    Color3f warmTint(1.0f, 0.45f, 0.15f);
+    float tintAmount = factor * 0.35f;
+
+    return fogCol * (1.0f - tintAmount) + warmTint * tintAmount;
+}
+
+Color3f EnhancedFog::applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled, bool isBetaSky) {
+    if (!enabled || isBetaSky) {
+        return fogCol;
+    }
+
+    // Start 20 blocks above sea level (64 + 20 = 84), max at 80 blocks above (64 + 80 = 144)
+    float startY = 84.0f;
+    float maxY = 144.0f;
+
+    float altFactor = Mth::clamp((cameraY - startY) / (maxY - startY), 0.0f, 1.0f);
+    float blendWeight = altFactor * 0.70f; // max strength 70%
+
+    return fogCol * (1.0f - blendWeight) + skyColLookUp * blendWeight;
+}
+
+void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky) {
     if (!cameraEntity) return;
 
     float camX = cameraEntity->x;
+    float camY = cameraEntity->y;
     float camZ = cameraEntity->z;
 
     if (!m_initialized) {
@@ -111,17 +142,19 @@ void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float 
         m_currentColor = m_targetColor;
         m_sampleTimer = 0;
         m_initialized = true;
-        return;
+    } else {
+        m_sampleTimer++;
+        if (m_sampleTimer >= 10) {
+            m_sampleTimer = 0;
+            sampleBiomeGridDayNight(level, camX, camZ, m_cachedDayColor, m_cachedNightColor);
+        }
+
+        daylight = Mth::clamp(daylight, 0.0f, 1.0f);
+        m_targetColor = m_cachedDayColor * daylight + m_cachedNightColor * (1.0f - daylight);
+
+        m_currentColor = updateSmoothing(m_currentColor, m_targetColor, dt, settings.transitionSpeed);
     }
 
-    m_sampleTimer++;
-    if (m_sampleTimer >= 10) {
-        m_sampleTimer = 0;
-        sampleBiomeGridDayNight(level, camX, camZ, m_cachedDayColor, m_cachedNightColor);
-    }
-
-    daylight = Mth::clamp(daylight, 0.0f, 1.0f);
-    m_targetColor = m_cachedDayColor * daylight + m_cachedNightColor * (1.0f - daylight);
-
-    m_currentColor = updateSmoothing(m_currentColor, m_targetColor, dt, settings.transitionSpeed);
+    Color3f colWithTint = applySunsetTint(m_currentColor, td, settings.sunsetTint, isBetaSky);
+    m_currentColor = applyHighAltitudeBlend(colWithTint, skyColLookUp, camY, settings.highAltitudeBlend, isBetaSky);
 }

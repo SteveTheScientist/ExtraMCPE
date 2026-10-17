@@ -104,6 +104,8 @@ enum OptionId {
 	OPTIONS_FOG_START_PCT,
 	OPTIONS_FOG_END_PCT,
 	OPTIONS_FOG_TRANSITION_SPEED,
+	OPTIONS_FOG_SUNSET_TINT,
+	OPTIONS_FOG_HIGH_ALTITUDE_BLEND,
 	// Should be last!
 	OPTIONS_COUNT
 };
@@ -113,6 +115,8 @@ struct FogSettings {
     float startPct = 50.0f;
     float endPct = 100.0f;
     float transitionSpeed = 5.0f;
+    bool sunsetTint = true;
+    bool highAltitudeBlend = true;
 };
 
 class Minecraft;
@@ -172,6 +176,8 @@ public:
 		settings.startPct = getProgressValue(OPTIONS_FOG_START_PCT);
 		settings.endPct = getProgressValue(OPTIONS_FOG_END_PCT);
 		settings.transitionSpeed = getProgressValue(OPTIONS_FOG_TRANSITION_SPEED);
+		settings.sunsetTint = getBooleanValue(OPTIONS_FOG_SUNSET_TINT);
+		settings.highAltitudeBlend = getBooleanValue(OPTIONS_FOG_HIGH_ALTITUDE_BLEND);
 		return settings;
 	}
 

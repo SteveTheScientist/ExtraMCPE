@@ -35,6 +35,8 @@ void FogScreen::init() {
     int idSeq = 400;
 
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ENHANCED_FOG, "Enhanced Fog"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_SUNSET_TINT, "Sunset Tint"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOG_HIGH_ALTITUDE_BLEND, "High-Altitude Blend"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_FOG_START_PCT, "Fog Start", false, 0.0f, 100.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_FOG_END_PCT, "Fog End", false, 50.0f, 100.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_FOG_TRANSITION_SPEED, "Transition Speed", false, 1.0f, 20.0f));
@@ -208,6 +210,8 @@ void FogScreen::buttonClicked(Button* button) {
 
     if (button == btnReset) {
         minecraft->options.set(OPTIONS_ENHANCED_FOG, true);
+        minecraft->options.set(OPTIONS_FOG_SUNSET_TINT, true);
+        minecraft->options.set(OPTIONS_FOG_HIGH_ALTITUDE_BLEND, true);
         minecraft->options.set(OPTIONS_FOG_START_PCT, 50.0f);
         minecraft->options.set(OPTIONS_FOG_END_PCT, 100.0f);
         minecraft->options.set(OPTIONS_FOG_TRANSITION_SPEED, 5.0f);

@@ -91,8 +91,10 @@ OptionFloat cloudYLevel("cloud_y_level", 108.0f, 32.0f, 192.0f);
 
 OptionBool enhancedFog("enhanced_fog", true);
 OptionFloat fogStartPct("fog_start_pct", 50.0f, 0.0f, 100.0f);
-OptionFloat fogEndPct("fog_end_pct", 100.0f, 0.0f, 200.0f);
+OptionFloat fogEndPct("fog_end_pct", 100.0f, 50.0f, 100.0f);
 OptionFloat fogTransitionSpeed("fog_transition_speed", 5.0f, 0.1f, 20.0f);
+OptionBool fogSunsetTint("fog_sunset_tint", true);
+OptionBool fogHighAltitudeBlend("fog_high_altitude_blend", true);
 
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
@@ -230,6 +232,8 @@ void Options::initTable() {
 	m_options[OPTIONS_FOG_START_PCT] = &fogStartPct;
 	m_options[OPTIONS_FOG_END_PCT] = &fogEndPct;
 	m_options[OPTIONS_FOG_TRANSITION_SPEED] = &fogTransitionSpeed;
+	m_options[OPTIONS_FOG_SUNSET_TINT] = &fogSunsetTint;
+	m_options[OPTIONS_FOG_HIGH_ALTITUDE_BLEND] = &fogHighAltitudeBlend;
 }
 
 void Options::set(OptionId key, bool value) {

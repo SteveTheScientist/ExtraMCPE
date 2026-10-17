@@ -30,8 +30,11 @@ public:
     static Color3f updateSmoothing(Color3f current, Color3f target, float dt, float transitionSpeed);
     static void calculateFogDistances(float renderDistance, float startPct, float endPct, float& outStart, float& outEnd);
 
+    static Color3f applySunsetTint(Color3f fogCol, float td, bool enabled, bool isBetaSky);
+    static Color3f applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled, bool isBetaSky);
+
     void reset();
-    void update(Level* level, Mob* cameraEntity, float daylight, float dt, const FogSettings& settings);
+    void update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky);
 
     bool isInitialized() const { return m_initialized; }
     Color3f getCurrentColor() const { return m_currentColor; }

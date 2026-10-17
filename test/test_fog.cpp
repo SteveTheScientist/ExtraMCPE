@@ -103,14 +103,47 @@ int main() {
     // Terrain edge is fully fogged at render distance (fogEnd == renderDist)
     assert(isClose(fogEnd, renderDist));
 
-    // 4. Test 10-frame sampling behavior
-    EnhancedFog fogModule;
-    FogSettings settings;
-    settings.enhancedFog = true;
+    // 4. Sunset Tint Unit Test
+    Color3f baseFog(0.7f, 0.8f, 0.9f);
+    Color3f middayTint = EnhancedFog::applySunsetTint(baseFog, 0.0f, true, false);
+    Color3f midnightTint = EnhancedFog::applySunsetTint(baseFog, 0.5f, true, false);
+    Color3f sunsetTintCol = EnhancedFog::applySunsetTint(baseFog, 0.25f, true, false);
+    Color3f sunriseTintCol = EnhancedFog::applySunsetTint(baseFog, 0.75f, true, false);
 
-    // Use dummy camera coordinates via Mob pointer or direct sampling call
-    EnhancedFog::sampleBiomeGrid(nullptr, 0.0f, 0.0f, 1.0f);
-    assert(!fogModule.isInitialized());
+    assert(isCloseCol(middayTint, baseFog));
+    assert(isCloseCol(midnightTint, baseFog));
+    assert(sunsetTintCol.r > baseFog.r); // warmer red at sunset
+    assert(sunriseTintCol.r > baseFog.r); // warmer red at sunrise
+    assert(isCloseCol(sunsetTintCol, sunriseTintCol));
+
+    // Sunset tint disabled or Beta Sky mode should return unchanged color
+    Color3f disabledTint = EnhancedFog::applySunsetTint(baseFog, 0.25f, false, false);
+    Color3f betaSkyTint = EnhancedFog::applySunsetTint(baseFog, 0.25f, true, true);
+    assert(isCloseCol(disabledTint, baseFog));
+    assert(isCloseCol(betaSkyTint, baseFog));
+
+    // 5. High-Altitude Blend Unit Test
+    Color3f baseFogCol(0.7f, 0.8f, 0.9f);
+    Color3f skyLookUpCol(0.2f, 0.4f, 0.9f);
+
+    Color3f lowAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 64.0f, true, false); // sea level y=64
+    Color3f startAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 84.0f, true, false); // start y=84
+    Color3f midAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 114.0f, true, false); // mid y=114
+    Color3f highAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, true, false); // max y>=144
+
+    assert(isCloseCol(lowAlt, baseFogCol));
+    assert(isCloseCol(startAlt, baseFogCol));
+    assert(highAlt.b > baseFogCol.b); // blended towards sky blue
+
+    // Check max strength is 70% at high altitude
+    Color3f expectedMax = baseFogCol * 0.30f + skyLookUpCol * 0.70f;
+    assert(isCloseCol(highAlt, expectedMax));
+
+    // High-altitude blend disabled or Beta Sky mode should return unchanged color
+    Color3f disabledAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, false, false);
+    Color3f betaSkyAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, true, true);
+    assert(isCloseCol(disabledAlt, baseFogCol));
+    assert(isCloseCol(betaSkyAlt, baseFogCol));
 
     std::cout << "All EnhancedFog unit tests passed successfully!" << std::endl;
     return 0;

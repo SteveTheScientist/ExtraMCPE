@@ -194,6 +194,18 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_FOG_SUNSET_TINT) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_FOG_SUNSET_TINT);
+        msg = "Sunset Tint: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_HIGH_ALTITUDE_BLEND) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_FOG_HIGH_ALTITUDE_BLEND);
+        msg = "High-Altitude Blend: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
     if (optionId == OPTIONS_FOG_START_PCT) {
         float val = minecraft->options.getProgressValue(OPTIONS_FOG_START_PCT);
         int pct = (int)(val + 0.5f);

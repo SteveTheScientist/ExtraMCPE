@@ -865,12 +865,16 @@ void GameRenderer::setupClearColor(float a) {
 		float daylight = Mth::cos(td * Mth::PI * 2) * 2.0f + 0.5f;
 		daylight = Mth::clamp(daylight, 0.0f, 1.0f);
 
+		Vec3 skyColorLookUpVec = level->getSkyColor(player, a);
+		Color3f skyColLookUp((float)skyColorLookUpVec.x, (float)skyColorLookUpVec.y, (float)skyColorLookUpVec.z);
+
 		float now = getTimeS();
 		float dt = (m_lastFrameTimeSec > 0.0f) ? (now - m_lastFrameTimeSec) : (1.0f / 60.0f);
 		if (dt <= 0.0f || dt > 1.0f) dt = 1.0f / 60.0f;
 		m_lastFrameTimeSec = now;
 
-		m_enhancedFogModule.update(level, player, daylight, dt, fogSettings);
+		bool isBetaSky = mc->options.getBooleanValue(OPTIONS_BETA_SKY);
+		m_enhancedFogModule.update(level, player, daylight, td, skyColLookUp, dt, fogSettings, isBetaSky);
 		Color3f fogCol = m_enhancedFogModule.getCurrentColor();
 
 		fr = fogCol.r;
