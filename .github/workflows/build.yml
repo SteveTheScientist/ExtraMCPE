@@ -291,7 +291,7 @@ jobs:
       - name: Declare Version Variables
         id: ref
         run: |
-          echo "version=$(cat VERSION | xargs)" >> $GITHUB_OUTPUT
+          echo "version=$(cat VERSION 2>/dev/null | xargs || echo "0.6.1")" >> $GITHUB_OUTPUT
           echo "hash=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_OUTPUT
 
       - name: Download Artifacts
@@ -340,7 +340,7 @@ jobs:
           dest: data.zip
 
       - name: Update Development Release
-        uses: andelf/nightly-release@main
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -348,6 +348,8 @@ jobs:
           name: 'Development Release'
           body: |
             MinecraftPE development release for commit ${{ github.sha }}.
+          prerelease: true
+          make_latest: false
           files: |
             ./data.zip
             ./minecraftpe-server-${{ steps.ref.outputs.hash }}.zip
