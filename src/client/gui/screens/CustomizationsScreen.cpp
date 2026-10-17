@@ -34,18 +34,8 @@ void CustomizationsScreen::init() {
     m_controls.clear();
     int idSeq = 200;
 
-    // Customization Options
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", true, 0.0f, 1.0f, ACTION_CLOUDS));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_IS_LEFT_HANDED, "Lefty Mode"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "3rd Person View"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TINTED_SIDE, "Tinted Sides"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RESTORED_ANIMS, "Restored Animations"));
+    // Customization Options: sub-menu buttons
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -54,8 +44,28 @@ void CustomizationsScreen::init() {
 }
 
 void CustomizationsScreen::updateScrollBounds() {
-    int totalRows = (int)((m_controls.size() + 1) / 2);
-    float contentH = (float)(totalRows * 24 + 10);
+    int currentRow = 0;
+    int col = 0;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        if (ctrl->isFullWidth) {
+            if (col != 0) {
+                currentRow++;
+                col = 0;
+            }
+            currentRow++;
+            col = 0;
+        } else {
+            col++;
+            if (col >= 2) {
+                col = 0;
+                currentRow++;
+            }
+        }
+    }
+    if (col != 0) currentRow++;
+
+    float contentH = (float)(currentRow * 24 + 10);
     float viewportH = (float)(height - 68);
     m_maxScroll = std::max(0.0f, contentH - viewportH);
     m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
@@ -73,38 +83,46 @@ void CustomizationsScreen::setupPositions() {
 
     int centerX = width / 2;
     int topY = 36;
+    int currentRow = 0;
+    int col = 0;
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         OptionControl* ctrl = m_controls[i];
         if (ctrl->isFullWidth) {
-            int r = (int)(i / 2);
+            if (col != 0) {
+                currentRow++;
+                col = 0;
+            }
             int itemX = centerX - 155;
             int itemW = 310;
-            int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+            int itemY = (int)(topY + 4 + currentRow * 24 - m_scrollY);
 
             ctrl->x = itemX;
             ctrl->y = itemY;
             ctrl->width = itemW;
             ctrl->height = 20;
 
-            ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
-            ctrl->updateLabel(minecraft);
+            currentRow++;
+            col = 0;
         } else {
-            int r = (int)(i / 2);
-            int c = (int)(i % 2);
-
-            int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+            int itemX = (col == 0) ? centerX - 155 : centerX + 5;
             int itemW = 150;
-            int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+            int itemY = (int)(topY + 4 + currentRow * 24 - m_scrollY);
 
             ctrl->x = itemX;
             ctrl->y = itemY;
             ctrl->width = itemW;
             ctrl->height = 20;
 
-            ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
-            ctrl->updateLabel(minecraft);
+            col++;
+            if (col >= 2) {
+                col = 0;
+                currentRow++;
+            }
         }
+
+        ctrl->visible = (ctrl->y + ctrl->height >= 34 && ctrl->y < height - 34);
+        ctrl->updateLabel(minecraft);
     }
 }
 
@@ -153,8 +171,20 @@ void CustomizationsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
+    // Enable scissor clipping for scrollable area
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
     // Top and bottom header/footer translucent bars
-    fill(0, 0, width, 32, 0x70000000);
+    fill(0, 0, width, 34, 0x70000000);
     fill(0, height - 34, width, height, 0x70000000);
 
     // Render vertical scrollbar track and thumb
@@ -188,7 +218,7 @@ void CustomizationsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
     drawCenteredString(font, "Customizations", width / 2, 10, 0xffffffff);
 }

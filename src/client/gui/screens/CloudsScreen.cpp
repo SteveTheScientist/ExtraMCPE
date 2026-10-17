@@ -39,7 +39,7 @@ void CloudsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_FADE, "Cloud Fade", false, 0.0f, 1.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_OPACITY, "Cloud Opacity", false, 0.4f, 1.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_CLOUD_FLAT_SHADING, "Flat Shading"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_Y_LEVEL, "Cloud Height", false, 32.0f, 192.0f));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CLOUD_Y_LEVEL, "Cloud Height", false, 64.0f, 192.0f));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -151,7 +151,19 @@ void CloudsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
-    fill(0, 0, width, 32, 0x70000000);
+    // Enable scissor clipping for scrollable area
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    fill(0, 0, width, 34, 0x70000000);
     fill(0, height - 34, width, height, 0x70000000);
 
     if (m_maxScroll > 0) {
@@ -184,7 +196,7 @@ void CloudsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
     drawCenteredString(font, "Clouds Customization", width / 2, 10, 0xffffffff);
 }
@@ -202,7 +214,7 @@ void CloudsScreen::buttonClicked(Button* button) {
         minecraft->options.set(OPTIONS_CLOUD_FADE, 1.0f);
         minecraft->options.set(OPTIONS_CLOUD_OPACITY, 0.8f);
         minecraft->options.set(OPTIONS_CLOUD_FLAT_SHADING, true);
-        minecraft->options.set(OPTIONS_CLOUD_Y_LEVEL, 108.0f);
+        minecraft->options.set(OPTIONS_CLOUD_Y_LEVEL, 128.0f);
         minecraft->options.save();
 
         for (size_t i = 0; i < m_controls.size(); ++i) {

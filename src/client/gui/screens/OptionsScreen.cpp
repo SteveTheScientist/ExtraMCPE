@@ -188,7 +188,6 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-
     if (optionId == OPTIONS_BETA_SKY) {
         bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
         active = !tallOn;
@@ -244,7 +243,6 @@ void OptionControl::updateSliderValue(Minecraft* minecraft, int mx) {
 bool OptionControl::clicked(Minecraft* minecraft, int mx, int my) {
     if (!visible || !active) return false;
 
-    // Bounds check to ensure control isn't covered by top header bar or bottom footer bar
     if (my < 34 || (minecraft->screen && my >= minecraft->screen->height - 34)) return false;
 
     if (mx >= x && my >= y && mx < x + width && my < y + height) {
@@ -302,6 +300,9 @@ void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
     }
 }
 
+//
+// OptionsScreen
+//
 OptionsScreen::OptionsScreen()
 	: btnDone(NULL),
 	  m_activeKeyControl(NULL),
@@ -327,22 +328,17 @@ void OptionsScreen::init() {
 	m_controls.clear();
 	int idSeq = 10;
 
-	// Submenu Navigation (Full width 310px matching Customizations "Clouds..." button)
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls & Input...", true, 0.0f, 1.0f, ACTION_CONTROLS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics & Visuals...", true, 0.0f, 1.0f, ACTION_GRAPHICS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface & Game...", true, 0.0f, 1.0f, ACTION_INTERFACE));
+	// Top controls: Username, Music, Sound
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username...", true, 0.0f, 1.0f, ACTION_USERNAME));
-
-	// Primary Audio & Controls Sliders
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SOUND_VOLUME, "Sound", false, 0.0f, 1.0f));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SENSITIVITY, "Sensitivity", false, 0.0f, 1.0f));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DIFFICULTY, "Difficulty"));
 
-	// Submenus (Full width 310px)
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", true, 0.0f, 1.0f, ACTION_KEYBINDS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", true, 0.0f, 1.0f, ACTION_CREDITS));
+	// Sub-menu buttons in 2-column grid
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics & Visuals...", false, 0.0f, 1.0f, ACTION_GRAPHICS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls...", false, 0.0f, 1.0f, ACTION_CONTROLS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface...", false, 0.0f, 1.0f, ACTION_INTERFACE));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", false, 0.0f, 1.0f, ACTION_CREDITS));
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		m_controls[i]->updateLabel(minecraft);
@@ -351,11 +347,31 @@ void OptionsScreen::init() {
 }
 
 void OptionsScreen::updateScrollBounds() {
-	int totalRows = (int)((m_controls.size() + 1) / 2);
-	float contentH = (float)(totalRows * 24 + 10);
-	float viewportH = (float)(height - 68);
-	m_maxScroll = std::max(0.0f, contentH - viewportH);
-	m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
+    int currentRow = 0;
+    int col = 0;
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        if (ctrl->isFullWidth) {
+            if (col != 0) {
+                currentRow++;
+                col = 0;
+            }
+            currentRow++;
+            col = 0;
+        } else {
+            col++;
+            if (col >= 2) {
+                col = 0;
+                currentRow++;
+            }
+        }
+    }
+    if (col != 0) currentRow++;
+
+    float contentH = (float)(currentRow * 24 + 10);
+    float viewportH = (float)(height - 68);
+    m_maxScroll = std::max(0.0f, contentH - viewportH);
+    m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
 }
 
 void OptionsScreen::setupPositions() {
@@ -370,38 +386,46 @@ void OptionsScreen::setupPositions() {
 
 	int centerX = width / 2;
 	int topY = 36;
+    int currentRow = 0;
+    int col = 0;
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		OptionControl* ctrl = m_controls[i];
 		if (ctrl->isFullWidth) {
-			int r = (int)(i / 2);
+            if (col != 0) {
+                currentRow++;
+                col = 0;
+            }
 			int itemX = centerX - 155;
 			int itemW = 310;
-			int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+			int itemY = (int)(topY + 4 + currentRow * 24 - m_scrollY);
 
 			ctrl->x = itemX;
 			ctrl->y = itemY;
 			ctrl->width = itemW;
 			ctrl->height = 20;
 
-			ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
-			ctrl->updateLabel(minecraft);
+            currentRow++;
+            col = 0;
 		} else {
-			int r = (int)(i / 2);
-			int c = (int)(i % 2);
-
-			int itemX = (c == 0) ? centerX - 155 : centerX + 5;
+			int itemX = (col == 0) ? centerX - 155 : centerX + 5;
 			int itemW = 150;
-			int itemY = (int)(topY + 4 + r * 24 - m_scrollY);
+			int itemY = (int)(topY + 4 + currentRow * 24 - m_scrollY);
 
 			ctrl->x = itemX;
 			ctrl->y = itemY;
 			ctrl->width = itemW;
 			ctrl->height = 20;
 
-			ctrl->visible = (itemY + 20 >= 34 && itemY < height - 34);
-			ctrl->updateLabel(minecraft);
+            col++;
+            if (col >= 2) {
+                col = 0;
+                currentRow++;
+            }
 		}
+
+        ctrl->visible = (ctrl->y + ctrl->height >= 34 && ctrl->y < height - 34);
+        ctrl->updateLabel(minecraft);
 	}
 }
 
@@ -450,11 +474,20 @@ void OptionsScreen::render(int xm, int ym, float a) {
 	int topY = 34;
 	int bottomY = height - 34;
 
-	// Top and bottom header/footer shadow masks rendered behind buttons
-	fill(0, 0, width, 32, 0x70000000);
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
+	fill(0, 0, width, 34, 0x70000000);
 	fill(0, height - 34, width, height, 0x70000000);
 
-	// Render vertical scrollbar track and thumb if content exceeds viewport
 	if (m_maxScroll > 0) {
 		int trackX = centerX + 160;
 		int trackW = 6;
@@ -485,7 +518,7 @@ void OptionsScreen::render(int xm, int ym, float a) {
 		t.draw();
 	}
 
-	super::render(xm, ym, a);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
 	drawCenteredString(font, "Options", width / 2, 10, 0xffffffff);
 }
@@ -518,7 +551,6 @@ void OptionsScreen::buttonClicked(Button* button) {
 			ctrl->toggleValue(minecraft);
 			minecraft->options.save();
 
-			// If scale changed, re-initialize screen so GUI coordinates immediately update
 			if (ctrl->optionId == OPTIONS_GUI_SCALE || ctrl->optionId == OPTIONS_WINDOW_SCALE) {
 				minecraft->setScreen(new OptionsScreen());
 				return;
@@ -731,7 +763,18 @@ void ControlsOptionsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
-    fill(0, 0, width, 32, 0x70000000);
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    fill(0, 0, width, 34, 0x70000000);
     fill(0, height - 34, width, height, 0x70000000);
 
     if (m_maxScroll > 0) {
@@ -764,7 +807,7 @@ void ControlsOptionsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
     drawCenteredString(font, "Controls & Input", width / 2, 10, 0xffffffff);
 }
@@ -992,7 +1035,18 @@ void GraphicsOptionsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
-    fill(0, 0, width, 32, 0x70000000);
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    fill(0, 0, width, 34, 0x70000000);
     fill(0, height - 34, width, height, 0x70000000);
 
     if (m_maxScroll > 0) {
@@ -1025,7 +1079,7 @@ void GraphicsOptionsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
     drawCenteredString(font, "Graphics & Visuals", width / 2, 10, 0xffffffff);
 }
@@ -1133,6 +1187,7 @@ void InterfaceOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DIFFICULTY, "Difficulty"));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -1225,7 +1280,18 @@ void InterfaceOptionsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
-    fill(0, 0, width, 32, 0x70000000);
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    fill(0, 0, width, 34, 0x70000000);
     fill(0, height - 34, width, height, 0x70000000);
 
     if (m_maxScroll > 0) {
@@ -1258,7 +1324,7 @@ void InterfaceOptionsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
     drawCenteredString(font, "Interface & Game", width / 2, 10, 0xffffffff);
 }

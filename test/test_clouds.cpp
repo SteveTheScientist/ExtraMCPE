@@ -55,6 +55,27 @@ int main() {
     float b_halfBase = cloudAlpha(0.0f, 2.5f, 0.5f, opacity, fadeStrength);
     assert(isClose(b_halfBase, 0.4f));
 
-    std::cout << "All cloudAlpha unit tests passed successfully!" << std::endl;
+    // 6. Test getCloudFacesDrawn
+    // Camera far below (y = 50, cloudBaseY = 128, thickness = 10)
+    CloudDrawnFaces f_far_below = getCloudFacesDrawn(50.0f, 128.0f, 10.0f);
+    assert(!f_far_below.drawTop && f_far_below.drawBottom && f_far_below.drawSides);
+
+    // Camera just below base (y = 127.5, cloudBaseY = 128, thickness = 10)
+    CloudDrawnFaces f_just_below = getCloudFacesDrawn(127.5f, 128.0f, 10.0f);
+    assert(!f_just_below.drawTop && f_just_below.drawBottom && f_just_below.drawSides);
+
+    // Camera inside slab (y = 133, cloudBaseY = 128, thickness = 10)
+    CloudDrawnFaces f_inside = getCloudFacesDrawn(133.0f, 128.0f, 10.0f);
+    assert(f_inside.drawTop && f_inside.drawBottom && f_inside.drawSides);
+
+    // Camera just above top (y = 138.5, cloudBaseY = 128, thickness = 10)
+    CloudDrawnFaces f_just_above = getCloudFacesDrawn(138.5f, 128.0f, 10.0f);
+    assert(f_just_above.drawTop && !f_just_above.drawBottom && f_just_above.drawSides);
+
+    // Camera far above (y = 200, cloudBaseY = 128, thickness = 10)
+    CloudDrawnFaces f_far_above = getCloudFacesDrawn(200.0f, 128.0f, 10.0f);
+    assert(f_far_above.drawTop && !f_far_above.drawBottom && f_far_above.drawSides);
+
+    std::cout << "All cloudAlpha and getCloudFacesDrawn unit tests passed successfully!" << std::endl;
     return 0;
 }

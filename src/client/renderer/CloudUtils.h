@@ -24,4 +24,18 @@ inline float cloudAlpha(float ny, float rel, float baseAlpha, float opacity, flo
     return alpha;
 }
 
+struct CloudDrawnFaces {
+    bool drawTop;
+    bool drawBottom;
+    bool drawSides;
+};
+
+inline CloudDrawnFaces getCloudFacesDrawn(float cameraY, float cloudBaseY, float cloudThickness) {
+    CloudDrawnFaces faces;
+    faces.drawSides = true;
+    faces.drawTop = (cameraY > cloudBaseY);
+    faces.drawBottom = (cameraY < cloudBaseY + cloudThickness);
+    return faces;
+}
+
 #endif /* NET_MINECRAFT_CLIENT_RENDERER__CloudUtils_H__ */
