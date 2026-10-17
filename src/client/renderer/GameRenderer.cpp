@@ -874,7 +874,14 @@ void GameRenderer::setupClearColor(float a) {
 		m_lastFrameTimeSec = now;
 
 		bool isBetaSky = mc->options.getBooleanValue(OPTIONS_BETA_SKY);
-		m_enhancedFogModule.update(level, player, daylight, td, skyColLookUp, dt, fogSettings, isBetaSky);
+		float camX = player ? player->x : 0.0f;
+		float camY = player ? player->y : 64.0f;
+		float camZ = player ? player->z : 0.0f;
+
+		float surfaceY = (float)level->getTopSolidBlock(Mth::floor(camX), Mth::floor(camZ));
+		bool canSeeSky = level->canSeeSky(Mth::floor(camX), Mth::floor(camY), Mth::floor(camZ));
+
+		m_enhancedFogModule.update(level, player, daylight, td, skyColLookUp, dt, fogSettings, isBetaSky, surfaceY, canSeeSky);
 		Color3f fogCol = m_enhancedFogModule.getCurrentColor();
 
 		fr = fogCol.r;
@@ -892,7 +899,15 @@ void GameRenderer::setupClearColor(float a) {
 		}
 
 		m_enhancedFogColor = Color3f(fr, fg, fb);
+
+		float ugFactor = m_enhancedFogModule.getUndergroundFactor();
 		EnhancedFog::calculateFogDistances(renderDistance, fogSettings.startPct, fogSettings.endPct, m_enhancedFogStart, m_enhancedFogEnd);
+
+		// Shorten fog end when underground (down to 25% of end distance at max underground factor)
+		if (ugFactor > 0.0f) {
+			float shortenedEnd = m_enhancedFogEnd * (1.0f - ugFactor * 0.75f);
+			m_enhancedFogEnd = std::max(m_enhancedFogStart + 4.0f, shortenedEnd);
+		}
 
 		glClearColor(fr, fg, fb, 1.0f);
 		return;

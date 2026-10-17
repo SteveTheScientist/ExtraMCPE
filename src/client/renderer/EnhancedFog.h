@@ -32,9 +32,12 @@ public:
 
     static Color3f applySunsetTint(Color3f fogCol, float td, bool enabled, bool isBetaSky);
     static Color3f applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled, bool isBetaSky);
+    static float calculateUndergroundFactor(float cameraY, float surfaceY, bool canSeeSky, bool enabled, bool isBetaSky);
 
     void reset();
-    void update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky);
+    void update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky, float surfaceY, bool canSeeSky);
+
+    float getUndergroundFactor() const { return m_undergroundFactor; }
 
     bool isInitialized() const { return m_initialized; }
     Color3f getCurrentColor() const { return m_currentColor; }
@@ -45,6 +48,7 @@ private:
     Color3f m_targetColor;
     Color3f m_cachedDayColor;
     Color3f m_cachedNightColor;
+    float m_undergroundFactor;
     int m_sampleTimer;
     bool m_initialized;
 };

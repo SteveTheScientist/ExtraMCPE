@@ -206,6 +206,12 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_FOG_UNDERGROUND_FOG) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_FOG_UNDERGROUND_FOG);
+        msg = "Underground Fog: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
     if (optionId == OPTIONS_FOG_START_PCT) {
         float val = minecraft->options.getProgressValue(OPTIONS_FOG_START_PCT);
         int pct = (int)(val + 0.5f);

@@ -11,12 +11,14 @@ EnhancedFog::EnhancedFog()
       m_targetColor(0.8f, 0.85f, 0.9f),
       m_cachedDayColor(0.8f, 0.85f, 0.9f),
       m_cachedNightColor(0.15f, 0.18f, 0.35f),
+      m_undergroundFactor(0.0f),
       m_sampleTimer(0),
       m_initialized(false) {
 }
 
 void EnhancedFog::reset() {
     m_initialized = false;
+    m_undergroundFactor = 0.0f;
     m_sampleTimer = 0;
 }
 
@@ -128,7 +130,23 @@ Color3f EnhancedFog::applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp
     return fogCol * (1.0f - blendWeight) + skyColLookUp * blendWeight;
 }
 
-void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky) {
+float EnhancedFog::calculateUndergroundFactor(float cameraY, float surfaceY, bool canSeeSky, bool enabled, bool isBetaSky) {
+    if (!enabled || isBetaSky || canSeeSky) {
+        return 0.0f;
+    }
+
+    // Well below surface with no sky access
+    float depthBelowSurface = surfaceY - cameraY;
+    if (depthBelowSurface <= 2.0f) {
+        return 0.0f;
+    }
+
+    // Smoothly scale factor from 0.0 at depth=2 to 1.0 at depth=20
+    float factor = (depthBelowSurface - 2.0f) / 18.0f;
+    return Mth::clamp(factor, 0.0f, 1.0f);
+}
+
+void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky, float surfaceY, bool canSeeSky) {
     if (!cameraEntity) return;
 
     float camX = cameraEntity->x;
@@ -156,5 +174,19 @@ void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float 
     }
 
     Color3f colWithTint = applySunsetTint(m_currentColor, td, settings.sunsetTint, isBetaSky);
-    m_currentColor = applyHighAltitudeBlend(colWithTint, skyColLookUp, camY, settings.highAltitudeBlend, isBetaSky);
+    Color3f colWithAlt = applyHighAltitudeBlend(colWithTint, skyColLookUp, camY, settings.highAltitudeBlend, isBetaSky);
+
+    float targetUgFactor = calculateUndergroundFactor(camY, surfaceY, canSeeSky, settings.undergroundFog, isBetaSky);
+    if (dt > 0.0f) {
+        float easeSpeed = settings.transitionSpeed;
+        float factor = 1.0f - std::exp(-easeSpeed * dt);
+        factor = Mth::clamp(factor, 0.0f, 1.0f);
+        m_undergroundFactor = m_undergroundFactor + (targetUgFactor - m_undergroundFactor) * factor;
+    } else {
+        m_undergroundFactor = targetUgFactor;
+    }
+
+    // Darken fog color toward near-black (e.g. 0.02, 0.02, 0.03) based on underground factor
+    Color3f nearBlack(0.02f, 0.02f, 0.03f);
+    m_currentColor = colWithAlt * (1.0f - m_undergroundFactor * 0.90f) + nearBlack * (m_undergroundFactor * 0.90f);
 }

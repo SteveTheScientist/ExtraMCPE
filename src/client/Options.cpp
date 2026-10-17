@@ -95,6 +95,7 @@ OptionFloat fogEndPct("fog_end_pct", 100.0f, 50.0f, 100.0f);
 OptionFloat fogTransitionSpeed("fog_transition_speed", 5.0f, 0.1f, 20.0f);
 OptionBool fogSunsetTint("fog_sunset_tint", true);
 OptionBool fogHighAltitudeBlend("fog_high_altitude_blend", true);
+OptionBool fogUndergroundFog("fog_underground_fog", true);
 
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
@@ -234,6 +235,7 @@ void Options::initTable() {
 	m_options[OPTIONS_FOG_TRANSITION_SPEED] = &fogTransitionSpeed;
 	m_options[OPTIONS_FOG_SUNSET_TINT] = &fogSunsetTint;
 	m_options[OPTIONS_FOG_HIGH_ALTITUDE_BLEND] = &fogHighAltitudeBlend;
+	m_options[OPTIONS_FOG_UNDERGROUND_FOG] = &fogUndergroundFog;
 }
 
 void Options::set(OptionId key, bool value) {

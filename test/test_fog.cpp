@@ -145,6 +145,22 @@ int main() {
     assert(isCloseCol(disabledAlt, baseFogCol));
     assert(isCloseCol(betaSkyAlt, baseFogCol));
 
+    // 6. Underground Fog Factor Unit Test
+    float surfaceY = 64.0f;
+    float ugSky = EnhancedFog::calculateUndergroundFactor(20.0f, surfaceY, true, true, false); // can see sky -> 0
+    float ugSurface = EnhancedFog::calculateUndergroundFactor(63.0f, surfaceY, false, true, false); // depth <= 2 -> 0
+    float ugMid = EnhancedFog::calculateUndergroundFactor(51.0f, surfaceY, false, true, false); // depth = 13 -> 11/18 ~= 0.611
+    float ugDeep = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, true, false); // depth = 34 >= 20 -> 1.0
+    float ugDisabled = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, false, false); // disabled -> 0
+    float ugBetaSky = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, true, true); // Beta Sky -> 0
+
+    assert(isClose(ugSky, 0.0f));
+    assert(isClose(ugSurface, 0.0f));
+    assert(isClose(ugMid, (13.0f - 2.0f) / 18.0f));
+    assert(isClose(ugDeep, 1.0f));
+    assert(isClose(ugDisabled, 0.0f));
+    assert(isClose(ugBetaSky, 0.0f));
+
     std::cout << "All EnhancedFog unit tests passed successfully!" << std::endl;
     return 0;
 }

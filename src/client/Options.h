@@ -106,6 +106,7 @@ enum OptionId {
 	OPTIONS_FOG_TRANSITION_SPEED,
 	OPTIONS_FOG_SUNSET_TINT,
 	OPTIONS_FOG_HIGH_ALTITUDE_BLEND,
+	OPTIONS_FOG_UNDERGROUND_FOG,
 	// Should be last!
 	OPTIONS_COUNT
 };
@@ -117,6 +118,7 @@ struct FogSettings {
     float transitionSpeed = 5.0f;
     bool sunsetTint = true;
     bool highAltitudeBlend = true;
+    bool undergroundFog = true;
 };
 
 class Minecraft;
@@ -178,6 +180,7 @@ public:
 		settings.transitionSpeed = getProgressValue(OPTIONS_FOG_TRANSITION_SPEED);
 		settings.sunsetTint = getBooleanValue(OPTIONS_FOG_SUNSET_TINT);
 		settings.highAltitudeBlend = getBooleanValue(OPTIONS_FOG_HIGH_ALTITUDE_BLEND);
+		settings.undergroundFog = getBooleanValue(OPTIONS_FOG_UNDERGROUND_FOG);
 		return settings;
 	}
 
