@@ -115,9 +115,10 @@ void KeyBindsScreen::updateScrollBounds() {
     int totalHeight = 10;
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            totalHeight += 22;
+            totalHeight += 15;
         } else {
-            totalHeight += 24;
+            bool nextIsCategory = (i + 1 < m_entries.size() && !m_entries[i + 1].category.empty());
+            totalHeight += nextIsCategory ? 16 : 24;
         }
     }
     float viewportH = (float)(height - 68);
@@ -146,7 +147,7 @@ void KeyBindsScreen::setupPositions() {
 
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            curY += 22;
+            curY += 15;
             continue;
         }
 
@@ -168,7 +169,8 @@ void KeyBindsScreen::setupPositions() {
             kb->visible = inBounds;
             rb->visible = inBounds;
         }
-        curY += 24;
+        bool nextIsCategory = (i + 1 < m_entries.size() && !m_entries[i + 1].category.empty());
+        curY += nextIsCategory ? 16 : 24;
     }
 }
 
@@ -206,26 +208,39 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
-    // Header & Footer shadow overlays rendered behind buttons
-    fill(0, 0, width, 32, 0x70000000);
-    fill(0, height - 34, width, height, 0x70000000);
+    // Scissor clipping for list area
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
 
     // Render category titles and action labels
     int curY = (int)(38 - m_scrollY);
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
             if (curY >= topY - 10 && curY < bottomY) {
-                drawCenteredString(font, m_entries[i].category, centerX, curY + 4, 0xffffffff);
+                drawCenteredString(font, m_entries[i].category, centerX, curY, 0xffffffff);
             }
-            curY += 22;
+            curY += 15;
             continue;
         }
 
         if (curY >= topY - 10 && curY < bottomY) {
             drawString(font, m_entries[i].label, centerX - 150, curY + 6, 0xffffffff);
         }
-        curY += 24;
+        bool nextIsCategory = (i + 1 < m_entries.size() && !m_entries[i + 1].category.empty());
+        curY += nextIsCategory ? 16 : 24;
     }
+
+    super::render(xm, ym, a);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    // Header & Footer shadow overlays rendered on top of scrolling list
+    fill(0, 0, width, 34, 0x70000000);
+    fill(0, height - 34, width, height, 0x70000000);
 
     // Scrollbar track & thumb
     if (m_maxScroll > 0) {
@@ -258,7 +273,8 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    if (btnResetAll) btnResetAll->render(minecraft, xm, ym);
+    if (btnDone) btnDone->render(minecraft, xm, ym);
 
     drawCenteredString(font, "Key Binds", width / 2, 10, 0xffffffff);
 }
