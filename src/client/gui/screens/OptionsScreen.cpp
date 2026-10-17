@@ -9,6 +9,7 @@
 #include "../../../util/Mth.h"
 #include "../../renderer/Tesselator.h"
 #include "../../renderer/Textures.h"
+#include "../../renderer/CloudUtils.h"
 #include "platform/input/Keyboard.h"
 #include "platform/input/Mouse.h"
 #include <algorithm>
@@ -146,9 +147,15 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    bool tc = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
+    bool bs = minecraft->options.getBooleanValue(OPTIONS_BETA_SKY);
+    bool bts = minecraft->options.getBooleanValue(OPTIONS_BEAUTIFUL_SKY);
+    CloudModeResolution res = resolveCloudModes(tc, bs, bts);
+
     if (optionId == OPTIONS_TALL_CLOUDS) {
-        bool state = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
-        msg = "Tall Clouds: " + std::string(state ? "ON" : "OFF");
+        msg = "Tall Clouds: " + std::string(res.tallClouds ? "ON" : "OFF");
+        active = res.tallCloudsEnabled;
+        hintText = res.tallCloudsHint;
         return;
     }
 
@@ -189,18 +196,45 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
     }
 
     if (optionId == OPTIONS_BETA_SKY) {
-        bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
-        active = !tallOn;
+        msg = "Beta Sky: " + std::string(res.betaSky ? "ON" : "OFF");
+        active = res.betaSkyEnabled;
+        hintText = res.betaSkyHint;
+        return;
     }
 
     bool state = minecraft->options.getBooleanValue(optionId);
     msg = baseName + (state ? ": ON" : ": OFF");
+    hintText = "";
 }
 
 void OptionControl::toggleValue(Minecraft* minecraft) {
     if (controlType == CONTROL_ACTION || controlType == CONTROL_KEY) return;
 
-    if (optionId == OPTIONS_BETA_SKY && minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS)) {
+    bool tc = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
+    bool bs = minecraft->options.getBooleanValue(OPTIONS_BETA_SKY);
+    bool bts = minecraft->options.getBooleanValue(OPTIONS_BEAUTIFUL_SKY);
+
+    if (optionId == OPTIONS_TALL_CLOUDS) {
+        tc = !tc;
+        if (tc) bs = false;
+        minecraft->options.set(OPTIONS_TALL_CLOUDS, tc);
+        minecraft->options.set(OPTIONS_BETA_SKY, bs);
+        updateLabel(minecraft);
+        return;
+    } else if (optionId == OPTIONS_BETA_SKY) {
+        bs = !bs;
+        if (bs) tc = false;
+        minecraft->options.set(OPTIONS_TALL_CLOUDS, tc);
+        minecraft->options.set(OPTIONS_BETA_SKY, bs);
+        updateLabel(minecraft);
+        return;
+    } else if (optionId == OPTIONS_BEAUTIFUL_SKY) {
+        bts = !bts;
+        minecraft->options.set(OPTIONS_BEAUTIFUL_SKY, bts);
+        CloudModeResolution res = resolveCloudModes(tc, bs, bts);
+        minecraft->options.set(OPTIONS_TALL_CLOUDS, res.tallClouds);
+        minecraft->options.set(OPTIONS_BETA_SKY, res.betaSky);
+        updateLabel(minecraft);
         return;
     }
 
@@ -297,6 +331,9 @@ void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
         drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xffffffff);
     } else {
         super::render(minecraft, xm, ym);
+        if (!active && !hintText.empty()) {
+            drawCenteredString(font, hintText, x + width / 2, y + height + 2, 0xffffa0a0);
+        }
     }
 }
 

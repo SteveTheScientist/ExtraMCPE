@@ -210,6 +210,7 @@ void CloudsScreen::buttonClicked(Button* button) {
 
     if (button == btnReset) {
         minecraft->options.set(OPTIONS_TALL_CLOUDS, true);
+        minecraft->options.set(OPTIONS_BETA_SKY, false);
         minecraft->options.set(OPTIONS_CLOUD_THICKNESS, 2.5f);
         minecraft->options.set(OPTIONS_CLOUD_FADE, 1.0f);
         minecraft->options.set(OPTIONS_CLOUD_OPACITY, 0.8f);

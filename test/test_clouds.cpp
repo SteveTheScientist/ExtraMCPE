@@ -58,11 +58,11 @@ int main() {
     // 6. Test getCloudFacesDrawn
     // Camera far below (y = 50, cloudBaseY = 128, thickness = 10)
     CloudDrawnFaces f_far_below = getCloudFacesDrawn(50.0f, 128.0f, 10.0f);
-    assert(!f_far_below.drawTop && f_far_below.drawBottom && f_far_below.drawSides);
+    assert(f_far_below.drawTop && f_far_below.drawBottom && f_far_below.drawSides);
 
     // Camera just below base (y = 127.5, cloudBaseY = 128, thickness = 10)
     CloudDrawnFaces f_just_below = getCloudFacesDrawn(127.5f, 128.0f, 10.0f);
-    assert(!f_just_below.drawTop && f_just_below.drawBottom && f_just_below.drawSides);
+    assert(f_just_below.drawTop && f_just_below.drawBottom && f_just_below.drawSides);
 
     // Camera inside slab (y = 133, cloudBaseY = 128, thickness = 10)
     CloudDrawnFaces f_inside = getCloudFacesDrawn(133.0f, 128.0f, 10.0f);
@@ -70,12 +70,44 @@ int main() {
 
     // Camera just above top (y = 138.5, cloudBaseY = 128, thickness = 10)
     CloudDrawnFaces f_just_above = getCloudFacesDrawn(138.5f, 128.0f, 10.0f);
-    assert(f_just_above.drawTop && !f_just_above.drawBottom && f_just_above.drawSides);
+    assert(f_just_above.drawTop && f_just_above.drawBottom && f_just_above.drawSides);
 
     // Camera far above (y = 200, cloudBaseY = 128, thickness = 10)
     CloudDrawnFaces f_far_above = getCloudFacesDrawn(200.0f, 128.0f, 10.0f);
-    assert(f_far_above.drawTop && !f_far_above.drawBottom && f_far_above.drawSides);
+    assert(f_far_above.drawTop && f_far_above.drawBottom && f_far_above.drawSides);
 
-    std::cout << "All cloudAlpha and getCloudFacesDrawn unit tests passed successfully!" << std::endl;
+    // 7. Test resolveCloudModes pure function
+    // Case 1: Default state (Tall Clouds ON, Beta Sky OFF, Beautiful Sky ON)
+    CloudModeResolution r1 = resolveCloudModes(true, false, true);
+    assert(r1.tallClouds == true && r1.betaSky == false);
+    assert(r1.tallCloudsEnabled == true && r1.betaSkyEnabled == false);
+    assert(r1.tallCloudsHint.empty());
+    assert(r1.betaSkyHint == "Disabled (Tall Clouds & Beautiful Sky)");
+
+    // Case 2: Turn Beta Sky ON (Tall Clouds OFF, Beautiful Sky OFF)
+    CloudModeResolution r2 = resolveCloudModes(false, true, false);
+    assert(r2.tallClouds == false && r2.betaSky == true);
+    assert(r2.tallCloudsEnabled == false && r2.betaSkyEnabled == true);
+    assert(r2.tallCloudsHint == "Disabled while Beta Sky is ON");
+    assert(r2.betaSkyHint.empty());
+
+    // Case 3: Old options file with both ON (Tall Clouds ON, Beta Sky ON, Beautiful Sky OFF)
+    CloudModeResolution r3 = resolveCloudModes(true, true, false);
+    assert(r3.tallClouds == false && r3.betaSky == true);
+    assert(r3.tallCloudsEnabled == false && r3.betaSkyEnabled == true);
+
+    // Case 4: Both OFF, Beautiful Sky OFF
+    CloudModeResolution r4 = resolveCloudModes(false, false, false);
+    assert(r4.tallClouds == false && r4.betaSky == false);
+    assert(r4.tallCloudsEnabled == true && r4.betaSkyEnabled == true);
+    assert(r4.tallCloudsHint.empty() && r4.betaSkyHint.empty());
+
+    // Case 5: Both OFF, Beautiful Sky ON
+    CloudModeResolution r5 = resolveCloudModes(false, false, true);
+    assert(r5.tallClouds == false && r5.betaSky == false);
+    assert(r5.tallCloudsEnabled == true && r5.betaSkyEnabled == false);
+    assert(r5.betaSkyHint == "Disabled while Beautiful Sky is ON");
+
+    std::cout << "All cloudAlpha, getCloudFacesDrawn, and resolveCloudModes unit tests passed successfully!" << std::endl;
     return 0;
 }

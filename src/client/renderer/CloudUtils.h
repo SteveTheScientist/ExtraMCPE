@@ -2,6 +2,7 @@
 #define NET_MINECRAFT_CLIENT_RENDERER__CloudUtils_H__
 
 #include <algorithm>
+#include <string>
 
 inline float cloudAlpha(float ny, float rel, float baseAlpha, float opacity, float fadeStrength) {
     // ny: 0 at bottom of cloud, 1 at top
@@ -33,9 +34,54 @@ struct CloudDrawnFaces {
 inline CloudDrawnFaces getCloudFacesDrawn(float cameraY, float cloudBaseY, float cloudThickness) {
     CloudDrawnFaces faces;
     faces.drawSides = true;
-    faces.drawTop = (cameraY > cloudBaseY);
-    faces.drawBottom = (cameraY < cloudBaseY + cloudThickness);
+    faces.drawTop = true;
+    faces.drawBottom = true;
     return faces;
+}
+
+struct CloudModeResolution {
+    bool tallClouds;
+    bool betaSky;
+    bool tallCloudsEnabled;
+    bool betaSkyEnabled;
+    std::string tallCloudsHint;
+    std::string betaSkyHint;
+};
+
+inline CloudModeResolution resolveCloudModes(bool tallClouds, bool betaSky, bool beautifulSkies) {
+    CloudModeResolution res;
+    res.tallClouds = tallClouds;
+    res.betaSky = betaSky;
+
+    if (res.tallClouds && res.betaSky) {
+        res.tallClouds = false;
+    }
+
+    res.tallCloudsEnabled = !res.betaSky;
+    if (!res.tallCloudsEnabled) {
+        res.tallCloudsHint = "Disabled while Beta Sky is ON";
+    } else {
+        res.tallCloudsHint = "";
+    }
+
+    bool betaByTall = res.tallClouds;
+    bool betaByBeautiful = beautifulSkies;
+
+    if (!betaByTall && !betaByBeautiful) {
+        res.betaSkyEnabled = true;
+        res.betaSkyHint = "";
+    } else {
+        res.betaSkyEnabled = false;
+        if (betaByTall && betaByBeautiful) {
+            res.betaSkyHint = "Disabled (Tall Clouds & Beautiful Sky)";
+        } else if (betaByTall) {
+            res.betaSkyHint = "Disabled while Tall Clouds is ON";
+        } else {
+            res.betaSkyHint = "Disabled while Beautiful Sky is ON";
+        }
+    }
+
+    return res;
 }
 
 #endif /* NET_MINECRAFT_CLIENT_RENDERER__CloudUtils_H__ */

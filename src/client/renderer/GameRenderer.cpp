@@ -293,29 +293,16 @@ void GameRenderer::renderLevel(float a) {
 		TIMER_POP_PUSH("culling");
 		mc->levelRenderer->cull(&frustum, a);
 		mc->levelRenderer->updateDirtyChunks(cameraEntity, false);
-		// this sky rendering code below was originally before the frustrum and culling stuff but sunset color breaks for some reason in that place, so i moved i after those two - shredder
-//		if(mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS)) {
-			setupFog(-1);
-			TIMER_POP_PUSH("sky");
-			// @TODO - EXTREME JANK BELOW, it works but i have to do heavy cleanup here, also to test if the glfogf commands even affect fog in anyway.
-			if(mc->options.getBooleanValue(OPTIONS_BETA_SKY) && (mc->options.getIntValue(OPTIONS_VIEW_DISTANCE) < 2)){
-			levelRenderer->renderSky(a); // how java renders the sky instead of how pe doing prepareandrenderclouds.
-			} else if (!mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-			glFogf(GL_FOG_START, renderDistance  * 0.2f);
-			glFogf(GL_FOG_END, renderDistance *0.75);
+		setupFog(-1);
+		TIMER_POP_PUSH("sky");
+		glFogf(GL_FOG_START, renderDistance * 0.2f);
+		glFogf(GL_FOG_END, renderDistance * 0.75f);
+		levelRenderer->renderSky(a);
+		glFogf(GL_FOG_START, renderDistance * 0.6f);
+		glFogf(GL_FOG_END, renderDistance);
 
-			glFogf(GL_FOG_START, renderDistance  * 0.6f);
-			glFogf(GL_FOG_END, renderDistance);
-			}
-//		}
 		glEnable2(GL_FOG);
 		setupFog(1);
-		// MCPE renders clouds using this, but this method breaks 3d clouds and also breaks 2d clouds transparency viewed from above, add as a Legacy Sky or Fast Sky option. - shredder
-		if(!mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		if(mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS)) {
-			prepareAndRenderClouds(levelRenderer, a);
-		}
-		}
 
 		setupFog(0);
 		glEnable2(GL_FOG);
@@ -396,14 +383,37 @@ void GameRenderer::renderLevel(float a) {
 		}
 
 		glDisable2(GL_FOG);
-		// Normally this is commented out, but this is how java does it and should fix both 2d/3d clouds, a
-		if(mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		       setupFog(0);
-		       glEnable2(GL_FOG);
-		        levelRenderer->renderClouds(a);
-		        glDisable2(GL_FOG);
-		}
-		// SHREDDER END
+
+		// Unified Shared Cloud Pass for all cloud types:
+		// Rendered after opaque terrain, cutout terrain, entities, particles, and translucent terrain/water.
+		TIMER_POP_PUSH("clouds");
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix2();
+		glLoadIdentity2();
+		gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 2.0f, renderDistance * 512.0f);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix2();
+
+		setupFog(0);
+		glEnable2(GL_FOG);
+		glFogf(GL_FOG_START, renderDistance * 4.2f * 0.6f);
+		glFogf(GL_FOG_END, renderDistance * 4.2f);
+
+		glEnable2(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDisable2(GL_CULL_FACE);
+
+		levelRenderer->renderClouds(a);
+
+		glFogf(GL_FOG_START, renderDistance * 0.6f);
+		glFogf(GL_FOG_END, renderDistance);
+		glDisable2(GL_FOG);
+
+		glPopMatrix2();
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix2();
+		glMatrixMode(GL_MODELVIEW);
+
 		setupFog(1);
 
 		if (zoom == 1 && !mc->options.getBooleanValue(OPTIONS_HIDEGUI)) {
