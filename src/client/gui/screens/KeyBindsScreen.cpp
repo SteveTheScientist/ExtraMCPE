@@ -115,10 +115,9 @@ void KeyBindsScreen::updateScrollBounds() {
     int totalHeight = 10;
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            totalHeight += 15;
+            totalHeight += 16;
         } else {
-            bool nextIsCategory = (i + 1 < m_entries.size() && !m_entries[i + 1].category.empty());
-            totalHeight += nextIsCategory ? 16 : 24;
+            totalHeight += 24;
         }
     }
     float viewportH = (float)(height - 68);
@@ -147,7 +146,7 @@ void KeyBindsScreen::setupPositions() {
 
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            curY += 15;
+            curY += 16;
             continue;
         }
 
@@ -169,8 +168,7 @@ void KeyBindsScreen::setupPositions() {
             kb->visible = inBounds;
             rb->visible = inBounds;
         }
-        bool nextIsCategory = (i + 1 < m_entries.size() && !m_entries[i + 1].category.empty());
-        curY += nextIsCategory ? 16 : 24;
+        curY += 24;
     }
 }
 
@@ -221,17 +219,16 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
             if (curY >= topY - 10 && curY < bottomY) {
-                drawCenteredString(font, m_entries[i].category, centerX, curY, 0xffffffff);
+                drawCenteredString(font, m_entries[i].category, centerX, curY + 3, 0xffffffff);
             }
-            curY += 15;
+            curY += 16;
             continue;
         }
 
         if (curY >= topY - 10 && curY < bottomY) {
             drawString(font, m_entries[i].label, centerX - 150, curY + 6, 0xffffffff);
         }
-        bool nextIsCategory = (i + 1 < m_entries.size() && !m_entries[i + 1].category.empty());
-        curY += nextIsCategory ? 16 : 24;
+        curY += 24;
     }
 
     super::render(xm, ym, a);
