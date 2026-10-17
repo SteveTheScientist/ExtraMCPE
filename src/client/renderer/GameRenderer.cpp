@@ -386,11 +386,20 @@ void GameRenderer::renderLevel(float a) {
 		glEnable2(GL_FOG);
 		glEnable2(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
-		glDepthMask(GL_FALSE);
 		glEnable2(GL_BLEND);
 		glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix2();
+		glLoadIdentity2();
+		gluPerspective(getFov(a, true), mc->width / (float)mc->height, 0.05f, 512.0f);
+		glMatrixMode(GL_MODELVIEW);
+
 		levelRenderer->renderClouds(a);
+
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix2();
+		glMatrixMode(GL_MODELVIEW);
 
 		glDepthMask(GL_TRUE);
 		glDisable2(GL_FOG);

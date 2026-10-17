@@ -115,7 +115,7 @@ void KeyBindsScreen::updateScrollBounds() {
     int totalHeight = 10;
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            totalHeight += 16;
+            totalHeight += 21;
         } else {
             totalHeight += 24;
         }
@@ -146,7 +146,7 @@ void KeyBindsScreen::setupPositions() {
 
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            curY += 16;
+            curY += 21;
             continue;
         }
 
@@ -218,10 +218,10 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
     int curY = (int)(38 - m_scrollY);
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            if (curY >= topY - 10 && curY < bottomY) {
-                drawCenteredString(font, m_entries[i].category, centerX, curY + 3, 0xffffffff);
+            if (curY >= topY - 15 && curY < bottomY) {
+                drawCenteredString(font, m_entries[i].category, centerX, curY + 8, 0xffffffff);
             }
-            curY += 16;
+            curY += 21;
             continue;
         }
 
