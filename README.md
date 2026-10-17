@@ -1,29 +1,3 @@
-# MinecraftPE
-> [!Warning]
-> [Github repository](https://github.com/Minecraft-PE-0-6-1/minecraft-pe-0.6.1-on-all) **isnt main**. All issues and pull requests should be send in [Gitea Repository](https://gitea.sffempire.ru/Kolyah35/minecraft-pe-0.6.1).
-
-> [!Important]
-> We have a discord server, where you can report bugs or send feedback https://discord.gg/c58YesBxve
-
-Source code for **Minecraft Pocket Edition 0.6.1 alpha** with various fixes and improvements.
-
-This project aims to preserve and improve this early version of Minecraft PE.
-
-# Features
-- Support for modern IOS and Android, Linux, Web
-- Improved Dedicated Server (Windows build, anticheat, commands, etc)
-- Features from Beta version of Minecraft (Grass tint, Beta sky, Smooth lighting, etc) and other tweaks
-
-# Screenshots
-<p align="center">
-
-<img width="49%" alt="menu" src="https://sffempire.ru/mcpe-screenshots/menu.png" />
-<img width="49%" alt="settings" src="https://sffempire.ru/mcpe-screenshots/settings.png" />
-<img width="49%" alt="worlds" src="https://sffempire.ru/mcpe-screenshots/worlds.png" />
-<img width="49%" alt="gameplay" src="https://sffempire.ru/mcpe-screenshots/gameplay.png" />
-
-</p>
-
 # Build
 
 ## CMake
