@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug DEMO|Win32">
@@ -58,6 +58,7 @@
     <ClCompile Include="..\..\src\client\gui\screens\IngameBlockSelectionScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\JoinGameScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\OptionsScreen.cpp" />
+    <ClCompile Include="..\..\src\client\gui\screens\FogScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\PauseScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\ProgressScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\RenameMPLevelScreen.cpp" />
@@ -109,7 +110,8 @@
     <ClCompile Include="..\..\src\client\renderer\entity\SheepRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\entity\TntRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\entity\TripodCameraRenderer.cpp" />
-    <ClCompile Include="..\..\src\client\renderer\GameRenderer.cpp" />
+    <ClCompile Include="..\..\src\client\renderer\EnhancedFog.cpp" />
+    <ClCompile Include="..\..\src\client/renderer\GameRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\gles.cpp" />
     <ClCompile Include="..\..\src\client\renderer\ItemInHandRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\LevelRenderer.cpp" />
@@ -406,6 +408,7 @@
     <ClInclude Include="..\..\src\client\gui\screens\InvalidLicenseScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\JoinGameScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\OptionsScreen.h" />
+    <ClInclude Include="..\..\src\client\gui\screens\FogScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\PauseScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\PrerenderTilesScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\ProgressScreen.h" />
@@ -502,6 +505,7 @@
     <ClInclude Include="..\..\src\client\renderer\entity\SpiderRenderer.h" />
     <ClInclude Include="..\..\src\client\renderer\entity\TntRenderer.h" />
     <ClInclude Include="..\..\src\client\renderer\entity\TripodCameraRenderer.h" />
+    <ClInclude Include="..\..\src\client\renderer\EnhancedFog.h" />
     <ClInclude Include="..\..\src\client\renderer\GameRenderer.h" />
     <ClInclude Include="..\..\src\client\renderer\gles.h" />
     <ClInclude Include="..\..\src\client\renderer\ItemInHandRenderer.h" />

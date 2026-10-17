@@ -67,6 +67,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/client/gui/screens/OptionsScreen.cpp \
                    ../../../src/client/gui/screens/CustomizationsScreen.cpp \
                    ../../../src/client/gui/screens/CloudsScreen.cpp \
+                   ../../../src/client/gui/screens/FogScreen.cpp \
                    ../../../src/client/gui/screens/KeyBindsScreen.cpp \
                    ../../../src/client/gui/screens/CreditsScreen.cpp \
                    ../../../src/client/gui/screens/PauseScreen.cpp \
@@ -104,6 +105,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/client/renderer/Lighting.cpp \
 ../../../src/client/renderer/Chunk.cpp \
 ../../../src/client/renderer/EntityTileRenderer.cpp \
+../../../src/client/renderer/EnhancedFog.cpp \
 ../../../src/client/renderer/GameRenderer.cpp \
 ../../../src/client/renderer/ItemInHandRenderer.cpp \
 ../../../src/client/renderer/LevelRenderer.cpp \

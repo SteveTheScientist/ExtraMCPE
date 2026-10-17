@@ -20,7 +20,8 @@ enum ActionId {
     ACTION_CLOUDS,
     ACTION_CONTROLS,
     ACTION_GRAPHICS,
-    ACTION_INTERFACE
+    ACTION_INTERFACE,
+    ACTION_FOG
 };
 
 class OptionControl : public Button {
