@@ -1,4 +1,5 @@
 #include "GameRenderer.h"
+#include "FogManager.h"
 #include "client/Options.h"
 #include "gles.h"
 #include "Lighting.h"
@@ -262,6 +263,8 @@ void GameRenderer::renderLevel(float a) {
 			if (i == 0) glColorMask(false, true, true, false);
 			else glColorMask(true, false, false, false);
 		}
+
+		FogManager::getInstance().update(mc, a);
 
 		TIMER_POP_PUSH("clear");
 		glViewport(0, 0, mc->width, mc->height);
@@ -572,61 +575,7 @@ void GameRenderer::bobView(float a) {
 
 /*private*/
 void GameRenderer::setupFog(int i) {
-	Mob* player = mc->cameraTargetPlayer;
-	float fogBuffer[4] = {fr, fg, fb, 1};
-
-	glFogfv(GL_FOG_COLOR, (GLfloat*)fogBuffer);
-	glColor4f2(1, 1, 1, 1);
-
-	if (player->isUnderLiquid(Material::water)) {
-		glFogx(GL_FOG_MODE, GL_EXP);
-		glFogf(GL_FOG_DENSITY, 0.1f); // was 0.06
-
-		//        float rr = 0.4f;
-		//        float gg = 0.4f;
-		//        float bb = 0.9f;
-		//
-		//        if (mc->options.anaglyph3d) {
-		//            float rrr = (rr * 30 + gg * 59 + bb * 11) / 100;
-		//            float ggg = (rr * 30 + gg * 70) / (100);
-		//            float bbb = (rr * 30 + bb * 70) / (100);
-		//
-		//            rr = rrr;
-		//            gg = ggg;
-		//            bb = bbb;
-		//        }
-	} else if (player->isUnderLiquid(Material::lava)) {
-		glFogx(GL_FOG_MODE, GL_EXP);
-		glFogf(GL_FOG_DENSITY, 2.f); // was 0.06
-		//        float rr = 0.4f;
-		//        float gg = 0.3f;
-		//        float bb = 0.3f;
-		//
-		//        if (mc->options.anaglyph3d) {
-		//            float rrr = (rr * 30 + gg * 59 + bb * 11) / 100;
-		//            float ggg = (rr * 30 + gg * 70) / (100);
-		//            float bbb = (rr * 30 + bb * 70) / (100);
-		//
-		//            rr = rrr;
-		//            gg = ggg;
-		//            bb = bbb;
-		//        }
-	} else {
-		glFogx(GL_FOG_MODE, GL_LINEAR);
-		glFogf(GL_FOG_START, renderDistance * 0.6f);
-		glFogf(GL_FOG_END, renderDistance);
-		if (i < 0) {
-			glFogf(GL_FOG_START, 0);
-			glFogf(GL_FOG_END, renderDistance * 1.0f);
-		}
-
-		if (mc->level->dimension->foggy) {
-			glFogf(GL_FOG_START, 0);
-		}
-	}
-
-	glEnable2(GL_COLOR_MATERIAL);
-	//glColorMaterial(GL_FRONT, GL_AMBIENT);
+	FogManager::getInstance().setupFog(mc, i);
 }
 
 void GameRenderer::updateAllChunks() {
@@ -828,25 +777,29 @@ void GameRenderer::tick(int nTick, int maxTick) {
 
 /*private*/
 void GameRenderer::setupClearColor(float a) {
-	Level* level = mc->level;
 	Mob* player = mc->cameraTargetPlayer;
 
-	float whiteness = 1.0f / (4 - mc->options.getIntValue(OPTIONS_VIEW_DISTANCE));
-	whiteness = 1 - (float) pow(whiteness, 0.25f);
-
-	Vec3 skyColor = level->getSkyColor(mc->cameraTargetPlayer, a);
-	float sr = (float) skyColor.x;
-	float sg = (float) skyColor.y;
-	float sb = (float) skyColor.z;
-
-	Vec3 fogColor = level->getFogColor(a);
+	Vec3 fogColor = FogManager::getInstance().getCalculatedFogColor();
 	fr = (float) fogColor.x;
 	fg = (float) fogColor.y;
 	fb = (float) fogColor.z;
 
-	fr += (sr - fr) * whiteness;
-	fg += (sg - fg) * whiteness;
-	fb += (sb - fb) * whiteness;
+	bool enhancedEnabled = mc->options.getBooleanValue(OPTIONS_ENHANCED_FOG_ENABLED);
+	bool betaSky = mc->options.getBooleanValue(OPTIONS_BETA_SKY);
+
+	if (!enhancedEnabled || betaSky) {
+		float whiteness = 1.0f / (4 - mc->options.getIntValue(OPTIONS_VIEW_DISTANCE));
+		whiteness = 1 - (float) pow(whiteness, 0.25f);
+
+		Vec3 skyColor = mc->level->getSkyColor(mc->cameraTargetPlayer, a);
+		float sr = (float) skyColor.x;
+		float sg = (float) skyColor.y;
+		float sb = (float) skyColor.z;
+
+		fr += (sr - fr) * whiteness;
+		fg += (sg - fg) * whiteness;
+		fb += (sb - fb) * whiteness;
+	}
 
 	if (player->isUnderLiquid(Material::water)) {
 		fr = 0.02f;

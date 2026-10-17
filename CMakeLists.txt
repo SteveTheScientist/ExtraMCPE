@@ -114,6 +114,7 @@ CPMAddPackage(
 )
 
 file(GLOB SERVER_SOURCES
+    "src/client/renderer/FogManager.cpp"
     "project/lib_projects/raknet/jni/RaknetSources/*.cpp"
     "src/NinecraftApp.cpp"
     "src/Performance.cpp"
@@ -416,3 +417,6 @@ message(STATUS "  PLATFORM=" ${PLATFORM_CPP})
 
 add_executable(test_clouds test/test_clouds.cpp)
 target_include_directories(test_clouds PUBLIC "${CMAKE_SOURCE_DIR}/src")
+
+add_executable(test_fog test/test_fog.cpp)
+target_include_directories(test_fog PUBLIC "${CMAKE_SOURCE_DIR}/src")

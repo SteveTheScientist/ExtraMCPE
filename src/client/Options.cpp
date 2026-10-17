@@ -89,6 +89,11 @@ OptionFloat cloudOpacity("cloud_opacity", 0.8f, 0.4f, 1.0f);
 OptionBool cloudFlatShading("cloud_flat_shading", true);
 OptionFloat cloudYLevel("cloud_y_level", 108.0f, 32.0f, 192.0f);
 
+OptionBool enhancedFogEnabled("enhanced_fog_enabled", true);
+OptionFloat fogDistanceScale("fog_distance_scale", 1.0f, 0.5f, 2.0f);
+OptionFloat fogSunsetBias("fog_sunset_bias", 0.5f, 0.0f, 1.0f);
+OptionBool fogHorizonSync("fog_horizon_sync", true);
+
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
 OptionInt keyBack("key.back", Keyboard::KEY_S);
@@ -220,6 +225,10 @@ void Options::initTable() {
 	m_options[OPTIONS_CLOUD_OPACITY] = &cloudOpacity;
 	m_options[OPTIONS_CLOUD_FLAT_SHADING] = &cloudFlatShading;
 	m_options[OPTIONS_CLOUD_Y_LEVEL] = &cloudYLevel;
+	m_options[OPTIONS_ENHANCED_FOG_ENABLED] = &enhancedFogEnabled;
+	m_options[OPTIONS_FOG_DISTANCE_SCALE] = &fogDistanceScale;
+	m_options[OPTIONS_FOG_SUNSET_BIAS] = &fogSunsetBias;
+	m_options[OPTIONS_FOG_HORIZON_SYNC] = &fogHorizonSync;
 }
 
 void Options::set(OptionId key, bool value) {

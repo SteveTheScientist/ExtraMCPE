@@ -1,5 +1,6 @@
 #include "Level.h"
 #include "LevelListener.h"
+#include "client/renderer/FogManager.h"
 #include "tile/entity/TileEntity.h"
 #include "../entity/player/Player.h"
 #include "../entity/EntityEvent.h"
@@ -1179,6 +1180,11 @@ int Level::getSkyDarken(float a) {
 }
 
 Vec3 Level::getSkyColor(Entity* source, float a) {
+	Vec3 syncSky = FogManager::getInstance().getCalculatedSkyColor();
+	if (syncSky.x >= 0.0f) {
+		return syncSky;
+	}
+
 	float td = getTimeOfDay(a);
 
 	float br = Mth::cos(td * Mth::PI * 2) * 2 + 0.5f;

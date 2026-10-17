@@ -1,5 +1,6 @@
 #include "CustomizationsScreen.h"
 #include "CloudsScreen.h"
+#include "FogScreen.h"
 #include "StartMenuScreen.h"
 #include "PauseScreen.h"
 #include "../../Minecraft.h"
@@ -35,6 +36,7 @@ void CustomizationsScreen::init() {
     int idSeq = 200;
 
     // Customization Options: sub-menu buttons
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Fog Options...", false, 0.0f, 1.0f, ACTION_FOG));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
@@ -243,6 +245,8 @@ void CustomizationsScreen::buttonClicked(Button* button) {
         } else if (ctrl->controlType == CONTROL_ACTION) {
             if (ctrl->actionId == ACTION_CLOUDS) {
                 minecraft->setScreen(new CloudsScreen());
+            } else if (ctrl->actionId == ACTION_FOG) {
+                minecraft->setScreen(new FogScreen());
             }
         }
     }
