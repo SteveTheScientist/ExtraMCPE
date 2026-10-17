@@ -142,6 +142,7 @@
     <ClCompile Include="..\..\src\client\renderer\entity\MobRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\entity\TntRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\entity\TripodCameraRenderer.cpp" />
+    <ClCompile Include="..\..\src\client\renderer\EnhancedFog.cpp" />
     <ClCompile Include="..\..\src\client\renderer\GameRenderer.cpp" />
     <ClCompile Include="..\..\src\client\renderer\gles.cpp" />
     <ClCompile Include="..\..\src\client\renderer\ItemInHandRenderer.cpp" />
@@ -375,6 +376,7 @@
     <ClInclude Include="..\..\src\client\renderer\entity\ItemSpriteRenderer.h" />
     <ClInclude Include="..\..\src\client\renderer\entity\MobRenderer.h" />
     <ClInclude Include="..\..\src\client\renderer\entity\TntRenderer.h" />
+    <ClInclude Include="..\..\src\client\renderer\EnhancedFog.h" />
     <ClInclude Include="..\..\src\client\renderer\GameRenderer.h" />
     <ClInclude Include="..\..\src\client\renderer\gles.h" />
     <ClInclude Include="..\..\src\client\renderer\LevelRenderer.h" />

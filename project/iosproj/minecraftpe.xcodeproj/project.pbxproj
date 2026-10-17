@@ -833,6 +833,8 @@
 		D5B50FE014CFF670005F7284 /* TntRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CD814CFF66F005F7284 /* TntRenderer.cpp */; };
 		D5B50FE114CFF670005F7284 /* TripodCameraRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CDA14CFF66F005F7284 /* TripodCameraRenderer.cpp */; };
 		D5B50FE214CFF670005F7284 /* TripodCameraRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CDA14CFF66F005F7284 /* TripodCameraRenderer.cpp */; };
+		EF1000012C00000000000001 /* EnhancedFog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000002C00000000000001 /* EnhancedFog.cpp */; };
+		EF1000022C00000000000001 /* EnhancedFog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000002C00000000000001 /* EnhancedFog.cpp */; };
 		D5B50FE314CFF670005F7284 /* GameRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CDC14CFF66F005F7284 /* GameRenderer.cpp */; };
 		D5B50FE414CFF670005F7284 /* GameRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CDC14CFF66F005F7284 /* GameRenderer.cpp */; };
 		D5B50FE514CFF670005F7284 /* gles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CDE14CFF66F005F7284 /* gles.cpp */; };
@@ -1972,6 +1974,8 @@
 		D5B50CD914CFF66F005F7284 /* TntRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TntRenderer.h; sourceTree = "<group>"; };
 		D5B50CDA14CFF66F005F7284 /* TripodCameraRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TripodCameraRenderer.cpp; sourceTree = "<group>"; };
 		D5B50CDB14CFF66F005F7284 /* TripodCameraRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TripodCameraRenderer.h; sourceTree = "<group>"; };
+		EF1000002C00000000000001 /* EnhancedFog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnhancedFog.cpp; path = ../../../src/client/renderer/EnhancedFog.cpp; sourceTree = "<group>"; };
+		EF1000032C00000000000001 /* EnhancedFog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnhancedFog.h; path = ../../../src/client/renderer/EnhancedFog.h; sourceTree = "<group>"; };
 		D5B50CDC14CFF66F005F7284 /* GameRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameRenderer.cpp; sourceTree = "<group>"; };
 		D5B50CDD14CFF66F005F7284 /* GameRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameRenderer.h; sourceTree = "<group>"; };
 		D5B50CDE14CFF66F005F7284 /* gles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gles.cpp; sourceTree = "<group>"; };
@@ -3549,6 +3553,8 @@
 				D5B50CC314CFF66F005F7284 /* DirtyChunkSorter.h */,
 				D5B50CC414CFF66F005F7284 /* DistanceChunkSorter.h */,
 				D5B50CC514CFF66F005F7284 /* entity */,
+				EF1000002C00000000000001 /* EnhancedFog.cpp */,
+				EF1000032C00000000000001 /* EnhancedFog.h */,
 				D5B50CDC14CFF66F005F7284 /* GameRenderer.cpp */,
 				D5B50CDD14CFF66F005F7284 /* GameRenderer.h */,
 				D5B50CDE14CFF66F005F7284 /* gles.cpp */,
@@ -5236,6 +5242,7 @@
 				D5B50FDE14CFF670005F7284 /* MobRenderer.cpp in Sources */,
 				D5B50FE014CFF670005F7284 /* TntRenderer.cpp in Sources */,
 				D5B50FE214CFF670005F7284 /* TripodCameraRenderer.cpp in Sources */,
+				EF1000022C00000000000001 /* EnhancedFog.cpp in Sources */,
 				D5B50FE414CFF670005F7284 /* GameRenderer.cpp in Sources */,
 				D5B50FE614CFF670005F7284 /* gles.cpp in Sources */,
 				D5B50FE814CFF670005F7284 /* ItemInHandRenderer.cpp in Sources */,
@@ -5607,6 +5614,7 @@
 				D5B50FDD14CFF670005F7284 /* MobRenderer.cpp in Sources */,
 				D5B50FDF14CFF670005F7284 /* TntRenderer.cpp in Sources */,
 				D5B50FE114CFF670005F7284 /* TripodCameraRenderer.cpp in Sources */,
+				EF1000012C00000000000001 /* EnhancedFog.cpp in Sources */,
 				D5B50FE314CFF670005F7284 /* GameRenderer.cpp in Sources */,
 				D5B50FE514CFF670005F7284 /* gles.cpp in Sources */,
 				D5B50FE714CFF670005F7284 /* ItemInHandRenderer.cpp in Sources */,
