@@ -64,7 +64,7 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
     if (controlType == CONTROL_SLIDER) {
         float val = minecraft->options.getProgressValue(optionId);
         if (optionId == OPTIONS_LIMIT_FRAMERATE) {
-            int fps = (int)(std::round(val / 10.0f) * 10.0f);
+            int fps = (int)(floorf(val / 10.0f + 0.5f) * 10.0f);
             if (fps >= 260) {
                 msg = "Max Framerate: Unlimited";
             } else {
@@ -296,7 +296,7 @@ void OptionControl::updateSliderValue(Minecraft* minecraft, int mx) {
     pct = Mth::clamp(pct, 0.0f, 1.0f);
     float newVal = minVal + pct * (maxVal - minVal);
     if (optionId == OPTIONS_LIMIT_FRAMERATE) {
-        newVal = std::round(newVal / 10.0f) * 10.0f;
+        newVal = floorf(newVal / 10.0f + 0.5f) * 10.0f;
     }
     minecraft->options.set(optionId, newVal);
     updateLabel(minecraft);
