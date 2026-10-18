@@ -97,6 +97,16 @@ OptionBool fogSunsetTint("fog_sunset_tint", true);
 OptionBool fogHighAltitudeBlend("fog_high_altitude_blend", true);
 OptionBool fogUndergroundFog("fog_underground_fog", true);
 
+OptionBool chatShown("chat_shown", true);
+OptionFloat chatTextOpacity("chat_text_opacity", 100.0f, 10.0f, 100.0f);
+OptionFloat chatBgOpacity("chat_bg_opacity", 50.0f, 0.0f, 100.0f);
+OptionFloat chatTextSize("chat_text_size", 100.0f, 50.0f, 100.0f);
+OptionFloat chatLineSpacing("chat_line_spacing", 0.0f, 0.0f, 100.0f);
+OptionFloat chatWidth("chat_width", 320.0f, 40.0f, 320.0f);
+OptionFloat chatFocusedHeight("chat_focused_height", 180.0f, 20.0f, 180.0f);
+OptionFloat chatUnfocusedHeight("chat_unfocused_height", 90.0f, 20.0f, 90.0f);
+OptionInt chatMessageTime("chat_message_time", 1, 0, 5);
+
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
 OptionInt keyBack("key.back", Keyboard::KEY_S);
@@ -236,6 +246,16 @@ void Options::initTable() {
 	m_options[OPTIONS_FOG_SUNSET_TINT] = &fogSunsetTint;
 	m_options[OPTIONS_FOG_HIGH_ALTITUDE_BLEND] = &fogHighAltitudeBlend;
 	m_options[OPTIONS_FOG_UNDERGROUND_FOG] = &fogUndergroundFog;
+
+	m_options[OPTIONS_CHAT_SHOWN] = &chatShown;
+	m_options[OPTIONS_CHAT_TEXT_OPACITY] = &chatTextOpacity;
+	m_options[OPTIONS_CHAT_BG_OPACITY] = &chatBgOpacity;
+	m_options[OPTIONS_CHAT_TEXT_SIZE] = &chatTextSize;
+	m_options[OPTIONS_CHAT_LINE_SPACING] = &chatLineSpacing;
+	m_options[OPTIONS_CHAT_WIDTH] = &chatWidth;
+	m_options[OPTIONS_CHAT_FOCUSED_HEIGHT] = &chatFocusedHeight;
+	m_options[OPTIONS_CHAT_UNFOCUSED_HEIGHT] = &chatUnfocusedHeight;
+	m_options[OPTIONS_CHAT_MESSAGE_TIME] = &chatMessageTime;
 }
 
 void Options::set(OptionId key, bool value) {

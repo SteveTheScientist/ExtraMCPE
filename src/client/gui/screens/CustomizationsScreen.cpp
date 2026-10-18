@@ -1,6 +1,7 @@
 #include "CustomizationsScreen.h"
 #include "CloudsScreen.h"
 #include "FogScreen.h"
+#include "ChatSettingsScreen.h"
 #include "StartMenuScreen.h"
 #include "PauseScreen.h"
 #include "../../Minecraft.h"
@@ -38,6 +39,7 @@ void CustomizationsScreen::init() {
     // Customization Options: sub-menu buttons
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Fog...", false, 0.0f, 1.0f, ACTION_FOG));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Chat Settings...", false, 0.0f, 1.0f, ACTION_CHAT_SETTINGS));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -247,6 +249,8 @@ void CustomizationsScreen::buttonClicked(Button* button) {
                 minecraft->setScreen(new CloudsScreen());
             } else if (ctrl->actionId == ACTION_FOG) {
                 minecraft->setScreen(new FogScreen());
+            } else if (ctrl->actionId == ACTION_CHAT_SETTINGS) {
+                minecraft->setScreen(new ChatSettingsScreen());
             }
         }
     }

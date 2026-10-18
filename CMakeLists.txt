@@ -227,6 +227,8 @@ file(GLOB CLIENT_SOURCES
     "src/client/gui/components/*.cpp"
     "src/client/gui/screens/*.cpp"
     "src/client/gui/screens/crafting/*.cpp"
+    src/client/gui/screens/ChatSettingsScreen.cpp
+    src/client/gui/screens/ChatSettingsScreen.h
     "src/client/gui/screens/touch/*.cpp"
 
     "src/client/model/*.cpp"

@@ -1130,21 +1130,63 @@ float Gui::getColoredWidth(Font* font, const std::string& text) {
 void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isChatting, Font* font ) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// Respect Chat: Shown / Hidden
+	if (!minecraft->options.getBooleanValue(OPTIONS_CHAT_SHOWN)) {
+		return;
+	}
+
 	const float x = 2.0f;
 	const float screenWidth = (float)(minecraft->width * InvGuiScale);
 
-	// Chat width: 320px, or screenWidth - 4px if smaller
-	float boxWidth = 320.0f;
+	// Live Chat Settings
+	float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
+	if (configuredWidth < 40.0f) configuredWidth = 40.0f;
+	if (configuredWidth > 320.0f) configuredWidth = 320.0f;
+
+	float boxWidth = configuredWidth;
 	if (boxWidth > screenWidth - 4.0f) {
 		boxWidth = screenWidth - 4.0f;
 	}
 	if (boxWidth < 40.0f) boxWidth = 40.0f;
 
+	float textOpacityPct = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_OPACITY) / 100.0f;
+	textOpacityPct = Mth::clamp(textOpacityPct, 0.1f, 1.0f);
+
+	float bgOpacityPct = minecraft->options.getProgressValue(OPTIONS_CHAT_BG_OPACITY) / 100.0f;
+	bgOpacityPct = Mth::clamp(bgOpacityPct, 0.0f, 1.0f);
+
+	float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
+	textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
+
+	float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
+	float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
+	if (lineH < 4.0f) lineH = 4.0f;
+
+	// Message Time setting
+	int msgTimeIdx = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
+	int totalStayTicks = 200; // default 10s
+	switch (msgTimeIdx) {
+		case 0: totalStayTicks = 100; break; // 5s
+		case 1: totalStayTicks = 200; break; // 10s
+		case 2: totalStayTicks = 300; break; // 15s
+		case 3: totalStayTicks = 400; break; // 20s
+		default: totalStayTicks = 600; break; // 30s
+	}
+	int fadeTicks = 20; // last 1 second
+
+	glPushMatrix2();
+	glScalef2(textSizeScale, textSizeScale, 1.0f);
+	float invScale = 1.0f / textSizeScale;
+
 	if (isChatting) {
-		// Chat open: up to 20 lines, no fading, dragging/scroll offset applied
-		const int inputBarY = screenHeight - 14;
-		const int baseY = inputBarY - 4 - 9; // Bottom message just above input bar
-		const unsigned int maxLines = 20;
+		// Focused Height
+		float focusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+		if (focusedHeightPx < 20.0f) focusedHeightPx = 20.0f;
+		if (focusedHeightPx > 180.0f) focusedHeightPx = 180.0f;
+
+		const float inputBarY = (float)screenHeight - 14.0f;
+		const float baseY = inputBarY - 4.0f - lineH;
+		const unsigned int maxLines = std::max(1u, (unsigned int)(focusedHeightPx / lineH));
 
 		int start = chatScrollOffset;
 		if (start < 0) start = 0;
@@ -1155,68 +1197,75 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 			if (msgIdx >= guiMessages.size()) break;
 
 			GuiMessage& message = guiMessages.at(msgIdx);
-			const float y = (float)(baseY - renderedCount * 9);
+			const float y = baseY - renderedCount * lineH;
 
-			fill(x, y - 1.0f, x + boxWidth, y + 8.0f, 0x80000000); // 50% opacity black background
+			int bgAlpha = (int)(255.0f * bgOpacityPct);
+			int textAlpha = (int)(255.0f * textOpacityPct);
+
+			fill((x) * invScale, (y - 1.0f) * invScale, (x + boxWidth) * invScale, (y + lineH - 1.0f) * invScale, (bgAlpha << 24));
 			glEnable(GL_BLEND);
 
-			Gui::drawColoredString(font, message.message, x + 2.0f, y, 255);
+			Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
 			renderedCount++;
 		}
 
-		// Java Edition style thin grey scroll bar along the right edge of the chat box when history > 20
+		// Scroll bar for focused height
 		int totalLines = (int)guiMessages.size();
-		if (totalLines > 20) {
-			float barX = x + boxWidth - 2.0f; // 2px wide at right edge
-			float barTop = baseY - 19 * 9 - 1.0f;
-			float barH = 20 * 9.0f;
+		if (totalLines > (int)maxLines) {
+			float barX = (x + boxWidth - 2.0f) * invScale;
+			float barTop = (baseY - (maxLines - 1) * lineH - 1.0f) * invScale;
+			float barH = (maxLines * lineH) * invScale;
 
-			fill(barX, barTop, barX + 2.0f, barTop + barH, 0x80303030); // Darker background track
+			fill(barX, barTop, barX + 2.0f * invScale, barTop + barH, 0x80303030);
 
-			float thumbH = std::max(6.0f, barH * (20.0f / (float)totalLines));
-			int maxScroll = totalLines - 20;
+			float thumbH = std::max(6.0f, barH * ((float)maxLines / (float)totalLines));
+			int maxScroll = totalLines - (int)maxLines;
 			float scrollPct = (float)chatScrollOffset / (float)maxScroll;
-			if (scrollPct < 0.0f) scrollPct = 0.0f;
-			if (scrollPct > 1.0f) scrollPct = 1.0f;
+			scrollPct = Mth::clamp(scrollPct, 0.0f, 1.0f);
 
 			float thumbY = (barTop + barH - thumbH) - scrollPct * (barH - thumbH);
 			bool isDragging = Mouse::isButtonDown(MouseAction::ACTION_LEFT);
 			uint32_t thumbColor = isDragging ? 0xffcccccc : 0xff808080;
 
-			fill(barX, thumbY, barX + 2.0f, thumbY + thumbH, thumbColor);
+			fill(barX, thumbY, barX + 2.0f * invScale, thumbY + thumbH, thumbColor);
 		}
 	} else {
-		// Chat closed: bottom-left above hotbar, max 10 lines, 10s fadeout (fade out during last 1s / 20 ticks)
-		const int hotbarTop = screenHeight - 22;
-		const int baseY = hotbarTop - 4 - 9; // Bottom message starts just above hotbar
-		const unsigned int maxLines = 10;
+		// Unfocused Height & Message Time
+		float unfocusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+		if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
+		if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
+
+		const float hotbarTop = (float)screenHeight - 22.0f;
+		const float baseY = hotbarTop - 4.0f - lineH;
+		const unsigned int maxLines = std::max(1u, (unsigned int)(unfocusedHeightPx / lineH));
 
 		unsigned int renderedCount = 0;
 		for (unsigned int i = 0; i < guiMessages.size() && renderedCount < maxLines; i++) {
 			GuiMessage& message = guiMessages.at(i);
-			if (message.ticks >= 200) continue; // Fade out complete after 10s (200 ticks)
+			if (message.ticks >= totalStayTicks) continue;
 
 			float fade = 1.0f;
-			if (message.ticks > 180) { // Fade out in last 1 second (20 ticks)
-				fade = (200 - message.ticks) / 20.0f;
-				if (fade < 0.0f) fade = 0.0f;
-				if (fade > 1.0f) fade = 1.0f;
+			if (message.ticks > totalStayTicks - fadeTicks) {
+				fade = (float)(totalStayTicks - message.ticks) / (float)fadeTicks;
+				fade = Mth::clamp(fade, 0.0f, 1.0f);
 			}
 
-			int textAlpha = (int)(255.0f * fade);
-			int bgAlpha = (int)(128.0f * fade); // 50% opacity background
+			int textAlpha = (int)(255.0f * textOpacityPct * fade);
+			int bgAlpha = (int)(255.0f * bgOpacityPct * fade);
 
 			if (textAlpha > 0) {
-				const float y = (float)(baseY - renderedCount * 9);
+				const float y = baseY - renderedCount * lineH;
 
-				fill(x, y - 1.0f, x + boxWidth, y + 8.0f, (bgAlpha << 24));
+				fill((x) * invScale, (y - 1.0f) * invScale, (x + boxWidth) * invScale, (y + lineH - 1.0f) * invScale, (bgAlpha << 24));
 				glEnable(GL_BLEND);
 
-				Gui::drawColoredString(font, message.message, x + 2.0f, y, textAlpha);
+				Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
 				renderedCount++;
 			}
 		}
 	}
+
+	glPopMatrix2();
 }
 
 void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {

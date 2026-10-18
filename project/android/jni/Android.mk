@@ -68,6 +68,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
                    ../../../src/client/gui/screens/CustomizationsScreen.cpp \
                    ../../../src/client/gui/screens/CloudsScreen.cpp \
                    ../../../src/client/gui/screens/FogScreen.cpp \
+                   ../../../src/client/gui/screens/ChatSettingsScreen.cpp \
                    ../../../src/client/gui/screens/KeyBindsScreen.cpp \
                    ../../../src/client/gui/screens/CreditsScreen.cpp \
                    ../../../src/client/gui/screens/PauseScreen.cpp \

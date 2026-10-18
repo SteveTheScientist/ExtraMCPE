@@ -1171,6 +1171,8 @@
 		F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34482F736BDA00DC153E /* CloudsScreen.cpp */; };
 		EF1000062C00000000000001 /* FogScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000052C00000000000001 /* FogScreen.cpp */; };
 		EF1000072C00000000000001 /* FogScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000052C00000000000001 /* FogScreen.cpp */; };
+		EF10000A2C00000000000001 /* ChatSettingsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000092C00000000000001 /* ChatSettingsScreen.cpp */; };
+		EF10000B2C00000000000001 /* ChatSettingsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000092C00000000000001 /* ChatSettingsScreen.cpp */; };
 		F99D34372F736C1000DC153E /* JoinByIPScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */; };
 		F99D34382F736C1000DC153E /* JoinByIPScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */; };
 		F99D343B2F736C3B00DC153E /* UsernameScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D343A2F736C3B00DC153E /* UsernameScreen.cpp */; };
@@ -2486,6 +2488,8 @@
 		F99D34482F736BDA00DC153E /* CloudsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CloudsScreen.cpp; path = ../../src/client/gui/screens/CloudsScreen.cpp; sourceTree = "<group>"; };
 		EF1000042C00000000000001 /* FogScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FogScreen.h; path = ../../src/client/gui/screens/FogScreen.h; sourceTree = "<group>"; };
 		EF1000052C00000000000001 /* FogScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = FogScreen.cpp; path = ../../src/client/gui/screens/FogScreen.cpp; sourceTree = "<group>"; };
+		EF1000082C00000000000001 /* ChatSettingsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChatSettingsScreen.h; path = ../../src/client/gui/screens/ChatSettingsScreen.h; sourceTree = "<group>"; };
+		EF1000092C00000000000001 /* ChatSettingsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChatSettingsScreen.cpp; path = ../../src/client/gui/screens/ChatSettingsScreen.cpp; sourceTree = "<group>"; };
 		F99D34352F736C1000DC153E /* JoinByIPScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JoinByIPScreen.h; path = ../../src/client/gui/screens/JoinByIPScreen.h; sourceTree = "<group>"; };
 		F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = JoinByIPScreen.cpp; path = ../../src/client/gui/screens/JoinByIPScreen.cpp; sourceTree = "<group>"; };
 		F99D34392F736C3B00DC153E /* UsernameScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UsernameScreen.h; path = ../../src/client/gui/screens/UsernameScreen.h; sourceTree = "<group>"; };
@@ -4412,6 +4416,8 @@
 				F99D34482F736BDA00DC153E /* CloudsScreen.cpp */,
 				EF1000042C00000000000001 /* FogScreen.h */,
 				EF1000052C00000000000001 /* FogScreen.cpp */,
+				EF1000082C00000000000001 /* ChatSettingsScreen.h */,
+				EF1000092C00000000000001 /* ChatSettingsScreen.cpp */,
 				F99D34352F736C1000DC153E /* JoinByIPScreen.h */,
 				F99D34362F736C1000DC153E /* JoinByIPScreen.cpp */,
 				F99D34392F736C3B00DC153E /* UsernameScreen.h */,
@@ -5806,6 +5812,7 @@
 				F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
 				F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
 				EF1000062C00000000000001 /* FogScreen.cpp in Sources */,
+				EF10000A2C00000000000001 /* ChatSettingsScreen.cpp in Sources */,
 				D5251E471538192700FC82C8 /* SimpleMutex.cpp in Sources */,
 				D5251E491538192700FC82C8 /* SocketLayer.cpp in Sources */,
 				D5251E4B1538192700FC82C8 /* StringCompressor.cpp in Sources */,

@@ -61,6 +61,7 @@ SOURCES := ../../src/main.cpp \
 ../../src/client/gui/screens/OptionsScreen.cpp \
 ../../src/client/gui/screens/PauseScreen.cpp \
 ../../src/client/gui/screens/FogScreen.cpp \
+../../src/client/gui/screens/ChatSettingsScreen.cpp \
 ../../src/client/gui/screens/ProgressScreen.cpp \
 ../../src/client/gui/screens/RenameMPLevelScreen.cpp \
 ../../src/client/gui/screens/SelectWorldScreen.cpp \

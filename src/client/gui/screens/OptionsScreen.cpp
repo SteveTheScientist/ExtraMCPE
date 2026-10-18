@@ -224,6 +224,73 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_CHAT_SHOWN) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_CHAT_SHOWN);
+        msg = "Chat: " + std::string(state ? "Shown" : "Hidden");
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_TEXT_OPACITY) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_OPACITY);
+        int pct = (int)(val + 0.5f);
+        msg = "Text Opacity: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_BG_OPACITY) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_BG_OPACITY);
+        int pct = (int)(val + 0.5f);
+        msg = "Text Background Opacity: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_TEXT_SIZE) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE);
+        int pct = (int)(val + 0.5f);
+        msg = "Chat Text Size: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_LINE_SPACING) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING);
+        int pct = (int)(val + 0.5f);
+        msg = "Line Spacing: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_WIDTH) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
+        int px = (int)(val + 0.5f);
+        msg = "Width: " + to_str(px) + "px";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_FOCUSED_HEIGHT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+        int px = (int)(val + 0.5f);
+        msg = "Focused Height: " + to_str(px) + "px";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+        int px = (int)(val + 0.5f);
+        msg = "Unfocused Height: " + to_str(px) + "px";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_MESSAGE_TIME) {
+        int st = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
+        switch (st) {
+            case 0: msg = "Message Time: 5s"; break;
+            case 1: msg = "Message Time: 10s"; break;
+            case 2: msg = "Message Time: 15s"; break;
+            case 3: msg = "Message Time: 20s"; break;
+            default: msg = "Message Time: 30s"; break;
+        }
+        return;
+    }
+
     if (optionId == OPTIONS_FOG_START_PCT) {
         float val = minecraft->options.getProgressValue(OPTIONS_FOG_START_PCT);
         int pct = (int)(val + 0.5f);
@@ -284,6 +351,9 @@ void OptionControl::toggleValue(Minecraft* minecraft) {
     } else if (optionId == OPTIONS_DEBUG_STYLE) {
         int cur = minecraft->options.getIntValue(OPTIONS_DEBUG_STYLE);
         minecraft->options.set(OPTIONS_DEBUG_STYLE, (cur + 1) % 2);
+    } else if (optionId == OPTIONS_CHAT_MESSAGE_TIME) {
+        int cur = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
+        minecraft->options.set(OPTIONS_CHAT_MESSAGE_TIME, (cur + 1) % 5);
     } else {
         minecraft->options.toggle(optionId);
     }
