@@ -66,6 +66,7 @@ public:
 	void renderProgressIndicator( const bool isTouchInterface, const int screenWidth, const int screenHeight, float a );
 
     void addMessage(const std::string& string);
+	const GuiMessageList& getGuiMessages() const { return guiMessages; }
 	void clearMessages();
 	void postError(int errCode);
 

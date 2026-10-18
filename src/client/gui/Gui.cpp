@@ -1061,38 +1061,40 @@ float Gui::getColoredWidth(Font* font, const std::string& text) {
 
 void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isChatting, Font* font ) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	int baseY = screenHeight - (isChatting ? 28 : 48);
-	int start = chatScrollOffset;
-	if (start < 0) start = 0;
-	for (unsigned int i = 0; i < max; i++) {
-		unsigned int msgIdx = (unsigned int)start + i;
-		if (msgIdx >= guiMessages.size())
-			break;
+	if (isChatting) return; // ChatScreen handles rendering full chat history when typing
 
-		GuiMessage& message = guiMessages.at(msgIdx);
-		if (message.ticks < 20 * 10 || isChatting) {
-			float t = message.ticks / (20 * 10.0f);
-			t = 1 - t;
-			t = t * 10;
-			if (t < 0) t = 0;
-			if (t > 1) t = 1;
-			t = t * t;
-			int alpha = (int) (255 * t);
-			if (isChatting) alpha = 255;
+	const int hotbarTop = screenHeight - 22;
+	const int baseY = hotbarTop - 4 - 9; // Bottom message starts just above hotbar
+	const unsigned int maxLines = 10;
+	const float x = 4.0f;
 
-			if (alpha > 0) {
-				const float x = 4;
-				const float y = (float)(baseY - i * 9);
-				std::string msg = message.message;
-				float msgW = getColoredWidth(font, msg) + 4;
-				if (msgW < 120) msgW = 120;
-				if (msgW > MAX_MESSAGE_WIDTH) msgW = MAX_MESSAGE_WIDTH;
+	unsigned int renderedCount = 0;
+	for (unsigned int i = 0; i < guiMessages.size() && renderedCount < maxLines; i++) {
+		GuiMessage& message = guiMessages.at(i);
+		if (message.ticks >= 200) continue; // Fade out after ~10 seconds (200 ticks at 20tps)
 
-				this->fill(x - 2, y - 1, x + msgW, y + 8, (isChatting ? 0x90000000 : ((alpha / 2) << 24)));
-				glEnable(GL_BLEND);
+		float fade = 1.0f;
+		if (message.ticks > 160) {
+			fade = (200 - message.ticks) / 40.0f;
+			if (fade < 0.0f) fade = 0.0f;
+			if (fade > 1.0f) fade = 1.0f;
+		}
 
-				Gui::drawColoredString(font, msg, x, y, alpha);
-			}
+		int textAlpha = (int)(255.0f * fade);
+		int bgAlpha = (int)(128.0f * fade); // ~50% opacity background
+
+		if (textAlpha > 0) {
+			const float y = (float)(baseY - renderedCount * 9);
+			std::string msg = message.message;
+			float msgW = getColoredWidth(font, msg) + 4.0f;
+			if (msgW < 120.0f) msgW = 120.0f;
+			if (msgW > MAX_MESSAGE_WIDTH) msgW = MAX_MESSAGE_WIDTH;
+
+			fill(x - 2.0f, y - 1.0f, x + msgW, y + 8.0f, (bgAlpha << 24));
+			glEnable(GL_BLEND);
+
+			Gui::drawColoredString(font, msg, x, y, textAlpha);
+			renderedCount++;
 		}
 	}
 }
