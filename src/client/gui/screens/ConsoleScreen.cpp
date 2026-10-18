@@ -45,7 +45,7 @@ void ConsoleScreen::keyPressed(int eventKey)
         if (!_input.empty())
             _input.erase(_input.size() - 1, 1);
     } else {
-        super::keyPressed(eventKey);
+        Screen::keyPressed(eventKey);
     }
 }
 
@@ -94,27 +94,20 @@ void ConsoleScreen::execute()
 // ---------------------------------------------------------------------------
 void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
 {
-    // Dim the game world slightly
-    fillGradient(0, 0, width, height, 0x00000000, 0x40000000);
-
+    // Java Edition 1.8 style input bar: solid black at 50% opacity, 12px tall, 2px from bottom/sides, no border, 4px left padding, blinking cursor
     const int boxH  = 12;
-    const int boxY  = height - boxH - 2;
+    const int boxY  = height - 14;
     const int boxX0 = 2;
     const int boxX1 = width - 2;
 
-    // Input box background
-    fill(boxX0, boxY, boxX1, boxY + boxH, 0xc0000000);
-    // Border
-    fill(boxX0,     boxY,          boxX1, boxY + 1,   0xff808080);
-    fill(boxX0,     boxY + boxH - 1, boxX1, boxY + boxH, 0xff808080);
-    fill(boxX0,     boxY,          boxX0 + 1, boxY + boxH, 0xff808080);
-    fill(boxX1 - 1, boxY,          boxX1,     boxY + boxH, 0xff808080);
+    // Solid black at 50% opacity background with no border/outline
+    fill(boxX0, boxY, boxX1, boxY + boxH, 0x80000000);
 
     // Input text + blinking cursor
     std::string displayed = _input;
     if ((_cursorBlink / 10) % 2 == 0)
         displayed += '_';
 
-    // Placeholder hint when empty
-    font->drawShadow(displayed, (float)(boxX0 + 2), (float)(boxY + 2), 0xffffffff);
+    // White text with shadow, 4px left padding (boxX0 + 4)
+    font->drawShadow(displayed, (float)(boxX0 + 4), (float)(boxY + 2), 0xffffffff);
 }
