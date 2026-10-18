@@ -76,7 +76,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
 	if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
 		Mouse::feed(0, 0, xpos, ypos, deltaX, deltaY);
-	} else { 
+	} else {
 		Mouse::feed( MouseAction::ACTION_MOVE, 0, xpos, ypos);
 	}
 	Multitouch::feed(0, 0, xpos, ypos, 0);
@@ -116,7 +116,20 @@ void error_callback(int error, const char* desc) {
 
 void loop() {
 	using clock = std::chrono::steady_clock;
+	static auto lastFrameStart = clock::now();
 	auto frameStart = clock::now();
+
+#if defined(__EMSCRIPTEN__)
+	float maxFps = ((MAIN_CLASS*)g_app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
+	if (maxFps < 260.0f && maxFps >= 10.0f) {
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameStart - lastFrameStart);
+		auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
+		if (elapsed < target) {
+			return; // Skip frame for web
+		}
+	}
+	lastFrameStart = frameStart;
+#endif
 
 	g_app->update();
 
@@ -124,14 +137,19 @@ void loop() {
 	glfwPollEvents();
 
 	glfwSwapInterval(((MAIN_CLASS*)g_app)->options.getBooleanValue(OPTIONS_VSYNC) ? 1 : 0);
+
+#if !defined(__EMSCRIPTEN__)
 	float maxFps = ((MAIN_CLASS*)g_app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
 	if (maxFps < 260.0f && maxFps >= 10.0f) {
 		auto frameEnd = clock::now();
 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
 		auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
-		if(elapsed < target)
+		if (elapsed < target) {
 			std::this_thread::sleep_for(target - elapsed);
+		}
 	}
+#endif
+}
 }
 
 int main(void) {
@@ -170,7 +188,7 @@ int main(void) {
 	AppPlatform_glfw* platform = (AppPlatform_glfw*)appContext.platform;
 
 	platform->window = glfwCreateWindow(appContext.platform->getScreenWidth(), appContext.platform->getScreenHeight(), "Minecraft PE 0.6.1", NULL, NULL);
-	
+
 	if (platform->window == NULL) {
 		return 1;
 	}
@@ -215,7 +233,7 @@ int main(void) {
 #endif
 
 	appContext.platform->finish();
-	
+
 	delete appContext.platform;
 
 	return 0;

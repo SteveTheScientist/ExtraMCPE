@@ -1,3 +1,5 @@
+#include <chrono>
+#include <thread>
 #ifndef MAIN_WIN32_H__
 #define MAIN_WIN32_H__
 
@@ -56,22 +58,22 @@ void toggleResolutions(HWND hwnd, int direction) {
 	};
 	static int count = sizeof(sizes) / sizeof(sizes[0]);
 	n = (count + n + direction) % count;
-	
+
 	int* size = sizes[n];
 	int k = size[2];
-	
+
 	resizeWindow(hwnd, k * size[0], k * size[1]);
 }
 
 LRESULT WINAPI windowProc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
 	LRESULT retval = 1;
-	
+
 	switch (uMsg)
 	{
 	case WM_KEYDOWN: {
 		if (wParam == 33) toggleResolutions(hWnd, -1);
 		if (wParam == 34) toggleResolutions(hWnd, +1);
-		
+
 		//if (wParam == 'Q') ((Minecraft*)g_app)->leaveGame();
 		Keyboard::feed((unsigned char) wParam, 1); //(unsigned char) getBits(lParam, 16, 23, 1)
 
@@ -186,7 +188,7 @@ void inputNetworkThread(void* userdata)
 		printf("Couldn't create socket\n");
 		return;
 	}
-	
+
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(9991);
@@ -196,7 +198,7 @@ void inputNetworkThread(void* userdata)
 		printf("Couldn't bind socket to port 9991\n");
 		return;
 	}
-	
+
 	sockaddr fromAddr;
 	int fromAddrLen = sizeof(fromAddr);
 
@@ -275,7 +277,7 @@ int main(void) {
 	}
 
 	eglMakeCurrent(appContext.display, appContext.surface, appContext.surface, appContext.context);
-	
+
 	glInit();
 
 #endif
@@ -288,7 +290,7 @@ int main(void) {
 	g_app->setSize(appContext.platform->getScreenWidth(), appContext.platform->getScreenHeight());
 
 	//_beginthread(inputNetworkThread, 0, 0);
-	
+
 	// Main event loop
 	while(g_running && !app->wantToQuit())
 	{
@@ -303,9 +305,20 @@ int main(void) {
 				DispatchMessage(&sMessage);
 			}
 		}
+		using clock = std::chrono::steady_clock;
+		auto frameStart = clock::now();
+
 		app->update();
-		
-		//Sleep(30);
+
+		float maxFps = ((MAIN_CLASS*)app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
+		if (maxFps < 260.0f && maxFps >= 10.0f) {
+			auto frameEnd = clock::now();
+			auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
+			auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
+			if (elapsed < target) {
+				std::this_thread::sleep_for(target - elapsed);
+			}
+		}
 	}
 
 	Sleep(50);
@@ -316,7 +329,7 @@ int main(void) {
 	delete appContext.platform;
 	Sleep(50);
 	//printf("_crtDumpMemoryLeaks: %d\n", _CrtDumpMemoryLeaks());
-	
+
 #ifndef STANDALONE_SERVER
 	// Exit.
 	eglMakeCurrent(appContext.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);

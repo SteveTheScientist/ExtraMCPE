@@ -1,3 +1,5 @@
+#include <chrono>
+#include <thread>
 #include "App.h"
 #include "AppPlatform_android.h"
 #include <android_native_app_glue.h>
@@ -100,7 +102,7 @@ JNIEXPORT jint JNICALL
 	JNIEXPORT void JNICALL
 	Java_com_mojang_minecraftpe_MainActivity_nativeUnregisterThis(JNIEnv* env, jobject clazz) {
 		LOGI("@UnregisterThis %d\n", pthread_self());
-		env->DeleteGlobalRef( g_pActivity ); 
+		env->DeleteGlobalRef( g_pActivity );
 		g_pActivity = 0;
 
 		pthread_mutex_destroy(&g_activityMutex);
@@ -179,7 +181,7 @@ android_main( struct android_app* state )
         int ident;
         int events;
         struct android_poll_source* source;
-		
+
         while( (ident = ALooper_pollAll( 0, NULL, &events, (void**)&source) ) >= 0 )
         {
             // Process this event.
@@ -210,10 +212,23 @@ android_main( struct android_app* state )
 		 }
 
         if (inited && engine.is_inited && engine.has_focus) {
+            using clock = std::chrono::steady_clock;
+            auto frameStart = clock::now();
+
             app->update();
+
+            float maxFps = ((MAIN_CLASS*)app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
+            if (maxFps < 260.0f && maxFps >= 10.0f) {
+                auto frameEnd = clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
+                auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
+                if (elapsed < target) {
+                    std::this_thread::sleep_for(target - elapsed);
+                }
+            }
         } else {
             sleepMs(50);
-        }    
+        }
 
         if (!teardownPhase && app->wantToQuit()) {
             teardownPhase = true;

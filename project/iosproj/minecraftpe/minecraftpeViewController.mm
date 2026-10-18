@@ -69,6 +69,25 @@ static NSThread* lastThread = nil;
 	[aContext release];
 	
     [(EAGLView *)self.view setContext:context];
+    float maxFps = ((Minecraft*)_app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
+    if (self.displayLink) {
+        if (maxFps < 260.0f && maxFps >= 10.0f) {
+            NSInteger frameInterval = (NSInteger)(60.0f / maxFps);
+            if (frameInterval < 1) frameInterval = 1;
+            if ([self.displayLink respondsToSelector:@selector(setPreferredFramesPerSecond:)]) {
+                [self.displayLink setPreferredFramesPerSecond:(NSInteger)maxFps];
+            } else if ([self.displayLink respondsToSelector:@selector(setFrameInterval:)]) {
+                [self.displayLink setFrameInterval:frameInterval];
+            }
+        } else {
+            if ([self.displayLink respondsToSelector:@selector(setPreferredFramesPerSecond:)]) {
+                [self.displayLink setPreferredFramesPerSecond:60];
+            } else if ([self.displayLink respondsToSelector:@selector(setFrameInterval:)]) {
+                [self.displayLink setFrameInterval:1];
+            }
+        }
+    }
+
     [(EAGLView *)self.view setFramebuffer];
     
     animating = FALSE;
