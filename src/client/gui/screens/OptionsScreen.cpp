@@ -708,24 +708,29 @@ void OptionsScreen::buttonClicked(Button* button) {
 }
 
 void OptionsScreen::mouseClicked(int x, int y, int buttonNum) {
-	if (buttonNum == MouseAction::ACTION_LEFT) {
-		int centerX = width / 2;
-		int topY = 34;
-		int bottomY = height - 34;
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
 
-		if (y >= topY && y < bottomY) {
-			if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
-				m_isDraggingScrollbar = true;
-				float viewportH = (float)(height - 68);
-				float relY = (float)(y - 34) / (viewportH - 15);
-				m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
-				setupPositions();
-				return;
-			}
-		}
-	}
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        int centerX = width / 2;
+        int topY = 34;
+        int bottomY = height - 34;
 
-	super::mouseClicked(x, y, buttonNum);
+        if (y >= topY && y < bottomY) {
+            if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
+                m_isDraggingScrollbar = true;
+                float viewportH = (float)(height - 68);
+                float relY = (float)(y - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+                return;
+            }
+            super::mouseClicked(x, y, buttonNum);
+        }
+    }
 }
 
 void OptionsScreen::mouseReleased(int x, int y, int buttonNum) {
@@ -977,6 +982,12 @@ void ControlsOptionsScreen::buttonClicked(Button* button) {
 }
 
 void ControlsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
@@ -991,10 +1002,9 @@ void ControlsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void ControlsOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
@@ -1234,6 +1244,12 @@ void GraphicsOptionsScreen::buttonClicked(Button* button) {
 }
 
 void GraphicsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
@@ -1248,10 +1264,9 @@ void GraphicsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void GraphicsOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
@@ -1486,6 +1501,12 @@ void InterfaceOptionsScreen::buttonClicked(Button* button) {
 }
 
 void InterfaceOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
@@ -1500,10 +1521,9 @@ void InterfaceOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void InterfaceOptionsScreen::mouseReleased(int x, int y, int buttonNum) {

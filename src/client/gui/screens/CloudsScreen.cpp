@@ -235,11 +235,19 @@ void CloudsScreen::buttonClicked(Button* button) {
 }
 
 void CloudsScreen::mouseClicked(int x, int y, int buttonNum) {
+    // Requirement 2: Header/footer buttons hit-tested first
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
         int bottomY = height - 34;
 
+        // Requirement 1 & 3: List area touch/scroll only between header and footer
         if (y >= topY && y < bottomY) {
             if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
                 m_isDraggingScrollbar = true;
@@ -249,10 +257,9 @@ void CloudsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void CloudsScreen::mouseReleased(int x, int y, int buttonNum) {
