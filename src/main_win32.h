@@ -1,5 +1,3 @@
-#include <chrono>
-#include <thread>
 #ifndef MAIN_WIN32_H__
 #define MAIN_WIN32_H__
 
@@ -21,9 +19,12 @@
 #include "SharedConstants.h"
 
 #include <cstdio>
+#include <chrono>
+#include <thread>
 #include "platform/input/Mouse.h"
 #include "platform/input/Multitouch.h"
 #include "util/Mth.h"
+#include "util/FrameLimiter.h"
 #include "AppPlatform_win32.h"
 
 static App* g_app = 0;
@@ -305,20 +306,12 @@ int main(void) {
 				DispatchMessage(&sMessage);
 			}
 		}
-		using clock = std::chrono::steady_clock;
-		auto frameStart = clock::now();
+
+		auto frameStart = std::chrono::steady_clock::now();
 
 		app->update();
 
-		float maxFps = ((MAIN_CLASS*)app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
-		if (maxFps < 260.0f && maxFps >= 10.0f) {
-			auto frameEnd = clock::now();
-			auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
-			auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
-			if (elapsed < target) {
-				std::this_thread::sleep_for(target - elapsed);
-			}
-		}
+		FrameLimiter::limit(&((MAIN_CLASS*)app)->options, frameStart);
 	}
 
 	Sleep(50);

@@ -3,6 +3,7 @@
 #include "App.h"
 #include "AppPlatform_android.h"
 #include <android_native_app_glue.h>
+#include "util/FrameLimiter.h"
 
 // Horrible, I know. / A
 #ifndef MAIN_CLASS
@@ -212,20 +213,11 @@ android_main( struct android_app* state )
 		 }
 
         if (inited && engine.is_inited && engine.has_focus) {
-            using clock = std::chrono::steady_clock;
-            auto frameStart = clock::now();
+            auto frameStart = std::chrono::steady_clock::now();
 
             app->update();
 
-            float maxFps = ((MAIN_CLASS*)app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
-            if (maxFps < 260.0f && maxFps >= 10.0f) {
-                auto frameEnd = clock::now();
-                auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
-                auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
-                if (elapsed < target) {
-                    std::this_thread::sleep_for(target - elapsed);
-                }
-            }
+            FrameLimiter::limit(&((MAIN_CLASS*)app)->options, frameStart);
         } else {
             sleepMs(50);
         }

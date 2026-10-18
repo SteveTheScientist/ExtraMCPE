@@ -12,6 +12,7 @@
 #include "platform/input/Keyboard.h"
 #include "platform/input/Mouse.h"
 #include "platform/input/Multitouch.h"
+#include "util/FrameLimiter.h"
 #include "AppPlatform_glfw.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
@@ -139,15 +140,7 @@ void loop() {
 	glfwSwapInterval(((MAIN_CLASS*)g_app)->options.getBooleanValue(OPTIONS_VSYNC) ? 1 : 0);
 
 #if !defined(__EMSCRIPTEN__)
-	float maxFps = ((MAIN_CLASS*)g_app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
-	if (maxFps < 260.0f && maxFps >= 10.0f) {
-		auto frameEnd = clock::now();
-		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
-		auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
-		if (elapsed < target) {
-			std::this_thread::sleep_for(target - elapsed);
-		}
-	}
+	FrameLimiter::limit(&((MAIN_CLASS*)g_app)->options, frameStart);
 #endif
 }
 
