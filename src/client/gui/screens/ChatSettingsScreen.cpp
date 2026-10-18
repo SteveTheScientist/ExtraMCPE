@@ -80,12 +80,11 @@ void ChatSettingsScreen::setupPositions() {
     chatW = Mth::clamp(chatW, 40.0f, 320.0f);
     if (chatW > screenW - 4.0f) chatW = screenW - 4.0f;
 
-    float focusedH = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
-    focusedH = Mth::clamp(focusedH, 20.0f, 180.0f);
-    if (focusedH > screenHF) focusedH = screenHF;
+    float unfocusedH = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+    unfocusedH = Mth::clamp(unfocusedH, 20.0f, 90.0f);
 
-    float maxPosX = std::max(0.0f, screenW - chatW);
-    float maxPosY = std::max(0.0f, screenHF - focusedH);
+    float maxPosX = std::max(40.0f, screenW - chatW);
+    float maxPosY = std::max(40.0f, screenHF - unfocusedH - 4.0f);
 
     // Re-clamp options if Width/Height or screen scale changed
     float curX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
@@ -147,15 +146,20 @@ void ChatSettingsScreen::tick() {
     int ym = Mouse::getY();
     toGUICoordinate(xm, ym);
 
+    bool sliderMoved = false;
     for (size_t i = 0; i < m_controls.size(); ++i) {
         OptionControl* ctrl = m_controls[i];
         if (ctrl->isDraggingSlider) {
             if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
                 ctrl->updateSliderValue(minecraft, xm);
+                sliderMoved = true;
             } else {
                 ctrl->isDraggingSlider = false;
             }
         }
+    }
+    if (sliderMoved) {
+        setupPositions();
     }
 
     if (m_isDraggingScrollbar) {

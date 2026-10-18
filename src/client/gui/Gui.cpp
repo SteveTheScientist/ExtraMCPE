@@ -1170,7 +1170,7 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 	if (boxWidth < 40.0f) boxWidth = 40.0f;
 
 	// Re-clamp position X so chat box fits on screen
-	float maxX = std::max(0.0f, screenWidth - boxWidth);
+	float maxX = std::max(40.0f, screenWidth - boxWidth);
 	float posX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
 	posX = Mth::clamp(posX, 0.0f, maxX);
 
@@ -1195,10 +1195,8 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 	if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
 	if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
 
-	float activeBoxH = isChatting ? focusedHeightPx : unfocusedHeightPx;
-
-	// Re-clamp position Y so bottom of chat lines sits above bottom of screen and top doesn't leave screen
-	float maxY = std::max(0.0f, screenHeightF - activeBoxH);
+	// Re-clamp position Y based on unfocused box height (never limiting Y range)
+	float maxY = std::max(40.0f, screenHeightF - unfocusedHeightPx - 4.0f);
 	float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
 	posY = Mth::clamp(posY, 0.0f, maxY);
 
@@ -1222,7 +1220,9 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 
 	if (isChatting) {
 		const float baseY = screenHeightF - posY - lineH;
-		const unsigned int maxLines = std::max(1u, (unsigned int)(focusedHeightPx / lineH));
+		const unsigned int desiredMaxLines = std::max(1u, (unsigned int)(focusedHeightPx / lineH));
+		const unsigned int allowedLines = (unsigned int)((screenHeightF - posY) / lineH);
+		const unsigned int maxLines = std::max(1u, std::min(desiredMaxLines, allowedLines));
 
 		int start = chatScrollOffset;
 		if (start < 0) start = 0;

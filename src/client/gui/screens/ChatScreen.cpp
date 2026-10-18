@@ -56,16 +56,20 @@ void ChatScreen::tick() {
 	textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
 	float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
 
-	int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
+	float screenHeightF = (float)height;
+	float unfocusedH = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+	unfocusedH = Mth::clamp(unfocusedH, 20.0f, 90.0f);
+	float maxY = std::max(40.0f, screenHeightF - unfocusedH - 4.0f);
+	float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+	posY = Mth::clamp(posY, 0.0f, maxY);
+
+	int desiredMaxLines = std::max(1, (int)(configuredHeightPx / lineH));
+	int allowedLines = (int)((screenHeightF - posY) / lineH);
+	int maxLines = std::max(1, std::min(desiredMaxLines, allowedLines));
 	int maxScroll = totalLines - maxLines;
 
 	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
 		if (m_isBarDragging && maxScroll > 0) {
-			float screenHeightF = (float)height;
-			float maxY = std::max(0.0f, screenHeightF - configuredHeightPx);
-			float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
-			posY = Mth::clamp(posY, 0.0f, maxY);
-
 			const float baseY = screenHeightF - posY - lineH;
 			float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
 			float barH = maxLines * lineH;
@@ -306,13 +310,19 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 		float screenWidth = (float)width;
 		float screenHeightF = (float)height;
 
-		float maxX = std::max(0.0f, screenWidth - boxWidth);
+		float maxX = std::max(40.0f, screenWidth - boxWidth);
 		float posX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
 		posX = Mth::clamp(posX, 0.0f, maxX);
 
-		float maxY = std::max(0.0f, screenHeightF - configuredHeightPx);
+		float unfocusedH = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+		unfocusedH = Mth::clamp(unfocusedH, 20.0f, 90.0f);
+		float maxY = std::max(40.0f, screenHeightF - unfocusedH - 4.0f);
 		float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
 		posY = Mth::clamp(posY, 0.0f, maxY);
+
+		int desiredMaxLines = std::max(1, (int)(configuredHeightPx / lineH));
+		int allowedLines = (int)((screenHeightF - posY) / lineH);
+		int maxLines = std::max(1, std::min(desiredMaxLines, allowedLines));
 
 		const float baseY = screenHeightF - posY - lineH;
 		float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
