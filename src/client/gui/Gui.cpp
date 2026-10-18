@@ -1155,8 +1155,8 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 		return;
 	}
 
-	const float x = 2.0f;
 	const float screenWidth = (float)(minecraft->width * InvGuiScale);
+	const float screenHeightF = (float)screenHeight;
 
 	// Live Chat Settings
 	float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
@@ -1168,6 +1168,11 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 		boxWidth = screenWidth - 4.0f;
 	}
 	if (boxWidth < 40.0f) boxWidth = 40.0f;
+
+	// Re-clamp position X so chat box fits on screen
+	float maxX = std::max(0.0f, screenWidth - boxWidth);
+	float posX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
+	posX = Mth::clamp(posX, 0.0f, maxX);
 
 	float textOpacityPct = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_OPACITY) / 100.0f;
 	textOpacityPct = Mth::clamp(textOpacityPct, 0.1f, 1.0f);
@@ -1181,6 +1186,23 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 	float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
 	float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
 	if (lineH < 4.0f) lineH = 4.0f;
+
+	float focusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+	if (focusedHeightPx < 20.0f) focusedHeightPx = 20.0f;
+	if (focusedHeightPx > 180.0f) focusedHeightPx = 180.0f;
+
+	float unfocusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+	if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
+	if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
+
+	float activeBoxH = isChatting ? focusedHeightPx : unfocusedHeightPx;
+
+	// Re-clamp position Y so bottom of chat lines sits above bottom of screen and top doesn't leave screen
+	float maxY = std::max(0.0f, screenHeightF - activeBoxH);
+	float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+	posY = Mth::clamp(posY, 0.0f, maxY);
+
+	const float x = posX;
 
 	// Message Time setting
 	int msgTimeIdx = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
@@ -1199,13 +1221,7 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 	float invScale = 1.0f / textSizeScale;
 
 	if (isChatting) {
-		// Focused Height
-		float focusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
-		if (focusedHeightPx < 20.0f) focusedHeightPx = 20.0f;
-		if (focusedHeightPx > 180.0f) focusedHeightPx = 180.0f;
-
-		const float inputBarY = (float)screenHeight - 14.0f;
-		const float baseY = inputBarY - 4.0f - lineH;
+		const float baseY = screenHeightF - posY - lineH;
 		const unsigned int maxLines = std::max(1u, (unsigned int)(focusedHeightPx / lineH));
 
 		int start = chatScrollOffset;
@@ -1255,9 +1271,7 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 		if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
 		if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
 
-		// Raised position: sit 32px from bottom so lowest chat line is fully above hotbar and heart/health row like Java Edition
-		const float hotbarTop = (float)screenHeight - 32.0f;
-		const float baseY = hotbarTop - 4.0f - lineH;
+		const float baseY = screenHeightF - posY - lineH;
 		const unsigned int maxLines = std::max(1u, (unsigned int)(unfocusedHeightPx / lineH));
 
 		unsigned int renderedCount = 0;

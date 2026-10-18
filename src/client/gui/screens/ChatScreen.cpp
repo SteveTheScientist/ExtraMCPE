@@ -61,8 +61,12 @@ void ChatScreen::tick() {
 
 	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
 		if (m_isBarDragging && maxScroll > 0) {
-			const float inputBarY = (float)height - 14.0f;
-			const float baseY = inputBarY - 4.0f - lineH;
+			float screenHeightF = (float)height;
+			float maxY = std::max(0.0f, screenHeightF - configuredHeightPx);
+			float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+			posY = Mth::clamp(posY, 0.0f, maxY);
+
+			const float baseY = screenHeightF - posY - lineH;
 			float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
 			float barH = maxLines * lineH;
 
@@ -299,11 +303,21 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 
 		int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
 
-		const float inputBarY = (float)height - 14.0f;
-		const float baseY = inputBarY - 4.0f - lineH;
+		float screenWidth = (float)width;
+		float screenHeightF = (float)height;
+
+		float maxX = std::max(0.0f, screenWidth - boxWidth);
+		float posX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
+		posX = Mth::clamp(posX, 0.0f, maxX);
+
+		float maxY = std::max(0.0f, screenHeightF - configuredHeightPx);
+		float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+		posY = Mth::clamp(posY, 0.0f, maxY);
+
+		const float baseY = screenHeightF - posY - lineH;
 		float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
 		float barH = maxLines * lineH;
-		float barX = 2.0f + boxWidth - 2.0f;
+		float barX = posX + boxWidth - 2.0f;
 
 		// Scrollbar touch hit region: full height of chat box and at least 24px wide (12px on each side of bar)
 		if (x >= barX - 12.0f && x <= barX + 12.0f && y >= barTop - 4.0f && y <= barTop + barH + 4.0f) {
@@ -320,8 +334,8 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 			return;
 		}
 
-		if (y < height - 14) {
-			// Touching/dragging inside chat box
+		// Chat box touch region: from posX to posX + boxWidth, and from barTop to baseY + lineH
+		if (x >= posX && x <= posX + boxWidth && y >= barTop - 4.0f && y <= baseY + lineH + 4.0f) {
 			m_isDragging = true;
 			m_dragStartY = y;
 			m_dragStartScrollY = m_scrollY;

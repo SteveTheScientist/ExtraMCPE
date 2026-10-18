@@ -72,7 +72,7 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
             }
             return;
         }
-        if (optionId == OPTIONS_CHAT_WIDTH || optionId == OPTIONS_CHAT_FOCUSED_HEIGHT || optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT) {
+        if (optionId == OPTIONS_CHAT_WIDTH || optionId == OPTIONS_CHAT_FOCUSED_HEIGHT || optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT || optionId == OPTIONS_CHAT_POS_X || optionId == OPTIONS_CHAT_POS_Y) {
             int px = (int)(val + 0.5f);
             msg = baseName + ": " + to_str(px) + "px";
             return;

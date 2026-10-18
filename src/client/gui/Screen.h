@@ -78,7 +78,6 @@ protected:
 	int tabButtonIndex;
 
 	Font* font;
-private:
 	Button* clickedButton;
 };
 

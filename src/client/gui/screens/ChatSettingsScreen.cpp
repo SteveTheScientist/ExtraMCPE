@@ -44,6 +44,8 @@ void ChatSettingsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_FOCUSED_HEIGHT, "Focused Height", false, 20.0f, 180.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_UNFOCUSED_HEIGHT, "Unfocused Height", false, 20.0f, 90.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_CHAT_MESSAGE_TIME, "Message Time"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_POS_X, "Chat Position X", false, 0.0f, 320.0f));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_POS_Y, "Chat Position Y", false, 0.0f, 240.0f));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -68,6 +70,40 @@ void ChatSettingsScreen::setupPositions() {
         btnDone->height = 20;
         btnDone->x = (width - 200) / 2;
         btnDone->y = height - 28;
+    }
+
+    // Calculate dynamic max range for Chat Position X and Y
+    float screenW = (float)width;
+    float screenHF = (float)height;
+
+    float chatW = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
+    chatW = Mth::clamp(chatW, 40.0f, 320.0f);
+    if (chatW > screenW - 4.0f) chatW = screenW - 4.0f;
+
+    float focusedH = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+    focusedH = Mth::clamp(focusedH, 20.0f, 180.0f);
+    if (focusedH > screenHF) focusedH = screenHF;
+
+    float maxPosX = std::max(0.0f, screenW - chatW);
+    float maxPosY = std::max(0.0f, screenHF - focusedH);
+
+    // Re-clamp options if Width/Height or screen scale changed
+    float curX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
+    if (curX > maxPosX) {
+        minecraft->options.set(OPTIONS_CHAT_POS_X, maxPosX);
+    }
+    float curY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+    if (curY > maxPosY) {
+        minecraft->options.set(OPTIONS_CHAT_POS_Y, maxPosY);
+    }
+
+    for (size_t i = 0; i < m_controls.size(); ++i) {
+        OptionControl* ctrl = m_controls[i];
+        if (ctrl->optionId == OPTIONS_CHAT_POS_X) {
+            ctrl->maxVal = maxPosX;
+        } else if (ctrl->optionId == OPTIONS_CHAT_POS_Y) {
+            ctrl->maxVal = maxPosY;
+        }
     }
 
     updateScrollBounds();
@@ -215,6 +251,8 @@ void ChatSettingsScreen::buttonClicked(Button* button) {
         minecraft->options.set(OPTIONS_CHAT_FOCUSED_HEIGHT, 180.0f);
         minecraft->options.set(OPTIONS_CHAT_UNFOCUSED_HEIGHT, 90.0f);
         minecraft->options.set(OPTIONS_CHAT_MESSAGE_TIME, 1); // 10s
+        minecraft->options.set(OPTIONS_CHAT_POS_X, 2.0f);
+        minecraft->options.set(OPTIONS_CHAT_POS_Y, 40.0f);
         minecraft->options.save();
 
         for (size_t i = 0; i < m_controls.size(); ++i) {
