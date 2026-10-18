@@ -58,7 +58,7 @@ void DeathScreen::setupPositions()
 }
 
 void DeathScreen::tick() {
-	super::tick();
+	Screen::tick();
 }
 
 void DeathScreen::render(int xm, int ym, float a)
@@ -86,7 +86,7 @@ void DeathScreen::render(int xm, int ym, float a)
 		}
 	}
 
-	super::render(xm, ym, a);
+	Screen::render(xm, ym, a);
 }
 
 void DeathScreen::buttonClicked(Button* button)

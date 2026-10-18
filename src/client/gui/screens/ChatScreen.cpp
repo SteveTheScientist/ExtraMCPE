@@ -2,6 +2,7 @@
 #include "DialogDefinitions.h"
 #include "../Gui.h"
 #include "../../Minecraft.h"
+#include "../../player/LocalPlayer.h"
 #include "../../../AppPlatform.h"
 #include "../../../platform/input/Keyboard.h"
 #include "../../../platform/input/Mouse.h"
@@ -38,7 +39,7 @@ void ChatScreen::init() {
 }
 
 void ChatScreen::tick() {
-	super::tick();
+	Screen::tick();
 	m_blinkTimer++;
 
 	if (m_hasNativeDialog) {
@@ -100,7 +101,7 @@ void ChatScreen::render(int xm, int ym, float a) {
 
 	font->drawShadow(prompt, 4.0f, (float)(height - 11), 0xffffffff);
 
-	super::render(xm, ym, a);
+	Screen::render(xm, ym, a);
 }
 
 void ChatScreen::buttonClicked(Button* button) {
@@ -130,7 +131,7 @@ void ChatScreen::keyPressed(int key) {
 		return;
 	}
 
-	super::keyPressed(key);
+	Screen::keyPressed(key);
 }
 
 void ChatScreen::keyboardNewChar(char c) {
@@ -149,12 +150,12 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 		m_dragStartY = y;
 		m_dragStartScrollY = m_scrollY;
 	}
-	super::mouseClicked(x, y, buttonNum);
+	Screen::mouseClicked(x, y, buttonNum);
 }
 
 void ChatScreen::mouseReleased(int x, int y, int buttonNum) {
 	m_isDragging = false;
-	super::mouseReleased(x, y, buttonNum);
+	Screen::mouseReleased(x, y, buttonNum);
 }
 
 void ChatScreen::mouseWheel(int dx, int dy, int xm, int ym) {
