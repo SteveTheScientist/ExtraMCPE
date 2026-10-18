@@ -305,8 +305,6 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 		textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
 		float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
 
-		int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
-
 		float screenWidth = (float)width;
 		float screenHeightF = (float)height;
 
