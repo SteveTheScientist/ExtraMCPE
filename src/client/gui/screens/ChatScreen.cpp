@@ -45,10 +45,21 @@ void ChatScreen::tick() {
 
 		int deltaY = ym - m_dragStartY;
 		int totalLines = (int)minecraft->gui.getGuiMessages().size();
-		int maxScroll = totalLines - 20;
+
+		float configuredHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+		if (configuredHeightPx < 20.0f) configuredHeightPx = 20.0f;
+		if (configuredHeightPx > 180.0f) configuredHeightPx = 180.0f;
+
+		float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
+		float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
+		textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
+		float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
+
+		int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
+		int maxScroll = totalLines - maxLines;
+
 		if (maxScroll > 0) {
-			float lineH = 9.0f;
-			int linesChange = (int)(deltaY / lineH);
+			int linesChange = (int)(deltaY / std::max(1.0f, lineH));
 			if (linesChange != 0) {
 				minecraft->gui.scrollChat(-linesChange);
 				m_dragStartY = ym;
@@ -67,7 +78,7 @@ bool ChatScreen::handleBackEvent(bool isDown) {
 }
 
 void ChatScreen::render(int xm, int ym, float a) {
-	// Input bar at bottom:
+	// Java 1.8 style input bar at bottom:
 	// Black 50% opacity bar with no border, 12px tall, 2px from bottom and sides (y = height - 14, x = 2, w = width - 4)
 	int barX = 2;
 	int barY = height - 14;
@@ -91,7 +102,6 @@ void ChatScreen::render(int xm, int ym, float a) {
 	}
 
 	glEnable(GL_SCISSOR_TEST);
-	// Scissor clipping in physical screen coordinates
 	int scissorX = (int)((barX + 2) * Gui::GuiScale);
 	int scissorW = (int)((barW - 4) * Gui::GuiScale);
 	int physY = minecraft->height - (int)((barY + barH) * Gui::GuiScale);
@@ -178,9 +188,11 @@ void ChatScreen::keyboardNewChar(char c) {
 
 void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 	if (buttonNum == MouseAction::ACTION_LEFT && y < height - 14) {
+		// Tapping anywhere on the chat box area does NOT close chat, but initiates dragging
 		m_isDragging = true;
 		m_dragStartY = y;
 		m_dragStartScrollY = m_scrollY;
+		return;
 	}
 	Screen::mouseClicked(x, y, buttonNum);
 }

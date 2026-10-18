@@ -356,15 +356,35 @@ void Gui::addMessage(const std::string& _string) {
 			}
 		} else {
 			currentWord += c;
-			// Break very long words with no spaces character-by-character if they exceed line width
-			if (getColoredWidth(minecraft->font, currentWord) > maxTextWidth) {
-				std::string sub = currentWord.substr(0, currentWord.length() - 1);
+			// Small wrap fix: if a long word with no spaces does not fit in the rest of the line, break it by character on the same line (after "<name> "). Do not move the whole word to the next line and leave "<name>" alone.
+			std::string testLine = currentLine.empty() ? currentWord : (currentLine + " " + currentWord);
+			if (getColoredWidth(minecraft->font, testLine) > maxTextWidth) {
 				if (!currentLine.empty()) {
-					lines.push_back(currentLine);
-					currentLine = "";
+					// Fill remaining space on currentLine character by character
+					std::string prefix = currentLine + " ";
+					std::string wordFits = "";
+					size_t k = 0;
+					while (k < currentWord.length() && getColoredWidth(minecraft->font, prefix + currentWord.substr(0, k + 1)) <= maxTextWidth) {
+						k++;
+					}
+					if (k > 0) {
+						lines.push_back(prefix + currentWord.substr(0, k));
+						currentLine = "";
+						currentWord = currentWord.substr(k);
+					} else {
+						lines.push_back(currentLine);
+						currentLine = "";
+					}
 				}
-				lines.push_back(sub);
-				currentWord = std::string(1, c);
+				// If currentWord alone still exceeds maxTextWidth, break it by character
+				while (getColoredWidth(minecraft->font, currentWord) > maxTextWidth) {
+					size_t k = 1;
+					while (k < currentWord.length() && getColoredWidth(minecraft->font, currentWord.substr(0, k + 1)) <= maxTextWidth) {
+						k++;
+					}
+					lines.push_back(currentWord.substr(0, k));
+					currentWord = currentWord.substr(k);
+				}
 			}
 		}
 	}
