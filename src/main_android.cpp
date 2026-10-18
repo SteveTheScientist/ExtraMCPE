@@ -1,6 +1,9 @@
+#include <chrono>
+#include <thread>
 #include "App.h"
 #include "AppPlatform_android.h"
 #include <android_native_app_glue.h>
+#include "util/FrameLimiter.h"
 
 // Horrible, I know. / A
 #ifndef MAIN_CLASS
@@ -100,7 +103,7 @@ JNIEXPORT jint JNICALL
 	JNIEXPORT void JNICALL
 	Java_com_mojang_minecraftpe_MainActivity_nativeUnregisterThis(JNIEnv* env, jobject clazz) {
 		LOGI("@UnregisterThis %d\n", pthread_self());
-		env->DeleteGlobalRef( g_pActivity ); 
+		env->DeleteGlobalRef( g_pActivity );
 		g_pActivity = 0;
 
 		pthread_mutex_destroy(&g_activityMutex);
@@ -179,7 +182,7 @@ android_main( struct android_app* state )
         int ident;
         int events;
         struct android_poll_source* source;
-		
+
         while( (ident = ALooper_pollAll( 0, NULL, &events, (void**)&source) ) >= 0 )
         {
             // Process this event.
@@ -210,10 +213,14 @@ android_main( struct android_app* state )
 		 }
 
         if (inited && engine.is_inited && engine.has_focus) {
+            auto frameStart = std::chrono::steady_clock::now();
+
             app->update();
+
+            FrameLimiter::limit(&((MAIN_CLASS*)app)->options, frameStart);
         } else {
             sleepMs(50);
-        }    
+        }
 
         if (!teardownPhase && app->wantToQuit()) {
             teardownPhase = true;

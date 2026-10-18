@@ -100,8 +100,36 @@ enum OptionId {
 	OPTIONS_CLOUD_OPACITY,
 	OPTIONS_CLOUD_FLAT_SHADING,
 	OPTIONS_CLOUD_Y_LEVEL,
+	OPTIONS_ENHANCED_FOG,
+	OPTIONS_FOG_START_PCT,
+	OPTIONS_FOG_END_PCT,
+	OPTIONS_FOG_TRANSITION_SPEED,
+	OPTIONS_FOG_SUNSET_TINT,
+	OPTIONS_FOG_HIGH_ALTITUDE_BLEND,
+	OPTIONS_FOG_UNDERGROUND_FOG,
+	OPTIONS_CHAT_SHOWN,
+	OPTIONS_CHAT_TEXT_OPACITY,
+	OPTIONS_CHAT_BG_OPACITY,
+	OPTIONS_CHAT_TEXT_SIZE,
+	OPTIONS_CHAT_LINE_SPACING,
+	OPTIONS_CHAT_WIDTH,
+	OPTIONS_CHAT_FOCUSED_HEIGHT,
+	OPTIONS_CHAT_UNFOCUSED_HEIGHT,
+	OPTIONS_CHAT_MESSAGE_TIME,
+	OPTIONS_CHAT_POS_X,
+	OPTIONS_CHAT_POS_Y,
 	// Should be last!
 	OPTIONS_COUNT
+};
+
+struct FogSettings {
+    bool enhancedFog = true;
+    float startPct = 50.0f;
+    float endPct = 100.0f;
+    float transitionSpeed = 5.0f;
+    bool sunsetTint = true;
+    bool highAltitudeBlend = true;
+    bool undergroundFog = true;
 };
 
 class Minecraft;
@@ -154,6 +182,18 @@ public:
     }
 
     Option* getOpt(OptionId id) { return m_options[id]; }
+
+	FogSettings getFogSettings() {
+		FogSettings settings;
+		settings.enhancedFog = getBooleanValue(OPTIONS_ENHANCED_FOG);
+		settings.startPct = getProgressValue(OPTIONS_FOG_START_PCT);
+		settings.endPct = getProgressValue(OPTIONS_FOG_END_PCT);
+		settings.transitionSpeed = getProgressValue(OPTIONS_FOG_TRANSITION_SPEED);
+		settings.sunsetTint = getBooleanValue(OPTIONS_FOG_SUNSET_TINT);
+		settings.highAltitudeBlend = getBooleanValue(OPTIONS_FOG_HIGH_ALTITUDE_BLEND);
+		settings.undergroundFog = getBooleanValue(OPTIONS_FOG_UNDERGROUND_FOG);
+		return settings;
+	}
 
     void load();
     void save();

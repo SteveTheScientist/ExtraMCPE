@@ -227,6 +227,8 @@ file(GLOB CLIENT_SOURCES
     "src/client/gui/components/*.cpp"
     "src/client/gui/screens/*.cpp"
     "src/client/gui/screens/crafting/*.cpp"
+    src/client/gui/screens/ChatSettingsScreen.cpp
+    src/client/gui/screens/ChatSettingsScreen.h
     "src/client/gui/screens/touch/*.cpp"
 
     "src/client/model/*.cpp"
@@ -416,3 +418,13 @@ message(STATUS "  PLATFORM=" ${PLATFORM_CPP})
 
 add_executable(test_clouds test/test_clouds.cpp)
 target_include_directories(test_clouds PUBLIC "${CMAKE_SOURCE_DIR}/src")
+
+add_executable(test_fog
+    test/test_fog.cpp
+    src/client/renderer/EnhancedFog.cpp
+    src/util/Mth.cpp
+)
+target_include_directories(test_fog PUBLIC
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_SOURCE_DIR}/project/lib_projects/raknet/jni/RaknetSources"
+)

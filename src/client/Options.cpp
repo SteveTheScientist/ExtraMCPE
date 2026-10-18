@@ -27,7 +27,7 @@ OptionBool autoJump("autoJump", true);
 OptionFloat flySpeed("flySpeed", 1.f);
 OptionFloat cameraSpeed("cameraSpeed", 1.f);
 
-OptionInt guiScale("guiScale", 0, 0, 5);
+OptionInt guiScale("guiScale", 0, 0, 3);
 
 OptionString skin("skin", "Default");
 
@@ -50,7 +50,7 @@ OptionBool invertYMouse("invertMouse", false);
 OptionInt viewDistance("renderDistance", 2, 0, 4);
 
 OptionBool anaglyph3d("anaglyph3d", false);
-OptionBool limitFramerate("limitFramerate", false);
+OptionFloat limitFramerate("limitFramerate", 60.0f, 10.0f, 260.0f);
 OptionBool vsync("vsync", true);
 OptionBool fancyGraphics("fancyGraphics", true);
 OptionBool viewBobbing("viewBobbing", true);
@@ -88,6 +88,26 @@ OptionFloat cloudFade("cloud_fade", 1.0f, 0.0f, 1.0f);
 OptionFloat cloudOpacity("cloud_opacity", 0.8f, 0.4f, 1.0f);
 OptionBool cloudFlatShading("cloud_flat_shading", true);
 OptionFloat cloudYLevel("cloud_y_level", 108.0f, 32.0f, 192.0f);
+
+OptionBool enhancedFog("enhanced_fog", true);
+OptionFloat fogStartPct("fog_start_pct", 50.0f, 0.0f, 100.0f);
+OptionFloat fogEndPct("fog_end_pct", 100.0f, 50.0f, 100.0f);
+OptionFloat fogTransitionSpeed("fog_transition_speed", 5.0f, 0.1f, 20.0f);
+OptionBool fogSunsetTint("fog_sunset_tint", true);
+OptionBool fogHighAltitudeBlend("fog_high_altitude_blend", true);
+OptionBool fogUndergroundFog("fog_underground_fog", true);
+
+OptionBool chatShown("chat_shown", true);
+OptionFloat chatTextOpacity("chat_text_opacity", 100.0f, 10.0f, 100.0f);
+OptionFloat chatBgOpacity("chat_bg_opacity", 50.0f, 0.0f, 100.0f);
+OptionFloat chatTextSize("chat_text_size", 100.0f, 50.0f, 100.0f);
+OptionFloat chatLineSpacing("chat_line_spacing", 0.0f, 0.0f, 100.0f);
+OptionFloat chatWidth("chat_width", 320.0f, 40.0f, 320.0f);
+OptionFloat chatFocusedHeight("chat_focused_height", 180.0f, 20.0f, 180.0f);
+OptionFloat chatUnfocusedHeight("chat_unfocused_height", 90.0f, 20.0f, 90.0f);
+OptionInt chatMessageTime("chat_message_time", 1, 0, 5);
+OptionFloat chatPosX("chat_pos_x", 2.0f, 0.0f, 500.0f);
+OptionFloat chatPosY("chat_pos_y", 40.0f, 0.0f, 500.0f);
 
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
@@ -220,6 +240,26 @@ void Options::initTable() {
 	m_options[OPTIONS_CLOUD_OPACITY] = &cloudOpacity;
 	m_options[OPTIONS_CLOUD_FLAT_SHADING] = &cloudFlatShading;
 	m_options[OPTIONS_CLOUD_Y_LEVEL] = &cloudYLevel;
+
+	m_options[OPTIONS_ENHANCED_FOG] = &enhancedFog;
+	m_options[OPTIONS_FOG_START_PCT] = &fogStartPct;
+	m_options[OPTIONS_FOG_END_PCT] = &fogEndPct;
+	m_options[OPTIONS_FOG_TRANSITION_SPEED] = &fogTransitionSpeed;
+	m_options[OPTIONS_FOG_SUNSET_TINT] = &fogSunsetTint;
+	m_options[OPTIONS_FOG_HIGH_ALTITUDE_BLEND] = &fogHighAltitudeBlend;
+	m_options[OPTIONS_FOG_UNDERGROUND_FOG] = &fogUndergroundFog;
+
+	m_options[OPTIONS_CHAT_SHOWN] = &chatShown;
+	m_options[OPTIONS_CHAT_TEXT_OPACITY] = &chatTextOpacity;
+	m_options[OPTIONS_CHAT_BG_OPACITY] = &chatBgOpacity;
+	m_options[OPTIONS_CHAT_TEXT_SIZE] = &chatTextSize;
+	m_options[OPTIONS_CHAT_LINE_SPACING] = &chatLineSpacing;
+	m_options[OPTIONS_CHAT_WIDTH] = &chatWidth;
+	m_options[OPTIONS_CHAT_FOCUSED_HEIGHT] = &chatFocusedHeight;
+	m_options[OPTIONS_CHAT_UNFOCUSED_HEIGHT] = &chatUnfocusedHeight;
+	m_options[OPTIONS_CHAT_MESSAGE_TIME] = &chatMessageTime;
+	m_options[OPTIONS_CHAT_POS_X] = &chatPosX;
+	m_options[OPTIONS_CHAT_POS_Y] = &chatPosY;
 }
 
 void Options::set(OptionId key, bool value) {

@@ -1,5 +1,7 @@
 #include "CustomizationsScreen.h"
 #include "CloudsScreen.h"
+#include "FogScreen.h"
+#include "ChatSettingsScreen.h"
 #include "StartMenuScreen.h"
 #include "PauseScreen.h"
 #include "../../Minecraft.h"
@@ -36,6 +38,8 @@ void CustomizationsScreen::init() {
 
     // Customization Options: sub-menu buttons
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Fog...", false, 0.0f, 1.0f, ACTION_FOG));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Chat Settings...", false, 0.0f, 1.0f, ACTION_CHAT_SETTINGS));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -243,17 +247,29 @@ void CustomizationsScreen::buttonClicked(Button* button) {
         } else if (ctrl->controlType == CONTROL_ACTION) {
             if (ctrl->actionId == ACTION_CLOUDS) {
                 minecraft->setScreen(new CloudsScreen());
+            } else if (ctrl->actionId == ACTION_FOG) {
+                minecraft->setScreen(new FogScreen());
+            } else if (ctrl->actionId == ACTION_CHAT_SETTINGS) {
+                minecraft->setScreen(new ChatSettingsScreen());
             }
         }
     }
 }
 
 void CustomizationsScreen::mouseClicked(int x, int y, int buttonNum) {
+    // Requirement 2: Header/footer buttons hit-tested first
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
         int bottomY = height - 34;
 
+        // Requirement 1 & 3: List area touch/scroll only between header and footer
         if (y >= topY && y < bottomY) {
             if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
                 m_isDraggingScrollbar = true;
@@ -263,10 +279,9 @@ void CustomizationsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void CustomizationsScreen::mouseReleased(int x, int y, int buttonNum) {

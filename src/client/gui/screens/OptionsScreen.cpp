@@ -63,6 +63,47 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
 
     if (controlType == CONTROL_SLIDER) {
         float val = minecraft->options.getProgressValue(optionId);
+        if (optionId == OPTIONS_LIMIT_FRAMERATE) {
+            int fps = (int)(floorf(val / 10.0f + 0.5f) * 10.0f);
+            if (fps >= 260) {
+                msg = "Max Framerate: Unlimited";
+            } else {
+                msg = "Max Framerate: " + to_str(fps) + " fps";
+            }
+            return;
+        }
+        if (optionId == OPTIONS_CHAT_WIDTH || optionId == OPTIONS_CHAT_FOCUSED_HEIGHT || optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT || optionId == OPTIONS_CHAT_POS_X || optionId == OPTIONS_CHAT_POS_Y) {
+            int px = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(px) + "px";
+            return;
+        }
+        if (optionId == OPTIONS_CHAT_TEXT_OPACITY || optionId == OPTIONS_CHAT_BG_OPACITY || optionId == OPTIONS_CHAT_TEXT_SIZE || optionId == OPTIONS_CHAT_LINE_SPACING || optionId == OPTIONS_FOG_START_PCT || optionId == OPTIONS_FOG_END_PCT) {
+            int pct = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(pct) + "%";
+            return;
+        }
+        if (optionId == OPTIONS_CLOUD_FADE || optionId == OPTIONS_CLOUD_OPACITY) {
+            int pct = (int)(val * 100.0f + 0.5f);
+            msg = baseName + ": " + to_str(pct) + "%";
+            return;
+        }
+        if (optionId == OPTIONS_CLOUD_THICKNESS) {
+            std::ostringstream ss;
+            ss.precision(1);
+            ss << std::fixed << baseName << ": " << val << "x";
+            msg = ss.str();
+            return;
+        }
+        if (optionId == OPTIONS_CLOUD_Y_LEVEL) {
+            int yLvl = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(yLvl) + " blocks";
+            return;
+        }
+        if (optionId == OPTIONS_FOG_TRANSITION_SPEED) {
+            int speed = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(speed);
+            return;
+        }
         int pct = (int)(val * 100.0f + 0.5f);
         if (optionId == OPTIONS_MUSIC_VOLUME || optionId == OPTIONS_SOUND_VOLUME) {
             if (pct <= 0) {
@@ -90,7 +131,9 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         switch (scale) {
             case 0: msg = "GUI Scale: Auto"; break;
             case 1: msg = "GUI Scale: Normal"; break;
-            default: msg = "GUI Scale: Large"; break;
+            case 2: msg = "GUI Scale: Bigger"; break;
+            case 3: msg = "GUI Scale: Biggest"; break;
+            default: msg = "GUI Scale: Normal"; break;
         }
         return;
     }
@@ -128,15 +171,16 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-    if (optionId == OPTIONS_LIMIT_FRAMERATE) {
-        bool limit = minecraft->options.getBooleanValue(OPTIONS_LIMIT_FRAMERATE);
-        msg = limit ? "Max Framerate: 60 FPS" : "Max Framerate: Unlimited";
-        return;
-    }
 
     if (optionId == OPTIONS_FOG_TYPE) {
         int fog = minecraft->options.getIntValue(OPTIONS_FOG_TYPE);
         msg = (fog == 0) ? "Fog Type: Fancy" : "Fog Type: Fast";
+        return;
+    }
+
+    if (optionId == OPTIONS_RENDER_DEBUG) {
+        bool dbg = minecraft->options.getBooleanValue(OPTIONS_RENDER_DEBUG);
+        msg = std::string("Debug Menu: ") + (dbg ? "ON" : "OFF");
         return;
     }
 
@@ -188,6 +232,120 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_ENHANCED_FOG) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_ENHANCED_FOG);
+        msg = "Enhanced Fog: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_SUNSET_TINT) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_FOG_SUNSET_TINT);
+        msg = "Sunset Tint: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_HIGH_ALTITUDE_BLEND) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_FOG_HIGH_ALTITUDE_BLEND);
+        msg = "High-Altitude Blend: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_UNDERGROUND_FOG) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_FOG_UNDERGROUND_FOG);
+        msg = "Underground Fog: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_SHOWN) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_CHAT_SHOWN);
+        msg = "Chat: " + std::string(state ? "Shown" : "Hidden");
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_TEXT_OPACITY) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_OPACITY);
+        int pct = (int)(val + 0.5f);
+        msg = "Text Opacity: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_BG_OPACITY) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_BG_OPACITY);
+        int pct = (int)(val + 0.5f);
+        msg = "Text Background Opacity: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_TEXT_SIZE) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE);
+        int pct = (int)(val + 0.5f);
+        msg = "Chat Text Size: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_LINE_SPACING) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING);
+        int pct = (int)(val + 0.5f);
+        msg = "Line Spacing: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_WIDTH) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
+        int px = (int)(val + 0.5f);
+        msg = "Width: " + to_str(px) + "px";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_FOCUSED_HEIGHT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+        int px = (int)(val + 0.5f);
+        msg = "Focused Height: " + to_str(px) + "px";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+        int px = (int)(val + 0.5f);
+        msg = "Unfocused Height: " + to_str(px) + "px";
+        return;
+    }
+
+    if (optionId == OPTIONS_CHAT_MESSAGE_TIME) {
+        int st = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
+        switch (st) {
+            case 0: msg = "Message Time: 5s"; break;
+            case 1: msg = "Message Time: 10s"; break;
+            case 2: msg = "Message Time: 15s"; break;
+            case 3: msg = "Message Time: 20s"; break;
+            default: msg = "Message Time: 30s"; break;
+        }
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_START_PCT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_FOG_START_PCT);
+        int pct = (int)(val + 0.5f);
+        msg = "Fog Start: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_END_PCT) {
+        float val = minecraft->options.getProgressValue(OPTIONS_FOG_END_PCT);
+        int pct = (int)(val + 0.5f);
+        msg = "Fog End: " + to_str(pct) + "%";
+        return;
+    }
+
+    if (optionId == OPTIONS_FOG_TRANSITION_SPEED) {
+        float val = minecraft->options.getProgressValue(OPTIONS_FOG_TRANSITION_SPEED);
+        std::ostringstream ss;
+        ss.precision(1);
+        ss << std::fixed << "Transition Speed: " << val;
+        msg = ss.str();
+        return;
+    }
+
     if (optionId == OPTIONS_BETA_SKY) {
         bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
         active = !tallOn;
@@ -209,7 +367,7 @@ void OptionControl::toggleValue(Minecraft* minecraft) {
         minecraft->options.set(OPTIONS_VIEW_DISTANCE, (cur + 1) % 4);
     } else if (optionId == OPTIONS_GUI_SCALE) {
         int cur = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
-        minecraft->options.set(OPTIONS_GUI_SCALE, (cur + 1) % 3);
+        minecraft->options.set(OPTIONS_GUI_SCALE, (cur + 1) % 4);
     } else if (optionId == OPTIONS_WINDOW_SCALE) {
         int cur = minecraft->options.getIntValue(OPTIONS_WINDOW_SCALE);
         minecraft->options.set(OPTIONS_WINDOW_SCALE, (cur + 1) % 3);
@@ -225,6 +383,9 @@ void OptionControl::toggleValue(Minecraft* minecraft) {
     } else if (optionId == OPTIONS_DEBUG_STYLE) {
         int cur = minecraft->options.getIntValue(OPTIONS_DEBUG_STYLE);
         minecraft->options.set(OPTIONS_DEBUG_STYLE, (cur + 1) % 2);
+    } else if (optionId == OPTIONS_CHAT_MESSAGE_TIME) {
+        int cur = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
+        minecraft->options.set(OPTIONS_CHAT_MESSAGE_TIME, (cur + 1) % 5);
     } else {
         minecraft->options.toggle(optionId);
     }
@@ -236,6 +397,9 @@ void OptionControl::updateSliderValue(Minecraft* minecraft, int mx) {
     float pct = (float)(mx - x) / (float)width;
     pct = Mth::clamp(pct, 0.0f, 1.0f);
     float newVal = minVal + pct * (maxVal - minVal);
+    if (optionId == OPTIONS_LIMIT_FRAMERATE) {
+        newVal = floorf(newVal / 10.0f + 0.5f) * 10.0f;
+    }
     minecraft->options.set(optionId, newVal);
     updateLabel(minecraft);
 }
@@ -576,24 +740,29 @@ void OptionsScreen::buttonClicked(Button* button) {
 }
 
 void OptionsScreen::mouseClicked(int x, int y, int buttonNum) {
-	if (buttonNum == MouseAction::ACTION_LEFT) {
-		int centerX = width / 2;
-		int topY = 34;
-		int bottomY = height - 34;
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
 
-		if (y >= topY && y < bottomY) {
-			if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
-				m_isDraggingScrollbar = true;
-				float viewportH = (float)(height - 68);
-				float relY = (float)(y - 34) / (viewportH - 15);
-				m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
-				setupPositions();
-				return;
-			}
-		}
-	}
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        int centerX = width / 2;
+        int topY = 34;
+        int bottomY = height - 34;
 
-	super::mouseClicked(x, y, buttonNum);
+        if (y >= topY && y < bottomY) {
+            if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
+                m_isDraggingScrollbar = true;
+                float viewportH = (float)(height - 68);
+                float relY = (float)(y - 34) / (viewportH - 15);
+                m_scrollY = Mth::clamp(relY * m_maxScroll, 0.0f, m_maxScroll);
+                setupPositions();
+                return;
+            }
+            super::mouseClicked(x, y, buttonNum);
+        }
+    }
 }
 
 void OptionsScreen::mouseReleased(int x, int y, int buttonNum) {
@@ -845,6 +1014,12 @@ void ControlsOptionsScreen::buttonClicked(Button* button) {
 }
 
 void ControlsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
@@ -859,10 +1034,9 @@ void ControlsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void ControlsOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
@@ -931,7 +1105,7 @@ void GraphicsOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_LIMIT_FRAMERATE, "Max Framerate", false, 10.0f, 260.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
@@ -1102,6 +1276,12 @@ void GraphicsOptionsScreen::buttonClicked(Button* button) {
 }
 
 void GraphicsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
@@ -1116,10 +1296,9 @@ void GraphicsOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void GraphicsOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
@@ -1178,6 +1357,7 @@ void InterfaceOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RENDER_DEBUG, "Debug Menu"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));
@@ -1353,6 +1533,12 @@ void InterfaceOptionsScreen::buttonClicked(Button* button) {
 }
 
 void InterfaceOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
@@ -1367,10 +1553,9 @@ void InterfaceOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void InterfaceOptionsScreen::mouseReleased(int x, int y, int buttonNum) {

@@ -60,6 +60,8 @@ SOURCES := ../../src/main.cpp \
 ../../src/client/gui/screens/MouseUnlockedScreen.cpp \
 ../../src/client/gui/screens/OptionsScreen.cpp \
 ../../src/client/gui/screens/PauseScreen.cpp \
+../../src/client/gui/screens/FogScreen.cpp \
+../../src/client/gui/screens/ChatSettingsScreen.cpp \
 ../../src/client/gui/screens/ProgressScreen.cpp \
 ../../src/client/gui/screens/RenameMPLevelScreen.cpp \
 ../../src/client/gui/screens/SelectWorldScreen.cpp \
@@ -88,6 +90,7 @@ SOURCES := ../../src/main.cpp \
 ../../src/client/player/input/touchscreen/TouchscreenInput.cpp \
 ../../src/client/renderer/Chunk.cpp \
 ../../src/client/renderer/EntityTileRenderer.cpp \
+../../src/client/renderer/EnhancedFog.cpp \
 ../../src/client/renderer/GameRenderer.cpp \
 ../../src/client/renderer/ItemInHandRenderer.cpp \
 ../../src/client/renderer/LevelRenderer.cpp \

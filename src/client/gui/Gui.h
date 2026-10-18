@@ -40,6 +40,7 @@ public:
 	void handleClick(int button, int x, int y);
 	void handleKeyPressed( int key );
 	void scrollChat(int delta);
+	int getChatScrollOffset() const { return chatScrollOffset; }
 
 	void tick();
 	void render(float a, bool mouseFree, int xMouse, int yMouse);
@@ -66,6 +67,7 @@ public:
 	void renderProgressIndicator( const bool isTouchInterface, const int screenWidth, const int screenHeight, float a );
 
     void addMessage(const std::string& string);
+	const GuiMessageList& getGuiMessages() const { return guiMessages; }
 	void clearMessages();
 	void postError(int errCode);
 

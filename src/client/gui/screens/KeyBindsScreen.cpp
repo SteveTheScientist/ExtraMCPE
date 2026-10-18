@@ -115,7 +115,8 @@ void KeyBindsScreen::updateScrollBounds() {
     int totalHeight = 10;
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            totalHeight += 22;
+            if (i > 0) totalHeight += 10;
+            totalHeight += 20;
         } else {
             totalHeight += 24;
         }
@@ -146,7 +147,8 @@ void KeyBindsScreen::setupPositions() {
 
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            curY += 22;
+            if (i > 0) curY += 10;
+            curY += 20;
             continue;
         }
 
@@ -156,7 +158,7 @@ void KeyBindsScreen::setupPositions() {
         if (kb && rb) {
             kb->x = centerX + 5;
             kb->y = curY;
-            kb->width = 95;
+            kb->width = 96;
             kb->height = 20;
 
             rb->x = centerX + 105;
@@ -206,26 +208,43 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
     int topY = 34;
     int bottomY = height - 34;
 
-    // Header & Footer shadow overlays rendered behind buttons
-    fill(0, 0, width, 32, 0x70000000);
-    fill(0, height - 34, width, height, 0x70000000);
+    // Enable scissor clipping for scrollable area between header and footer
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((centerX - 165) * Gui::GuiScale);
+    int scissorW = (int)(330 * Gui::GuiScale);
+    int physY = minecraft->height - (int)((height - 34) * Gui::GuiScale);
+    int scissorH = (int)((height - 68) * Gui::GuiScale);
+    glScissor(scissorX < 0 ? 0 : scissorX, physY < 0 ? 0 : physY, scissorW < 0 ? 0 : scissorW, scissorH < 0 ? 0 : scissorH);
 
-    // Render category titles and action labels
+    // Hide footer buttons during super::render inside scissor so they don't get clipped or misdrawn
+    if (btnResetAll) btnResetAll->visible = false;
+    if (btnDone) btnDone->visible = false;
+
+    super::render(xm, ym, a);
+
+    // Render category titles and action labels inside scissor test
     int curY = (int)(38 - m_scrollY);
     for (size_t i = 0; i < m_entries.size(); ++i) {
         if (!m_entries[i].category.empty()) {
-            if (curY >= topY - 10 && curY < bottomY) {
+            if (i > 0) curY += 10;
+            if (curY + 20 >= 34 && curY < height - 34) {
                 drawCenteredString(font, m_entries[i].category, centerX, curY + 4, 0xffffffff);
             }
-            curY += 22;
+            curY += 20;
             continue;
         }
 
-        if (curY >= topY - 10 && curY < bottomY) {
+        if (curY + 20 >= 34 && curY < height - 34) {
             drawString(font, m_entries[i].label, centerX - 150, curY + 6, 0xffffffff);
         }
         curY += 24;
     }
+
+    glDisable(GL_SCISSOR_TEST);
+
+    // Top and bottom header/footer translucent bars
+    fill(0, 0, width, 34, 0x70000000);
+    fill(0, height - 34, width, height, 0x70000000);
 
     // Scrollbar track & thumb
     if (m_maxScroll > 0) {
@@ -258,7 +277,15 @@ void KeyBindsScreen::render(int xm, int ym, float a) {
         t.draw();
     }
 
-    super::render(xm, ym, a);
+    // Restore and render footer buttons
+    if (btnResetAll) {
+        btnResetAll->visible = true;
+        btnResetAll->render(minecraft, xm, ym);
+    }
+    if (btnDone) {
+        btnDone->visible = true;
+        btnDone->render(minecraft, xm, ym);
+    }
 
     drawCenteredString(font, "Key Binds", width / 2, 10, 0xffffffff);
 }
@@ -292,11 +319,24 @@ void KeyBindsScreen::buttonClicked(Button* button) {
 }
 
 void KeyBindsScreen::mouseClicked(int x, int y, int buttonNum) {
+    // Requirement 2: Header/footer buttons hit-tested first
+    if (btnDone && btnDone->clicked(minecraft, x, y)) {
+        btnDone->setPressed();
+        clickedButton = btnDone;
+        return;
+    }
+    if (btnResetAll && btnResetAll->clicked(minecraft, x, y)) {
+        btnResetAll->setPressed();
+        clickedButton = btnResetAll;
+        return;
+    }
+
     if (buttonNum == MouseAction::ACTION_LEFT) {
         int centerX = width / 2;
         int topY = 34;
         int bottomY = height - 34;
 
+        // Requirement 1 & 3: List area touch/scroll only between header and footer
         if (y >= topY && y < bottomY) {
             if (m_maxScroll > 0 && x >= centerX + 155 && x <= centerX + 172) {
                 m_isDraggingScrollbar = true;
@@ -306,10 +346,9 @@ void KeyBindsScreen::mouseClicked(int x, int y, int buttonNum) {
                 setupPositions();
                 return;
             }
+            super::mouseClicked(x, y, buttonNum);
         }
     }
-
-    super::mouseClicked(x, y, buttonNum);
 }
 
 void KeyBindsScreen::mouseReleased(int x, int y, int buttonNum) {

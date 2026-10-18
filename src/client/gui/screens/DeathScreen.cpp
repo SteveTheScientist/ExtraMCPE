@@ -1,17 +1,19 @@
 #include "DeathScreen.h"
-#include "ScreenChooser.h"
 #include "../components/Button.h"
 #include "../../Minecraft.h"
 #include "../../player/LocalPlayer.h"
-#include "../../../platform/time.h"
+#include <sstream>
 
-static const int WAIT_TICKS = 30;
+template<typename T>
+static std::string to_str(T val) {
+	std::ostringstream ss;
+	ss << val;
+	return ss.str();
+}
 
 DeathScreen::DeathScreen()
-:	bRespawn(0),
-	bTitle(0),
-	_hasChosen(false),
-	_tick(0)
+:	bRespawn(NULL),
+	bTitle(NULL)
 {
 }
 
@@ -23,16 +25,12 @@ DeathScreen::~DeathScreen()
 
 void DeathScreen::init()
 {
-	if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 0) {
-		bRespawn = new Touch::TButton(1, "Respawn!");
-		bTitle = new Touch::TButton(2, "Main menu");
-	} else if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 1) {
-		bRespawn = new Button(1, "Respawn!");
-		bTitle = new Button(2, "Main menu");
-	} else {
-		bRespawn = new Button(1, 0, 0, 200, 20, "Respawn");
-		bTitle = new Button(2, 0, 0, 200, 20, "Title menu");
-	}
+	buttons.clear();
+	tabButtons.clear();
+
+	bRespawn = new Button(1, 0, 0, 200, 20, "Respawn");
+	bTitle = new Button(2, 0, 0, 200, 20, "Title Screen");
+
 	buttons.push_back(bRespawn);
 	buttons.push_back(bTitle);
 
@@ -42,65 +40,63 @@ void DeathScreen::init()
 
 void DeathScreen::setupPositions()
 {
-if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 2){
-    bRespawn->width = 200;
-    bTitle->width = 200;
+	int buttonWidth = 200;
+	if (buttonWidth > width - 20) {
+		buttonWidth = width - 20;
+	}
 
-    int centerX = (width / 2) - (bRespawn->width / 2);
-    bRespawn->x = centerX;
-    bTitle->x = centerX;
+	bRespawn->width = buttonWidth;
+	bTitle->width = buttonWidth;
 
-    bRespawn->y = (height / 2);
-    bTitle->y = bRespawn->y + 24;
-} else {
-	bRespawn->width = bTitle->width = width / 4;
-	bRespawn->y = bTitle->y = height / 2;
-	bRespawn->x = width/2 - bRespawn->width - 10;
-	bTitle->x = width/2 + 10;
-}
-//	LOGI("xyz: %d, %d (%d, %d)\n", bTitle->x, bTitle->y, width, height);
+	int centerX = (width - buttonWidth) / 2;
+	bRespawn->x = centerX;
+	bTitle->x = centerX;
+
+	int startY = height / 2;
+	bRespawn->y = startY;
+	bTitle->y = startY + 24;
 }
 
 void DeathScreen::tick() {
-	++_tick;
+	Screen::tick();
 }
 
-void DeathScreen::render( int xm, int ym, float a )
+void DeathScreen::render(int xm, int ym, float a)
 {
+	// Dark red tint over the world
 	fillGradient(0, 0, width, height, 0x60500000, 0xa0803030);
 
-if (minecraft->options.getIntValue(OPTIONS_MENU_STYLE) == 2){
+	Font* font = minecraft->font;
+
+	// "You Died!" in big text (2x), centered near the top
 	glPushMatrix2();
-	glScalef2(2, 2, 2);
-	drawCenteredString(font, I18n::get("deathScreen.title.hardcore"), width / 4, height / 8, 0xffffff);
+	glScalef2(2.0f, 2.0f, 2.0f);
+	drawCenteredString(font, "You Died!", width / 4, height / 12, 0xffffffff);
 	glPopMatrix2();
-	std::stringstream ss;
-	ss << "Score: &e" << minecraft->player->getScore();
-	drawCenteredString(font, ss.str(), width / 2, (height / 4) + 32, 0xffffff);
-} else {
-	glPushMatrix2();
-	glScalef2(2, 2, 2);
-	drawCenteredString(font, I18n::get("deathScreen.title"), width / 4, height / 8, 0xffffff);
-	glPopMatrix2();
-}
 
-	if (_tick >= WAIT_TICKS)
-		Screen::render(xm, ym, a);
-}
+	int currentY = height / 6 + 24;
 
-void DeathScreen::buttonClicked( Button* button )
-{
-	if (_tick < WAIT_TICKS) return;
-
-	if (button == bRespawn) {
-		//RespawnPacket packet();
-		//minecraft->raknetInstance->send(packet);
-
-		minecraft->player->respawn();
-		//minecraft->raknetInstance->send();
-		minecraft->setScreen(NULL);
+	// Score line: show only if score exists / > 0
+	if (minecraft->player) {
+		int score = minecraft->player->getScore();
+		if (score > 0) {
+			std::string scoreText = "Score: \xa7" "e" + to_str(score);
+			drawCenteredString(font, scoreText, width / 2, currentY, 0xffffffff);
+			currentY += 12;
+		}
 	}
 
-	if (button == bTitle)
+	Screen::render(xm, ym, a);
+}
+
+void DeathScreen::buttonClicked(Button* button)
+{
+	if (button == bRespawn) {
+		if (minecraft->player) {
+			minecraft->player->respawn();
+		}
+		minecraft->setScreen(NULL);
+	} else if (button == bTitle) {
 		minecraft->leaveGame();
+	}
 }

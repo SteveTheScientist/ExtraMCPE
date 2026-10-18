@@ -28,6 +28,7 @@
 #include "Textures.h"
 #include "../gui/components/ImageButton.h"
 #include "Tesselator.h"
+#include "../../platform/time.h"
 
 static int _shTicks = -1;
 
@@ -53,7 +54,11 @@ GameRenderer::GameRenderer( Minecraft* mc )
 	fr(0), fg(0), fb(0),
 	_rotX(0), _rotY(0),
 	_rotXlast(0), _rotYlast(0),
-	useScreenScissor(false)
+	useScreenScissor(false),
+	m_useEnhancedFogThisFrame(false),
+	m_enhancedFogStart(0.0f),
+	m_enhancedFogEnd(0.0f),
+	m_lastFrameTimeSec(0.0f)
 {
 	saveMatrices();
 
@@ -233,6 +238,70 @@ void GameRenderer::render(float a) {
 	}
 }
 
+void GameRenderer::updateEnhancedFog(float a) {
+	Level* level = mc->level;
+	Mob* player = mc->cameraTargetPlayer;
+
+	renderDistance = (float) (16 * 16 >> (mc->options.getIntValue(OPTIONS_VIEW_DISTANCE)));
+#if defined(ANDROID)
+	if (mc->isPowerVR() && mc->options.getIntValue(OPTIONS_VIEW_DISTANCE) <= 2)
+		renderDistance *= 0.8f;
+#endif
+
+	FogSettings fogSettings = mc->options.getFogSettings();
+	bool inLiquid = player && (player->isUnderLiquid(Material::water) || player->isUnderLiquid(Material::lava));
+	m_useEnhancedFogThisFrame = fogSettings.enhancedFog && !mc->options.getBooleanValue(OPTIONS_BETA_SKY) && !inLiquid;
+
+	if (m_useEnhancedFogThisFrame) {
+		float td = level->getTimeOfDay(a);
+		float daylight = Mth::cos(td * Mth::PI * 2) * 2.0f + 0.5f;
+		daylight = Mth::clamp(daylight, 0.0f, 1.0f);
+
+		Vec3 skyColorLookUpVec = level->getSkyColor(player, a);
+		Color3f skyColLookUp((float)skyColorLookUpVec.x, (float)skyColorLookUpVec.y, (float)skyColorLookUpVec.z);
+
+		float now = getTimeS();
+		float dt = (m_lastFrameTimeSec > 0.0f) ? (now - m_lastFrameTimeSec) : (1.0f / 60.0f);
+		if (dt <= 0.0f || dt > 1.0f) dt = 1.0f / 60.0f;
+		m_lastFrameTimeSec = now;
+
+		bool isBetaSky = mc->options.getBooleanValue(OPTIONS_BETA_SKY);
+		float camX = player ? player->x : 0.0f;
+		float camY = player ? player->y : 64.0f;
+		float camZ = player ? player->z : 0.0f;
+
+		float surfaceY = (float)level->getTopSolidBlock(Mth::floor(camX), Mth::floor(camZ));
+		bool canSeeSky = level->canSeeSky(Mth::floor(camX), Mth::floor(camY), Mth::floor(camZ));
+
+		m_enhancedFogModule.update(level, player, daylight, td, skyColLookUp, dt, fogSettings, isBetaSky, surfaceY, canSeeSky);
+		Color3f fogCol = m_enhancedFogModule.getCurrentColor();
+
+		fr = fogCol.r;
+		fg = fogCol.g;
+		fb = fogCol.b;
+
+		if (mc->options.getBooleanValue(OPTIONS_ANAGLYPH_3D)) {
+			float frr = (fr * 30 + fg * 59 + fb * 11) / 100;
+			float fgg = (fr * 30 + fg * 70) / (100);
+			float fbb = (fr * 30 + fb * 70) / (100);
+
+			fr = frr;
+			fg = fgg;
+			fb = fbb;
+		}
+
+		m_enhancedFogColor = Color3f(fr, fg, fb);
+
+		float ugFactor = m_enhancedFogModule.getUndergroundFactor();
+		EnhancedFog::calculateFogDistances(renderDistance, fogSettings.startPct, fogSettings.endPct, m_enhancedFogStart, m_enhancedFogEnd);
+
+		if (ugFactor > 0.0f) {
+			float shortenedEnd = m_enhancedFogEnd * (1.0f - ugFactor * 0.75f);
+			m_enhancedFogEnd = std::max(m_enhancedFogStart + 4.0f, shortenedEnd);
+		}
+	}
+}
+
 /*public*/
 void GameRenderer::renderLevel(float a) {
 
@@ -246,6 +315,8 @@ void GameRenderer::renderLevel(float a) {
 			return;
 		}
 	}
+
+	updateEnhancedFog(a);
 
 	TIMER_PUSH("pick");
 	pick(a);
@@ -301,11 +372,13 @@ void GameRenderer::renderLevel(float a) {
 			if(mc->options.getBooleanValue(OPTIONS_BETA_SKY) && (mc->options.getIntValue(OPTIONS_VIEW_DISTANCE) < 2)){
 			levelRenderer->renderSky(a); // how java renders the sky instead of how pe doing prepareandrenderclouds.
 			} else if (!mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
+			if (!m_useEnhancedFogThisFrame) {
 			glFogf(GL_FOG_START, renderDistance  * 0.2f);
 			glFogf(GL_FOG_END, renderDistance *0.75);
 
 			glFogf(GL_FOG_START, renderDistance  * 0.6f);
 			glFogf(GL_FOG_END, renderDistance);
+			}
 			}
 //		}
 		glEnable2(GL_FOG);
@@ -573,6 +646,18 @@ void GameRenderer::bobView(float a) {
 /*private*/
 void GameRenderer::setupFog(int i) {
 	Mob* player = mc->cameraTargetPlayer;
+
+	if (m_useEnhancedFogThisFrame) {
+		float fogBuffer[4] = {m_enhancedFogColor.r, m_enhancedFogColor.g, m_enhancedFogColor.b, 1.0f};
+		glFogfv(GL_FOG_COLOR, (GLfloat*)fogBuffer);
+		glColor4f2(1, 1, 1, 1);
+		glFogx(GL_FOG_MODE, GL_LINEAR);
+		glFogf(GL_FOG_START, m_enhancedFogStart);
+		glFogf(GL_FOG_END, m_enhancedFogEnd);
+		glEnable2(GL_COLOR_MATERIAL);
+		return;
+	}
+
 	float fogBuffer[4] = {fr, fg, fb, 1};
 
 	glFogfv(GL_FOG_COLOR, (GLfloat*)fogBuffer);
@@ -830,6 +915,11 @@ void GameRenderer::tick(int nTick, int maxTick) {
 void GameRenderer::setupClearColor(float a) {
 	Level* level = mc->level;
 	Mob* player = mc->cameraTargetPlayer;
+
+	if (m_useEnhancedFogThisFrame) {
+		glClearColor(fr, fg, fb, 1.0f);
+		return;
+	}
 
 	float whiteness = 1.0f / (4 - mc->options.getIntValue(OPTIONS_VIEW_DISTANCE));
 	whiteness = 1 - (float) pow(whiteness, 0.25f);

@@ -71,9 +71,6 @@ void TextBox::tick(Minecraft* minecraft) {
 }
 
 void TextBox::render(Minecraft* minecraft, int xm, int ym) {
-    // textbox like in beta 1.7.3
-    // change appearance when focused so the user can tell it's active
-    // active background darker gray with a subtle border
     uint32_t bgColor = focused ? 0xffa0a0a0 : 0xffa0a0a0;
     uint32_t borderColor = focused ? 0xff000000 : 0xff000000;
     fill(x, y, x + width, y + height, bgColor);
@@ -83,11 +80,35 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
 
     if (text.empty() && !focused) {
         drawString(minecraft->font, hint, x + 2, _y, 0xff5e5e5e);
+        return;
     }
 
-    if (focused && blink) text.push_back('_');
+    std::string displayed = text;
+    if (focused && blink) displayed.push_back('_');
 
-    drawString(minecraft->font, text, x + 2, _y, 0xffffffff);
+    Font* font = minecraft->font;
+    float textW = Gui::getColoredWidth(font, displayed);
+    float maxVisibleW = (float)(width - 4); // 2px margin inside box
 
-    if (focused && blink) text.pop_back();
+    float textX = (float)(x + 2);
+    if (textW > maxVisibleW) {
+        textX = (float)(x + 2) - (textW - maxVisibleW);
+    }
+
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((x + 1) * Gui::GuiScale);
+    int scissorW = (int)((width - 2) * Gui::GuiScale);
+    int physY = minecraft->height - (int)((y + height - 1) * Gui::GuiScale);
+    int scissorH = (int)((height - 2) * Gui::GuiScale);
+
+    if (scissorX < 0) scissorX = 0;
+    if (physY < 0) physY = 0;
+    if (scissorW < 0) scissorW = 0;
+    if (scissorH < 0) scissorH = 0;
+
+    glScissor(scissorX, physY, scissorW, scissorH);
+
+    drawString(font, displayed, textX, _y, 0xffffffff);
+
+    glDisable(GL_SCISSOR_TEST);
 }

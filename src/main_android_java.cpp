@@ -6,8 +6,10 @@
 
 //#include "main_android_java.h"
 #include "platform/input/Multitouch.h"
+#include "util/FrameLimiter.h"
 #include <unistd.h>
 #include <pthread.h>
+#include <chrono>
 
 // Horrible, I know. / A
 #ifndef MAIN_CLASS
@@ -194,7 +196,11 @@ Java_com_mojang_minecraftpe_GLRenderer_nativeUpdate(JNIEnv* env) {
         if (!gApp->isInited())
             gApp->init(gContext);
 
+        auto frameStart = std::chrono::steady_clock::now();
+
         gApp->update();
+
+        FrameLimiter::limit(&((MAIN_CLASS*)gApp)->options, frameStart);
 
         if (gApp->wantToQuit())
             appPlatform.finish();

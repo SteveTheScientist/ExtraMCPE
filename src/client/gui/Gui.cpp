@@ -312,29 +312,117 @@ void Gui::addMessage(const std::string& _string) {
 	if (!minecraft->font)
 		return;
 
-	std::string string = _string;
-	while (minecraft->font->width(string) > MAX_MESSAGE_WIDTH) {
-		unsigned int i = 1;
-		while (i < string.length() && minecraft->font->width(string.substr(0, i + 1)) <= MAX_MESSAGE_WIDTH) {
-			i++;
-		}
-		addMessage(string.substr(0, i));
-		string = string.substr(i);
+	// Chat box width is 320px at GUI scale 1, minus 4px padding/margins (316px max width for text)
+	float maxTextWidth = 316.0f;
+	const float screenWidth = (float)(minecraft->width * InvGuiScale);
+	if (maxTextWidth > screenWidth - 8.0f) {
+		maxTextWidth = screenWidth - 8.0f;
 	}
-	GuiMessage message;
-	message.message = string;
-	message.ticks = 0;
-	guiMessages.insert(guiMessages.begin(), message);
+	if (maxTextWidth < 30.0f) maxTextWidth = 30.0f;
 
-	// Keep a larger history so users can scroll through the full chat
-	const unsigned int MaxHistoryLines = 200;
+	std::vector<std::string> lines;
+	std::string currentLine = "";
+	std::string currentWord = "";
+
+	for (size_t i = 0; i < _string.length(); i++) {
+		char c = _string[i];
+		if (c == '\n') {
+			if (!currentWord.empty()) {
+				if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+					currentLine += " " + currentWord;
+				} else if (currentLine.empty()) {
+					currentLine = currentWord;
+				} else {
+					lines.push_back(currentLine);
+					currentLine = currentWord;
+				}
+				currentWord = "";
+			}
+			lines.push_back(currentLine);
+			currentLine = "";
+		} else if (c == ' ') {
+			if (!currentWord.empty()) {
+				if (!currentLine.empty()) {
+					if (getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+						currentLine += " " + currentWord;
+					} else {
+						lines.push_back(currentLine);
+						currentLine = currentWord;
+					}
+				} else {
+					currentLine = currentWord;
+				}
+				currentWord = "";
+			}
+		} else {
+			currentWord += c;
+			// Small wrap fix: if a long word with no spaces does not fit in the rest of the line, break it by character on the same line (after "<name> "). Do not move the whole word to the next line and leave "<name>" alone.
+			std::string testLine = currentLine.empty() ? currentWord : (currentLine + " " + currentWord);
+			if (getColoredWidth(minecraft->font, testLine) > maxTextWidth) {
+				if (!currentLine.empty()) {
+					// Fill remaining space on currentLine character by character
+					std::string prefix = currentLine + " ";
+					std::string wordFits = "";
+					size_t k = 0;
+					while (k < currentWord.length() && getColoredWidth(minecraft->font, prefix + currentWord.substr(0, k + 1)) <= maxTextWidth) {
+						k++;
+					}
+					if (k > 0) {
+						lines.push_back(prefix + currentWord.substr(0, k));
+						currentLine = "";
+						currentWord = currentWord.substr(k);
+					} else {
+						lines.push_back(currentLine);
+						currentLine = "";
+					}
+				}
+				// If currentWord alone still exceeds maxTextWidth, break it by character
+				while (getColoredWidth(minecraft->font, currentWord) > maxTextWidth) {
+					size_t k = 1;
+					while (k < currentWord.length() && getColoredWidth(minecraft->font, currentWord.substr(0, k + 1)) <= maxTextWidth) {
+						k++;
+					}
+					lines.push_back(currentWord.substr(0, k));
+					currentWord = currentWord.substr(k);
+				}
+			}
+		}
+	}
+
+	if (!currentWord.empty()) {
+		if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+			currentLine += " " + currentWord;
+		} else if (currentLine.empty()) {
+			currentLine = currentWord;
+		} else {
+			lines.push_back(currentLine);
+			currentLine = currentWord;
+		}
+	}
+
+	if (!currentLine.empty()) {
+		lines.push_back(currentLine);
+	}
+
+	if (lines.empty()) {
+		lines.push_back(_string);
+	}
+
+	for (size_t l = 0; l < lines.size(); l++) {
+		GuiMessage message;
+		message.message = lines[l];
+		message.ticks = 0;
+		guiMessages.insert(guiMessages.begin(), message);
+	}
+
+	// Requirement: Keep the last 100 lines
+	const unsigned int MaxHistoryLines = 100;
 	while (guiMessages.size() > MaxHistoryLines) {
 		guiMessages.pop_back();
 	}
 
-	// If the user has scrolled up, keep their window fixed (new messages shift older ones down)
 	if (chatScrollOffset > 0) {
-		chatScrollOffset++;
+		chatScrollOffset += (int)lines.size();
 	}
 }
 
@@ -1061,40 +1149,158 @@ float Gui::getColoredWidth(Font* font, const std::string& text) {
 
 void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isChatting, Font* font ) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	int baseY = screenHeight - (isChatting ? 28 : 48);
-	int start = chatScrollOffset;
-	if (start < 0) start = 0;
-	for (unsigned int i = 0; i < max; i++) {
-		unsigned int msgIdx = (unsigned int)start + i;
-		if (msgIdx >= guiMessages.size())
-			break;
 
-		GuiMessage& message = guiMessages.at(msgIdx);
-		if (message.ticks < 20 * 10 || isChatting) {
-			float t = message.ticks / (20 * 10.0f);
-			t = 1 - t;
-			t = t * 10;
-			if (t < 0) t = 0;
-			if (t > 1) t = 1;
-			t = t * t;
-			int alpha = (int) (255 * t);
-			if (isChatting) alpha = 255;
+	// Respect Chat: Shown / Hidden
+	if (!minecraft->options.getBooleanValue(OPTIONS_CHAT_SHOWN)) {
+		return;
+	}
 
-			if (alpha > 0) {
-				const float x = 4;
-				const float y = (float)(baseY - i * 9);
-				std::string msg = message.message;
-				float msgW = getColoredWidth(font, msg) + 4;
-				if (msgW < 120) msgW = 120;
-				if (msgW > MAX_MESSAGE_WIDTH) msgW = MAX_MESSAGE_WIDTH;
+	const float screenWidth = (float)(minecraft->width * InvGuiScale);
+	const float screenHeightF = (float)screenHeight;
 
-				this->fill(x - 2, y - 1, x + msgW, y + 8, (isChatting ? 0x90000000 : ((alpha / 2) << 24)));
+	// Live Chat Settings
+	float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
+	if (configuredWidth < 40.0f) configuredWidth = 40.0f;
+	if (configuredWidth > 320.0f) configuredWidth = 320.0f;
+
+	float boxWidth = configuredWidth;
+	if (boxWidth > screenWidth - 4.0f) {
+		boxWidth = screenWidth - 4.0f;
+	}
+	if (boxWidth < 40.0f) boxWidth = 40.0f;
+
+	// Re-clamp position X so chat box fits on screen
+	float maxX = std::max(0.0f, screenWidth - boxWidth);
+	float posX = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_X);
+	posX = Mth::clamp(posX, 0.0f, maxX);
+
+	float textOpacityPct = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_OPACITY) / 100.0f;
+	textOpacityPct = Mth::clamp(textOpacityPct, 0.1f, 1.0f);
+
+	float bgOpacityPct = minecraft->options.getProgressValue(OPTIONS_CHAT_BG_OPACITY) / 100.0f;
+	bgOpacityPct = Mth::clamp(bgOpacityPct, 0.0f, 1.0f);
+
+	float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
+	textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
+
+	float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
+	float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
+	if (lineH < 4.0f) lineH = 4.0f;
+
+	float focusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+	if (focusedHeightPx < 20.0f) focusedHeightPx = 20.0f;
+	if (focusedHeightPx > 180.0f) focusedHeightPx = 180.0f;
+
+	float unfocusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+	if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
+	if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
+
+	float activeBoxH = isChatting ? focusedHeightPx : unfocusedHeightPx;
+
+	// Re-clamp position Y so bottom of chat lines sits above bottom of screen and top doesn't leave screen
+	float maxY = std::max(0.0f, screenHeightF - activeBoxH);
+	float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+	posY = Mth::clamp(posY, 0.0f, maxY);
+
+	const float x = posX;
+
+	// Message Time setting
+	int msgTimeIdx = minecraft->options.getIntValue(OPTIONS_CHAT_MESSAGE_TIME);
+	int totalStayTicks = 200; // default 10s
+	switch (msgTimeIdx) {
+		case 0: totalStayTicks = 100; break; // 5s
+		case 1: totalStayTicks = 200; break; // 10s
+		case 2: totalStayTicks = 300; break; // 15s
+		case 3: totalStayTicks = 400; break; // 20s
+		default: totalStayTicks = 600; break; // 30s
+	}
+	int fadeTicks = 20; // last 1 second
+
+	glPushMatrix2();
+	glScalef2(textSizeScale, textSizeScale, 1.0f);
+	float invScale = 1.0f / textSizeScale;
+
+	if (isChatting) {
+		const float baseY = screenHeightF - posY - lineH;
+		const unsigned int maxLines = std::max(1u, (unsigned int)(focusedHeightPx / lineH));
+
+		int start = chatScrollOffset;
+		if (start < 0) start = 0;
+
+		unsigned int renderedCount = 0;
+		for (unsigned int i = 0; i < maxLines; i++) {
+			unsigned int msgIdx = (unsigned int)start + i;
+			if (msgIdx >= guiMessages.size()) break;
+
+			GuiMessage& message = guiMessages.at(msgIdx);
+			const float y = baseY - renderedCount * lineH;
+
+			int bgAlpha = (int)(255.0f * bgOpacityPct);
+			int textAlpha = (int)(255.0f * textOpacityPct);
+
+			fill((x) * invScale, (y - 1.0f) * invScale, (x + boxWidth) * invScale, (y + lineH - 1.0f) * invScale, (bgAlpha << 24));
+			glEnable(GL_BLEND);
+
+			Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
+			renderedCount++;
+		}
+
+		// Scroll bar for focused height
+		int totalLines = (int)guiMessages.size();
+		if (totalLines > (int)maxLines) {
+			float barX = (x + boxWidth - 2.0f) * invScale;
+			float barTop = (baseY - (maxLines - 1) * lineH - 1.0f) * invScale;
+			float barH = (maxLines * lineH) * invScale;
+
+			fill(barX, barTop, barX + 2.0f * invScale, barTop + barH, 0x80303030);
+
+			float thumbH = std::max(6.0f, barH * ((float)maxLines / (float)totalLines));
+			int maxScroll = totalLines - (int)maxLines;
+			float scrollPct = (float)chatScrollOffset / (float)maxScroll;
+			scrollPct = Mth::clamp(scrollPct, 0.0f, 1.0f);
+
+			float thumbY = (barTop + barH - thumbH) - scrollPct * (barH - thumbH);
+			bool isDragging = Mouse::isButtonDown(MouseAction::ACTION_LEFT);
+			uint32_t thumbColor = isDragging ? 0xffcccccc : 0xff808080;
+
+			fill(barX, thumbY, barX + 2.0f * invScale, thumbY + thumbH, thumbColor);
+		}
+	} else {
+		// Unfocused Height & Message Time
+		float unfocusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+		if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
+		if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
+
+		const float baseY = screenHeightF - posY - lineH;
+		const unsigned int maxLines = std::max(1u, (unsigned int)(unfocusedHeightPx / lineH));
+
+		unsigned int renderedCount = 0;
+		for (unsigned int i = 0; i < guiMessages.size() && renderedCount < maxLines; i++) {
+			GuiMessage& message = guiMessages.at(i);
+			if (message.ticks >= totalStayTicks) continue;
+
+			float fade = 1.0f;
+			if (message.ticks > totalStayTicks - fadeTicks) {
+				fade = (float)(totalStayTicks - message.ticks) / (float)fadeTicks;
+				fade = Mth::clamp(fade, 0.0f, 1.0f);
+			}
+
+			int textAlpha = (int)(255.0f * textOpacityPct * fade);
+			int bgAlpha = (int)(255.0f * bgOpacityPct * fade);
+
+			if (textAlpha > 0) {
+				const float y = baseY - renderedCount * lineH;
+
+				fill((x) * invScale, (y - 1.0f) * invScale, (x + boxWidth) * invScale, (y + lineH - 1.0f) * invScale, (bgAlpha << 24));
 				glEnable(GL_BLEND);
 
-				Gui::drawColoredString(font, msg, x, y, alpha);
+				Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
+				renderedCount++;
 			}
 		}
 	}
+
+	glPopMatrix2();
 }
 
 void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
