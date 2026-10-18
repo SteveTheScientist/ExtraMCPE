@@ -51,8 +51,12 @@ void ConsoleScreen::keyPressed(int eventKey)
 
 void ConsoleScreen::charPressed(char inputChar)
 {
-    if (inputChar >= 32 && inputChar < 127)
-        _input += inputChar;
+    if (inputChar >= 32 && inputChar < 127) {
+        // Limit input to 100 characters like Java Edition
+        if (_input.length() < 100) {
+            _input += inputChar;
+        }
+    }
 }
 
 void ConsoleScreen::execute()
@@ -99,6 +103,7 @@ void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
     const int boxY  = height - 14;
     const int boxX0 = 2;
     const int boxX1 = width - 2;
+    const int boxW  = boxX1 - boxX0;
 
     // Solid black at 50% opacity background with no border/outline
     fill(boxX0, boxY, boxX1, boxY + boxH, 0x80000000);
@@ -108,6 +113,29 @@ void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
     if ((_cursorBlink / 10) % 2 == 0)
         displayed += '_';
 
-    // White text with shadow, 4px left padding (boxX0 + 4)
-    font->drawShadow(displayed, (float)(boxX0 + 4), (float)(boxY + 2), 0xffffffff);
+    float textW = Gui::getColoredWidth(font, displayed);
+    float maxVisibleW = (float)(boxW - 8); // 4px padding on each side inside bar
+
+    float textX = (float)(boxX0 + 4);
+    if (textW > maxVisibleW) {
+        textX = (float)(boxX0 + 4) - (textW - maxVisibleW);
+    }
+
+    glEnable(GL_SCISSOR_TEST);
+    int scissorX = (int)((boxX0 + 2) * Gui::GuiScale);
+    int scissorW = (int)((boxW - 4) * Gui::GuiScale);
+    int physY = minecraft->height - (int)((boxY + boxH) * Gui::GuiScale);
+    int scissorH = (int)(boxH * Gui::GuiScale);
+
+    if (scissorX < 0) scissorX = 0;
+    if (physY < 0) physY = 0;
+    if (scissorW < 0) scissorW = 0;
+    if (scissorH < 0) scissorH = 0;
+
+    glScissor(scissorX, physY, scissorW, scissorH);
+
+    // White text with shadow
+    font->drawShadow(displayed, textX, (float)(boxY + 2), 0xffffffff);
+
+    glDisable(GL_SCISSOR_TEST);
 }

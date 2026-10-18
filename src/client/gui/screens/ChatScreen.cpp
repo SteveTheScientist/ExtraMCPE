@@ -37,6 +37,26 @@ void ChatScreen::init() {
 void ChatScreen::tick() {
 	Screen::tick();
 	m_blinkTimer++;
+
+	if (m_isDragging && Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+		int ym = Mouse::getY();
+		int xm = Mouse::getX();
+		toGUICoordinate(xm, ym);
+
+		int deltaY = ym - m_dragStartY;
+		int totalLines = (int)minecraft->gui.getGuiMessages().size();
+		int maxScroll = totalLines - 20;
+		if (maxScroll > 0) {
+			float lineH = 9.0f;
+			int linesChange = (int)(deltaY / lineH);
+			if (linesChange != 0) {
+				minecraft->gui.scrollChat(-linesChange);
+				m_dragStartY = ym;
+			}
+		}
+	} else if (!Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+		m_isDragging = false;
+	}
 }
 
 bool ChatScreen::handleBackEvent(bool isDown) {
@@ -47,7 +67,7 @@ bool ChatScreen::handleBackEvent(bool isDown) {
 }
 
 void ChatScreen::render(int xm, int ym, float a) {
-	// Java 1.8 style input bar at bottom:
+	// Input bar at bottom:
 	// Black 50% opacity bar with no border, 12px tall, 2px from bottom and sides (y = height - 14, x = 2, w = width - 4)
 	int barX = 2;
 	int barY = height - 14;
@@ -62,8 +82,32 @@ void ChatScreen::render(int xm, int ym, float a) {
 	}
 
 	Font* font = minecraft->font;
-	// White text with shadow, 4px left padding (barX + 4 = 6px)
-	font->drawShadow(text, (float)(barX + 4), (float)(barY + 2), 0xffffffff);
+	float textW = Gui::getColoredWidth(font, text);
+	float maxVisibleW = (float)(barW - 8); // 4px padding on each side inside bar
+
+	float textX = (float)(barX + 4);
+	if (textW > maxVisibleW) {
+		textX = (float)(barX + 4) - (textW - maxVisibleW);
+	}
+
+	glEnable(GL_SCISSOR_TEST);
+	// Scissor clipping in physical screen coordinates
+	int scissorX = (int)((barX + 2) * Gui::GuiScale);
+	int scissorW = (int)((barW - 4) * Gui::GuiScale);
+	int physY = minecraft->height - (int)((barY + barH) * Gui::GuiScale);
+	int scissorH = (int)(barH * Gui::GuiScale);
+
+	if (scissorX < 0) scissorX = 0;
+	if (physY < 0) physY = 0;
+	if (scissorW < 0) scissorW = 0;
+	if (scissorH < 0) scissorH = 0;
+
+	glScissor(scissorX, physY, scissorW, scissorH);
+
+	// White text with shadow
+	font->drawShadow(text, textX, (float)(barY + 2), 0xffffffff);
+
+	glDisable(GL_SCISSOR_TEST);
 
 	Screen::render(xm, ym, a);
 }
@@ -125,6 +169,7 @@ void ChatScreen::keyPressed(int key) {
 
 void ChatScreen::keyboardNewChar(char c) {
 	if (c >= 32 && c < 127) {
+		// Limit input to 100 characters like Java Edition
 		if (m_input.length() < 100) {
 			m_input += c;
 		}

@@ -312,29 +312,97 @@ void Gui::addMessage(const std::string& _string) {
 	if (!minecraft->font)
 		return;
 
-	std::string string = _string;
-	while (minecraft->font->width(string) > MAX_MESSAGE_WIDTH) {
-		unsigned int i = 1;
-		while (i < string.length() && minecraft->font->width(string.substr(0, i + 1)) <= MAX_MESSAGE_WIDTH) {
-			i++;
-		}
-		addMessage(string.substr(0, i));
-		string = string.substr(i);
+	// Chat box width is 320px at GUI scale 1, minus 4px padding/margins (316px max width for text)
+	float maxTextWidth = 316.0f;
+	const float screenWidth = (float)(minecraft->width * InvGuiScale);
+	if (maxTextWidth > screenWidth - 8.0f) {
+		maxTextWidth = screenWidth - 8.0f;
 	}
-	GuiMessage message;
-	message.message = string;
-	message.ticks = 0;
-	guiMessages.insert(guiMessages.begin(), message);
+	if (maxTextWidth < 30.0f) maxTextWidth = 30.0f;
 
-	// Keep a larger history so users can scroll through the full chat
-	const unsigned int MaxHistoryLines = 200;
+	std::vector<std::string> lines;
+	std::string currentLine = "";
+	std::string currentWord = "";
+
+	for (size_t i = 0; i < _string.length(); i++) {
+		char c = _string[i];
+		if (c == '\n') {
+			if (!currentWord.empty()) {
+				if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+					currentLine += " " + currentWord;
+				} else if (currentLine.empty()) {
+					currentLine = currentWord;
+				} else {
+					lines.push_back(currentLine);
+					currentLine = currentWord;
+				}
+				currentWord = "";
+			}
+			lines.push_back(currentLine);
+			currentLine = "";
+		} else if (c == ' ') {
+			if (!currentWord.empty()) {
+				if (!currentLine.empty()) {
+					if (getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+						currentLine += " " + currentWord;
+					} else {
+						lines.push_back(currentLine);
+						currentLine = currentWord;
+					}
+				} else {
+					currentLine = currentWord;
+				}
+				currentWord = "";
+			}
+		} else {
+			currentWord += c;
+			// Break very long words with no spaces character-by-character if they exceed line width
+			if (getColoredWidth(minecraft->font, currentWord) > maxTextWidth) {
+				std::string sub = currentWord.substr(0, currentWord.length() - 1);
+				if (!currentLine.empty()) {
+					lines.push_back(currentLine);
+					currentLine = "";
+				}
+				lines.push_back(sub);
+				currentWord = std::string(1, c);
+			}
+		}
+	}
+
+	if (!currentWord.empty()) {
+		if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+			currentLine += " " + currentWord;
+		} else if (currentLine.empty()) {
+			currentLine = currentWord;
+		} else {
+			lines.push_back(currentLine);
+			currentLine = currentWord;
+		}
+	}
+
+	if (!currentLine.empty()) {
+		lines.push_back(currentLine);
+	}
+
+	if (lines.empty()) {
+		lines.push_back(_string);
+	}
+
+	for (size_t l = 0; l < lines.size(); l++) {
+		GuiMessage message;
+		message.message = lines[l];
+		message.ticks = 0;
+		guiMessages.insert(guiMessages.begin(), message);
+	}
+
+	// Requirement: Keep the last 100 lines
+	const unsigned int MaxHistoryLines = 100;
 	while (guiMessages.size() > MaxHistoryLines) {
 		guiMessages.pop_back();
 	}
 
-	// If the user has scrolled up, keep their window fixed (new messages shift older ones down)
 	if (chatScrollOffset > 0) {
-		chatScrollOffset++;
+		chatScrollOffset += (int)lines.size();
 	}
 }
 
@@ -1094,6 +1162,28 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 
 			Gui::drawColoredString(font, message.message, x + 2.0f, y, 255);
 			renderedCount++;
+		}
+
+		// Java Edition style thin grey scroll bar along the right edge of the chat box when history > 20
+		int totalLines = (int)guiMessages.size();
+		if (totalLines > 20) {
+			float barX = x + boxWidth - 2.0f; // 2px wide at right edge
+			float barTop = baseY - 19 * 9 - 1.0f;
+			float barH = 20 * 9.0f;
+
+			fill(barX, barTop, barX + 2.0f, barTop + barH, 0x80303030); // Darker background track
+
+			float thumbH = std::max(6.0f, barH * (20.0f / (float)totalLines));
+			int maxScroll = totalLines - 20;
+			float scrollPct = (float)chatScrollOffset / (float)maxScroll;
+			if (scrollPct < 0.0f) scrollPct = 0.0f;
+			if (scrollPct > 1.0f) scrollPct = 1.0f;
+
+			float thumbY = (barTop + barH - thumbH) - scrollPct * (barH - thumbH);
+			bool isDragging = Mouse::isButtonDown(MouseAction::ACTION_LEFT);
+			uint32_t thumbColor = isDragging ? 0xffcccccc : 0xff808080;
+
+			fill(barX, thumbY, barX + 2.0f, thumbY + thumbH, thumbColor);
 		}
 	} else {
 		// Chat closed: bottom-left above hotbar, max 10 lines, 10s fadeout (fade out during last 1s / 20 ticks)
