@@ -150,7 +150,6 @@ void loop() {
 	}
 #endif
 }
-}
 
 int main(void) {
 	AppContext appContext;
