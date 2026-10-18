@@ -12,10 +12,12 @@ public:
 
 	virtual void init();
 	virtual void tick();
+	virtual bool handleBackEvent(bool isDown);
 	virtual void render(int xm, int ym, float a);
-	virtual void buttonClicked(Button* button);
+	virtual void buttonClicked(Button* button) {}
 	virtual void keyPressed(int key);
 	virtual void keyboardNewChar(char c);
+	virtual void charPressed(char c) { keyboardNewChar(c); }
 	virtual void mouseClicked(int x, int y, int buttonNum);
 	virtual void mouseReleased(int x, int y, int buttonNum);
 	virtual void mouseWheel(int dx, int dy, int xm, int ym);
@@ -23,10 +25,11 @@ public:
 	virtual bool renderGameBehind() const { return true; }
 
 private:
+	void execute();
+
 	std::string m_input;
 	int m_cursorPos;
 	int m_blinkTimer;
-	bool m_hasNativeDialog;
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDragging;

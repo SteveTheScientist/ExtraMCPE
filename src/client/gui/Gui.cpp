@@ -1061,40 +1061,70 @@ float Gui::getColoredWidth(Font* font, const std::string& text) {
 
 void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isChatting, Font* font ) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	if (isChatting) return; // ChatScreen handles rendering full chat history when typing
 
-	const int hotbarTop = screenHeight - 22;
-	const int baseY = hotbarTop - 4 - 9; // Bottom message starts just above hotbar
-	const unsigned int maxLines = 10;
-	const float x = 4.0f;
+	const float x = 2.0f;
+	const float screenWidth = (float)(minecraft->width * InvGuiScale);
 
-	unsigned int renderedCount = 0;
-	for (unsigned int i = 0; i < guiMessages.size() && renderedCount < maxLines; i++) {
-		GuiMessage& message = guiMessages.at(i);
-		if (message.ticks >= 200) continue; // Fade out after ~10 seconds (200 ticks at 20tps)
+	// Chat width: 320px, or screenWidth - 4px if smaller
+	float boxWidth = 320.0f;
+	if (boxWidth > screenWidth - 4.0f) {
+		boxWidth = screenWidth - 4.0f;
+	}
+	if (boxWidth < 40.0f) boxWidth = 40.0f;
 
-		float fade = 1.0f;
-		if (message.ticks > 160) {
-			fade = (200 - message.ticks) / 40.0f;
-			if (fade < 0.0f) fade = 0.0f;
-			if (fade > 1.0f) fade = 1.0f;
-		}
+	if (isChatting) {
+		// Chat open: up to 20 lines, no fading, dragging/scroll offset applied
+		const int inputBarY = screenHeight - 14;
+		const int baseY = inputBarY - 4 - 9; // Bottom message just above input bar
+		const unsigned int maxLines = 20;
 
-		int textAlpha = (int)(255.0f * fade);
-		int bgAlpha = (int)(128.0f * fade); // ~50% opacity background
+		int start = chatScrollOffset;
+		if (start < 0) start = 0;
 
-		if (textAlpha > 0) {
+		unsigned int renderedCount = 0;
+		for (unsigned int i = 0; i < maxLines; i++) {
+			unsigned int msgIdx = (unsigned int)start + i;
+			if (msgIdx >= guiMessages.size()) break;
+
+			GuiMessage& message = guiMessages.at(msgIdx);
 			const float y = (float)(baseY - renderedCount * 9);
-			std::string msg = message.message;
-			float msgW = getColoredWidth(font, msg) + 4.0f;
-			if (msgW < 120.0f) msgW = 120.0f;
-			if (msgW > MAX_MESSAGE_WIDTH) msgW = MAX_MESSAGE_WIDTH;
 
-			fill(x - 2.0f, y - 1.0f, x + msgW, y + 8.0f, (bgAlpha << 24));
+			fill(x, y - 1.0f, x + boxWidth, y + 8.0f, 0x80000000); // 50% opacity black background
 			glEnable(GL_BLEND);
 
-			Gui::drawColoredString(font, msg, x, y, textAlpha);
+			Gui::drawColoredString(font, message.message, x + 2.0f, y, 255);
 			renderedCount++;
+		}
+	} else {
+		// Chat closed: bottom-left above hotbar, max 10 lines, 10s fadeout (fade out during last 1s / 20 ticks)
+		const int hotbarTop = screenHeight - 22;
+		const int baseY = hotbarTop - 4 - 9; // Bottom message starts just above hotbar
+		const unsigned int maxLines = 10;
+
+		unsigned int renderedCount = 0;
+		for (unsigned int i = 0; i < guiMessages.size() && renderedCount < maxLines; i++) {
+			GuiMessage& message = guiMessages.at(i);
+			if (message.ticks >= 200) continue; // Fade out complete after 10s (200 ticks)
+
+			float fade = 1.0f;
+			if (message.ticks > 180) { // Fade out in last 1 second (20 ticks)
+				fade = (200 - message.ticks) / 20.0f;
+				if (fade < 0.0f) fade = 0.0f;
+				if (fade > 1.0f) fade = 1.0f;
+			}
+
+			int textAlpha = (int)(255.0f * fade);
+			int bgAlpha = (int)(128.0f * fade); // 50% opacity background
+
+			if (textAlpha > 0) {
+				const float y = (float)(baseY - renderedCount * 9);
+
+				fill(x, y - 1.0f, x + boxWidth, y + 8.0f, (bgAlpha << 24));
+				glEnable(GL_BLEND);
+
+				Gui::drawColoredString(font, message.message, x + 2.0f, y, textAlpha);
+				renderedCount++;
+			}
 		}
 	}
 }
