@@ -40,6 +40,7 @@ public:
 	void handleClick(int button, int x, int y);
 	void handleKeyPressed( int key );
 	void scrollChat(int delta);
+	int getChatScrollOffset() const { return chatScrollOffset; }
 
 	void tick();
 	void render(float a, bool mouseFree, int xMouse, int yMouse);

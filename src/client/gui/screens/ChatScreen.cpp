@@ -19,6 +19,7 @@ ChatScreen::ChatScreen()
 	  m_scrollY(0.0f),
 	  m_maxScroll(0.0f),
 	  m_isDragging(false),
+	  m_isBarDragging(false),
 	  m_dragStartY(0),
 	  m_dragStartScrollY(0.0f)
 {
@@ -32,41 +33,56 @@ void ChatScreen::init() {
 	m_cursorPos = 0;
 	m_blinkTimer = 0;
 	m_scrollY = 0.0f;
+	m_isDragging = false;
+	m_isBarDragging = false;
 }
 
 void ChatScreen::tick() {
 	Screen::tick();
 	m_blinkTimer++;
 
-	if (m_isDragging && Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
-		int ym = Mouse::getY();
-		int xm = Mouse::getX();
-		toGUICoordinate(xm, ym);
+	int ym = Mouse::getY();
+	int xm = Mouse::getX();
+	toGUICoordinate(xm, ym);
 
-		int deltaY = ym - m_dragStartY;
-		int totalLines = (int)minecraft->gui.getGuiMessages().size();
+	int totalLines = (int)minecraft->gui.getGuiMessages().size();
 
-		float configuredHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
-		if (configuredHeightPx < 20.0f) configuredHeightPx = 20.0f;
-		if (configuredHeightPx > 180.0f) configuredHeightPx = 180.0f;
+	float configuredHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+	if (configuredHeightPx < 20.0f) configuredHeightPx = 20.0f;
+	if (configuredHeightPx > 180.0f) configuredHeightPx = 180.0f;
 
-		float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
-		float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
-		textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
-		float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
+	float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
+	float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
+	textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
+	float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
 
-		int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
-		int maxScroll = totalLines - maxLines;
+	int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
+	int maxScroll = totalLines - maxLines;
 
-		if (maxScroll > 0) {
+	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+		if (m_isBarDragging && maxScroll > 0) {
+			const float inputBarY = (float)height - 14.0f;
+			const float baseY = inputBarY - 4.0f - lineH;
+			float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
+			float barH = maxLines * lineH;
+
+			// Moving finger up shows older messages (increases scroll/offset), moving down shows newer messages (decreases scroll/offset)
+			float relY = (float)(ym - barTop) / barH;
+			relY = Mth::clamp(relY, 0.0f, 1.0f);
+			// Top of bar = oldest messages (maxScroll), bottom of bar = newest messages (0)
+			int targetScroll = (int)((1.0f - relY) * maxScroll + 0.5f);
+			minecraft->gui.scrollChat(targetScroll - minecraft->gui.getChatScrollOffset());
+		} else if (m_isDragging && maxScroll > 0) {
+			int deltaY = ym - m_dragStartY;
 			int linesChange = (int)(deltaY / std::max(1.0f, lineH));
 			if (linesChange != 0) {
 				minecraft->gui.scrollChat(-linesChange);
 				m_dragStartY = ym;
 			}
 		}
-	} else if (!Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+	} else {
 		m_isDragging = false;
+		m_isBarDragging = false;
 	}
 }
 
@@ -188,7 +204,43 @@ void ChatScreen::keyboardNewChar(char c) {
 
 void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 	if (buttonNum == MouseAction::ACTION_LEFT && y < height - 14) {
-		// Tapping anywhere on the chat box area does NOT close chat, but initiates dragging
+		// Calculate chat box and scroll bar bounds
+		float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
+		configuredWidth = Mth::clamp(configuredWidth, 40.0f, 320.0f);
+		float boxWidth = std::min(configuredWidth, (float)width - 4.0f);
+
+		float configuredHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+		configuredHeightPx = Mth::clamp(configuredHeightPx, 20.0f, 180.0f);
+
+		float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
+		float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
+		textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
+		float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
+
+		int maxLines = std::max(1, (int)(configuredHeightPx / lineH));
+
+		const float inputBarY = (float)height - 14.0f;
+		const float baseY = inputBarY - 4.0f - lineH;
+		float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
+		float barH = maxLines * lineH;
+		float barX = 2.0f + boxWidth - 2.0f;
+
+		// Scrollbar touch hit region: full height of chat box and at least 24px wide (12px on each side of bar)
+		if (x >= barX - 12.0f && x <= barX + 12.0f && y >= barTop - 4.0f && y <= barTop + barH + 4.0f) {
+			m_isBarDragging = true;
+			m_dragStartY = y;
+			int totalLines = (int)minecraft->gui.getGuiMessages().size();
+			int maxScroll = totalLines - maxLines;
+			if (maxScroll > 0) {
+				float relY = (float)(y - barTop) / barH;
+				relY = Mth::clamp(relY, 0.0f, 1.0f);
+				int targetScroll = (int)((1.0f - relY) * maxScroll + 0.5f);
+				minecraft->gui.scrollChat(targetScroll - minecraft->gui.getChatScrollOffset());
+			}
+			return;
+		}
+
+		// Touching/dragging inside chat box
 		m_isDragging = true;
 		m_dragStartY = y;
 		m_dragStartScrollY = m_scrollY;
@@ -198,9 +250,8 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 }
 
 void ChatScreen::mouseReleased(int x, int y, int buttonNum) {
-	if (m_isDragging) {
-		m_isDragging = false;
-	}
+	m_isDragging = false;
+	m_isBarDragging = false;
 	Screen::mouseReleased(x, y, buttonNum);
 }
 

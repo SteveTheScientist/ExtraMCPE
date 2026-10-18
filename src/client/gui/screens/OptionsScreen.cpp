@@ -72,6 +72,16 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
             }
             return;
         }
+        if (optionId == OPTIONS_CHAT_WIDTH || optionId == OPTIONS_CHAT_FOCUSED_HEIGHT || optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT) {
+            int px = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(px) + "px";
+            return;
+        }
+        if (optionId == OPTIONS_CHAT_TEXT_OPACITY || optionId == OPTIONS_CHAT_BG_OPACITY || optionId == OPTIONS_CHAT_TEXT_SIZE || optionId == OPTIONS_CHAT_LINE_SPACING) {
+            int pct = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(pct) + "%";
+            return;
+        }
         int pct = (int)(val * 100.0f + 0.5f);
         if (optionId == OPTIONS_MUSIC_VOLUME || optionId == OPTIONS_SOUND_VOLUME) {
             if (pct <= 0) {

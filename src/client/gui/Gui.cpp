@@ -1255,7 +1255,8 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 		if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
 		if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
 
-		const float hotbarTop = (float)screenHeight - 22.0f;
+		// Raised position: sit 32px from bottom so lowest chat line is fully above hotbar and heart/health row like Java Edition
+		const float hotbarTop = (float)screenHeight - 32.0f;
 		const float baseY = hotbarTop - 4.0f - lineH;
 		const unsigned int maxLines = std::max(1u, (unsigned int)(unfocusedHeightPx / lineH));
 

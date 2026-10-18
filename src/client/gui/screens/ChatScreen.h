@@ -33,6 +33,7 @@ private:
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDragging;
+	bool m_isBarDragging;
 	int m_dragStartY;
 	float m_dragStartScrollY;
 };
