@@ -77,9 +77,31 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
             msg = baseName + ": " + to_str(px) + "px";
             return;
         }
-        if (optionId == OPTIONS_CHAT_TEXT_OPACITY || optionId == OPTIONS_CHAT_BG_OPACITY || optionId == OPTIONS_CHAT_TEXT_SIZE || optionId == OPTIONS_CHAT_LINE_SPACING) {
+        if (optionId == OPTIONS_CHAT_TEXT_OPACITY || optionId == OPTIONS_CHAT_BG_OPACITY || optionId == OPTIONS_CHAT_TEXT_SIZE || optionId == OPTIONS_CHAT_LINE_SPACING || optionId == OPTIONS_FOG_START_PCT || optionId == OPTIONS_FOG_END_PCT) {
             int pct = (int)(val + 0.5f);
             msg = baseName + ": " + to_str(pct) + "%";
+            return;
+        }
+        if (optionId == OPTIONS_CLOUD_FADE || optionId == OPTIONS_CLOUD_OPACITY) {
+            int pct = (int)(val * 100.0f + 0.5f);
+            msg = baseName + ": " + to_str(pct) + "%";
+            return;
+        }
+        if (optionId == OPTIONS_CLOUD_THICKNESS) {
+            std::ostringstream ss;
+            ss.precision(1);
+            ss << std::fixed << baseName << ": " << val << "x";
+            msg = ss.str();
+            return;
+        }
+        if (optionId == OPTIONS_CLOUD_Y_LEVEL) {
+            int yLvl = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(yLvl) + " blocks";
+            return;
+        }
+        if (optionId == OPTIONS_FOG_TRANSITION_SPEED) {
+            int speed = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(speed);
             return;
         }
         int pct = (int)(val * 100.0f + 0.5f);
