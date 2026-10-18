@@ -27,7 +27,7 @@ OptionBool autoJump("autoJump", true);
 OptionFloat flySpeed("flySpeed", 1.f);
 OptionFloat cameraSpeed("cameraSpeed", 1.f);
 
-OptionInt guiScale("guiScale", 0, 0, 5);
+OptionInt guiScale("guiScale", 0, 0, 1);
 
 OptionString skin("skin", "Default");
 

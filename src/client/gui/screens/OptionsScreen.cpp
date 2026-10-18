@@ -89,8 +89,7 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         int scale = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
         switch (scale) {
             case 0: msg = "GUI Scale: Auto"; break;
-            case 1: msg = "GUI Scale: Normal"; break;
-            default: msg = "GUI Scale: Large"; break;
+            default: msg = "GUI Scale: Normal"; break;
         }
         return;
     }

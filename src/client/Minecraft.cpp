@@ -127,7 +127,7 @@ int Minecraft::customDebugId = Minecraft::CDI_NONE;
 
 bool Minecraft::useAmbientOcclusion = false;
 
-Minecraft::Minecraft() :	
+Minecraft::Minecraft() :
 	level(NULL),
 	player(NULL),
 	cameraTargetPlayer(NULL),
@@ -289,7 +289,7 @@ void Minecraft::setLevel(Level* level, const std::string& message /* ="" */, Loc
 		this->level = level;
 		// So uhhh
 		std::string op = options.getStringValue(OPTIONS_USERNAME);
-    	std::transform(op.begin(), op.end(), op.begin(), ::tolower);
+	std::transform(op.begin(), op.end(), op.begin(), ::tolower);
 
 		level->ops.emplace(op);
 		_hasSignaledGeneratingLevelFinished = false;
@@ -571,7 +571,7 @@ void Minecraft::tick(int nTick, int maxTick) {
 			level->tickEntities();
 			level->tick();
 #ifndef STANDALONE_SERVER
-			TIMER_POP_PUSH("animateTick");	
+			TIMER_POP_PUSH("animateTick");
 			if (player) {
 				level->animateTick(Mth::floor(player->x), Mth::floor(player->y), Mth::floor(player->z));
 			}
@@ -744,7 +744,7 @@ void Minecraft::tickInput() {
 			if (key == Keyboard::KEY_F3) {
 				options.toggle(OPTIONS_RENDER_DEBUG);
 			}
-			
+
 			// TODO: replace it with client /give command :face_vomiting:
 			// if (key == Keyboard::KEY_F4) {
 			// 	player->inventory->add(new ItemInstance(Tile::redBrick));
@@ -1246,16 +1246,15 @@ void Minecraft::setSize(int w, int h) {
 
 
 		int guiScale = options.getIntValue(OPTIONS_GUI_SCALE);
+		if (guiScale > 1) {
+			options.set(OPTIONS_GUI_SCALE, 1);
+			guiScale = 1;
+		}
 
 		// determine gui scale, optionally overriding auto
 		if (guiScale != 0) {
-			// manual selection: 1->small, 2->medium, 3->large, 4->larger, 5->largest
 			switch (guiScale) {
 			case 1: Gui::GuiScale = 2.0f; break;
-			case 2: Gui::GuiScale = 3.0f; break;
-			case 3: Gui::GuiScale = 4.0f; break;
-			case 4: Gui::GuiScale = 5.0f; break;
-			case 5: Gui::GuiScale = 6.0f; break;
 			default: Gui::GuiScale = 1.0f; break; // auto
 			}
 		} else {
@@ -1339,7 +1338,7 @@ void Minecraft::_reloadInput() {
 	if (useTouchHolder) {
 		inputHolder = new TouchInputHolder(this, &options);
 	} else {
-#if defined(ANDROID) || defined(__APPLE__) 
+#if defined(ANDROID) || defined(__APPLE__)
 		inputHolder = new CustomInputHolder(
 			new XperiaPlayInput(&options),
 			new ControllerTurnInput(2, ControllerTurnInput::MODE_DELTA),
@@ -1389,7 +1388,7 @@ bool Minecraft::joinMultiplayer( const PingedCompatibleServer& server )
 }
 
 bool Minecraft::joinMultiplayerFromString( const std::string& server )
-{	
+{
 	std::string ip = "";
 	std::string port = "19132";
 
@@ -1401,7 +1400,7 @@ bool Minecraft::joinMultiplayerFromString( const std::string& server )
 	} else {
 		ip = server;
 	}
-	
+
 	if (isLookingForMultiplayer && netCallback) {
 		isLookingForMultiplayer = false;
 		int portNum = atoi(port.c_str());
@@ -1715,7 +1714,7 @@ void Minecraft::optionUpdated(OptionId option, int value ) {
 void Minecraft::addMessage(const std::string& msg) {
 #ifndef STANDALONE_SERVER
 	gui.addMessage(msg);
-#else 
+#else
 	LOGI("%s \n", msg.c_str());
 #endif
 }
