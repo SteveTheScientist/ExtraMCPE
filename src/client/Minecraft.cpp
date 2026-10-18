@@ -1246,16 +1246,17 @@ void Minecraft::setSize(int w, int h) {
 
 
 		int guiScale = options.getIntValue(OPTIONS_GUI_SCALE);
-		if (guiScale > 1) {
-			options.set(OPTIONS_GUI_SCALE, 1);
-			guiScale = 1;
+		if (guiScale < 0 || guiScale > 3) {
+			guiScale = 0;
 		}
 
 		// determine gui scale, optionally overriding auto
 		if (guiScale != 0) {
 			switch (guiScale) {
 			case 1: Gui::GuiScale = 2.0f; break;
-			default: Gui::GuiScale = 1.0f; break; // auto
+			case 2: Gui::GuiScale = 3.0f; break;
+			case 3: Gui::GuiScale = 4.0f; break;
+			default: Gui::GuiScale = 1.0f; break;
 			}
 		} else {
 			// auto compute from resolution

@@ -63,6 +63,15 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
 
     if (controlType == CONTROL_SLIDER) {
         float val = minecraft->options.getProgressValue(optionId);
+        if (optionId == OPTIONS_LIMIT_FRAMERATE) {
+            int fps = (int)(std::round(val / 10.0f) * 10.0f);
+            if (fps >= 260) {
+                msg = "Max Framerate: Unlimited";
+            } else {
+                msg = "Max Framerate: " + to_str(fps) + " fps";
+            }
+            return;
+        }
         int pct = (int)(val * 100.0f + 0.5f);
         if (optionId == OPTIONS_MUSIC_VOLUME || optionId == OPTIONS_SOUND_VOLUME) {
             if (pct <= 0) {
@@ -89,6 +98,9 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         int scale = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
         switch (scale) {
             case 0: msg = "GUI Scale: Auto"; break;
+            case 1: msg = "GUI Scale: Normal"; break;
+            case 2: msg = "GUI Scale: Bigger"; break;
+            case 3: msg = "GUI Scale: Biggest"; break;
             default: msg = "GUI Scale: Normal"; break;
         }
         return;
@@ -127,15 +139,16 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-    if (optionId == OPTIONS_LIMIT_FRAMERATE) {
-        bool limit = minecraft->options.getBooleanValue(OPTIONS_LIMIT_FRAMERATE);
-        msg = limit ? "Max Framerate: 60 FPS" : "Max Framerate: Unlimited";
-        return;
-    }
 
     if (optionId == OPTIONS_FOG_TYPE) {
         int fog = minecraft->options.getIntValue(OPTIONS_FOG_TYPE);
         msg = (fog == 0) ? "Fog Type: Fancy" : "Fog Type: Fast";
+        return;
+    }
+
+    if (optionId == OPTIONS_RENDER_DEBUG) {
+        bool dbg = minecraft->options.getBooleanValue(OPTIONS_RENDER_DEBUG);
+        msg = std::string("Debug Menu: ") + (dbg ? "ON" : "OFF");
         return;
     }
 
@@ -255,7 +268,7 @@ void OptionControl::toggleValue(Minecraft* minecraft) {
         minecraft->options.set(OPTIONS_VIEW_DISTANCE, (cur + 1) % 4);
     } else if (optionId == OPTIONS_GUI_SCALE) {
         int cur = minecraft->options.getIntValue(OPTIONS_GUI_SCALE);
-        minecraft->options.set(OPTIONS_GUI_SCALE, (cur + 1) % 3);
+        minecraft->options.set(OPTIONS_GUI_SCALE, (cur + 1) % 4);
     } else if (optionId == OPTIONS_WINDOW_SCALE) {
         int cur = minecraft->options.getIntValue(OPTIONS_WINDOW_SCALE);
         minecraft->options.set(OPTIONS_WINDOW_SCALE, (cur + 1) % 3);
@@ -282,6 +295,9 @@ void OptionControl::updateSliderValue(Minecraft* minecraft, int mx) {
     float pct = (float)(mx - x) / (float)width;
     pct = Mth::clamp(pct, 0.0f, 1.0f);
     float newVal = minVal + pct * (maxVal - minVal);
+    if (optionId == OPTIONS_LIMIT_FRAMERATE) {
+        newVal = std::round(newVal / 10.0f) * 10.0f;
+    }
     minecraft->options.set(optionId, newVal);
     updateLabel(minecraft);
 }
@@ -977,7 +993,7 @@ void GraphicsOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_DISTANCE, "Render Distance"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FANCY_GRAPHICS, "Graphics"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIEW_BOBBING, "View Bobbing"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_LIMIT_FRAMERATE, "Max Framerate"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_LIMIT_FRAMERATE, "Max Framerate", false, 10.0f, 260.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VSYNC, "VSync"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_AMBIENT_OCCLUSION, "Smooth Lighting"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
@@ -1224,6 +1240,7 @@ void InterfaceOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_WINDOW_SCALE, "Window Scale"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_MENU_STYLE, "Menu Style"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_JAVA_HUD, "Java HUD"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_RENDER_DEBUG, "Debug Menu"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DEBUG_STYLE, "Debug HUD Style"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BLOCK_OUTLINE, "Block Outline"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SERVER_VISIBLE, "Local Server Visible"));

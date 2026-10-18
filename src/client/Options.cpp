@@ -27,7 +27,7 @@ OptionBool autoJump("autoJump", true);
 OptionFloat flySpeed("flySpeed", 1.f);
 OptionFloat cameraSpeed("cameraSpeed", 1.f);
 
-OptionInt guiScale("guiScale", 0, 0, 1);
+OptionInt guiScale("guiScale", 0, 0, 3);
 
 OptionString skin("skin", "Default");
 
@@ -50,7 +50,7 @@ OptionBool invertYMouse("invertMouse", false);
 OptionInt viewDistance("renderDistance", 2, 0, 4);
 
 OptionBool anaglyph3d("anaglyph3d", false);
-OptionBool limitFramerate("limitFramerate", false);
+OptionFloat limitFramerate("limitFramerate", 60.0f, 10.0f, 260.0f);
 OptionBool vsync("vsync", true);
 OptionBool fancyGraphics("fancyGraphics", true);
 OptionBool viewBobbing("viewBobbing", true);

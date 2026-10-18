@@ -124,10 +124,11 @@ void loop() {
 	glfwPollEvents();
 
 	glfwSwapInterval(((MAIN_CLASS*)g_app)->options.getBooleanValue(OPTIONS_VSYNC) ? 1 : 0);
-	if(((MAIN_CLASS*)g_app)->options.getBooleanValue(OPTIONS_LIMIT_FRAMERATE)) {
+	float maxFps = ((MAIN_CLASS*)g_app)->options.getProgressValue(OPTIONS_LIMIT_FRAMERATE);
+	if (maxFps < 260.0f && maxFps >= 10.0f) {
 		auto frameEnd = clock::now();
 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
-		auto target = std::chrono::microseconds(33333); // ~30 fps
+		auto target = std::chrono::microseconds((long long)(1000000.0f / maxFps));
 		if(elapsed < target)
 			std::this_thread::sleep_for(target - elapsed);
 	}

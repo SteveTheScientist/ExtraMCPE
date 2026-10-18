@@ -30,7 +30,10 @@ void OptionsItem::render( Minecraft* minecraft, int xm, int ym ) {
 		std::string scaleText;
 		switch (value) {
 		case 0: scaleText = I18n::get("options.guiScale.auto"); break;
-		default: scaleText = I18n::get("options.guiScale.small"); break;
+		case 1: scaleText = "Normal"; break;
+		case 2: scaleText = "Bigger"; break;
+		case 3: scaleText = "Biggest"; break;
+		default: scaleText = "Normal"; break;
 		}
 		text += ": " + scaleText;
 	}
