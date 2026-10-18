@@ -66,10 +66,8 @@ void ChatScreen::tick() {
 			float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
 			float barH = maxLines * lineH;
 
-			// Moving finger up shows older messages (increases scroll/offset), moving down shows newer messages (decreases scroll/offset)
 			float relY = (float)(ym - barTop) / barH;
 			relY = Mth::clamp(relY, 0.0f, 1.0f);
-			// Top of bar = oldest messages (maxScroll), bottom of bar = newest messages (0)
 			int targetScroll = (int)((1.0f - relY) * maxScroll + 0.5f);
 			minecraft->gui.scrollChat(targetScroll - minecraft->gui.getChatScrollOffset());
 		} else if (m_isDragging && maxScroll > 0) {
@@ -93,29 +91,108 @@ bool ChatScreen::handleBackEvent(bool isDown) {
 	return true;
 }
 
+// Helper function to wrap typed input string into lines matching max width
+static void wrapInputText(Font* font, const std::string& input, float maxW, std::vector<std::string>& outLines) {
+	outLines.clear();
+	if (input.empty()) {
+		outLines.push_back("");
+		return;
+	}
+
+	std::string currentLine = "";
+	std::string currentWord = "";
+
+	for (size_t i = 0; i < input.length(); i++) {
+		char c = input[i];
+		if (c == ' ') {
+			if (!currentWord.empty()) {
+				if (!currentLine.empty()) {
+					if (Gui::getColoredWidth(font, currentLine + " " + currentWord) <= maxW) {
+						currentLine += " " + currentWord;
+					} else {
+						outLines.push_back(currentLine);
+						currentLine = currentWord;
+					}
+				} else {
+					currentLine = currentWord;
+				}
+				currentWord = "";
+			}
+		} else {
+			currentWord += c;
+			std::string testLine = currentLine.empty() ? currentWord : (currentLine + " " + currentWord);
+			if (Gui::getColoredWidth(font, testLine) > maxW) {
+				if (!currentLine.empty()) {
+					std::string prefix = currentLine + " ";
+					size_t k = 0;
+					while (k < currentWord.length() && Gui::getColoredWidth(font, prefix + currentWord.substr(0, k + 1)) <= maxW) {
+						k++;
+					}
+					if (k > 0) {
+						outLines.push_back(prefix + currentWord.substr(0, k));
+						currentLine = "";
+						currentWord = currentWord.substr(k);
+					} else {
+						outLines.push_back(currentLine);
+						currentLine = "";
+					}
+				}
+				while (Gui::getColoredWidth(font, currentWord) > maxW) {
+					size_t k = 1;
+					while (k < currentWord.length() && Gui::getColoredWidth(font, currentWord.substr(0, k + 1)) <= maxW) {
+						k++;
+					}
+					outLines.push_back(currentWord.substr(0, k));
+					currentWord = currentWord.substr(k);
+				}
+			}
+		}
+	}
+
+	if (!currentWord.empty()) {
+		if (!currentLine.empty() && Gui::getColoredWidth(font, currentLine + " " + currentWord) <= maxW) {
+			currentLine += " " + currentWord;
+		} else if (currentLine.empty()) {
+			currentLine = currentWord;
+		} else {
+			outLines.push_back(currentLine);
+			currentLine = currentWord;
+		}
+	}
+
+	if (!currentLine.empty()) {
+		outLines.push_back(currentLine);
+	}
+
+	if (outLines.empty()) {
+		outLines.push_back("");
+	}
+}
+
 void ChatScreen::render(int xm, int ym, float a) {
-	// Java 1.8 style input bar at bottom:
-	// Black 50% opacity bar with no border, 12px tall, 2px from bottom and sides (y = height - 14, x = 2, w = width - 4)
+	Font* font = minecraft->font;
+
 	int barX = 2;
-	int barY = height - 14;
 	int barW = width - 4;
-	int barH = 12;
+	float maxTextW = (float)(barW - 8);
+
+	std::string displayedText = m_input;
+	if ((m_blinkTimer / 10) % 2 == 0) {
+		displayedText += "_";
+	}
+
+	std::vector<std::string> inputLines;
+	wrapInputText(font, displayedText, maxTextW, inputLines);
+
+	int lineCount = (int)inputLines.size();
+	int visibleLines = std::min(lineCount, 4); // Grow up to 4 lines
+	int barH = visibleLines * 12;
+	int barY = height - 2 - barH;
 
 	fill(barX, barY, barX + barW, barY + barH, 0x80000000); // 50% opacity black
 
-	std::string text = m_input;
-	if ((m_blinkTimer / 10) % 2 == 0) {
-		text += "_";
-	}
-
-	Font* font = minecraft->font;
-	float textW = Gui::getColoredWidth(font, text);
-	float maxVisibleW = (float)(barW - 8); // 4px padding on each side inside bar
-
-	float textX = (float)(barX + 4);
-	if (textW > maxVisibleW) {
-		textX = (float)(barX + 4) - (textW - maxVisibleW);
-	}
+	// Scroll lines so the cursor line stays visible at the bottom
+	int startLineIdx = std::max(0, lineCount - 4);
 
 	glEnable(GL_SCISSOR_TEST);
 	int scissorX = (int)((barX + 2) * Gui::GuiScale);
@@ -130,8 +207,11 @@ void ChatScreen::render(int xm, int ym, float a) {
 
 	glScissor(scissorX, physY, scissorW, scissorH);
 
-	// White text with shadow
-	font->drawShadow(text, textX, (float)(barY + 2), 0xffffffff);
+	for (int i = 0; i < visibleLines && (startLineIdx + i) < lineCount; i++) {
+		const std::string& lineStr = inputLines[startLineIdx + i];
+		float lineY = (float)(barY + 2 + i * 12);
+		font->drawShadow(lineStr, (float)(barX + 4), lineY, 0xffffffff);
+	}
 
 	glDisable(GL_SCISSOR_TEST);
 
@@ -203,7 +283,7 @@ void ChatScreen::keyboardNewChar(char c) {
 }
 
 void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
-	if (buttonNum == MouseAction::ACTION_LEFT && y < height - 14) {
+	if (buttonNum == MouseAction::ACTION_LEFT) {
 		// Calculate chat box and scroll bar bounds
 		float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
 		configuredWidth = Mth::clamp(configuredWidth, 40.0f, 320.0f);
@@ -240,11 +320,13 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 			return;
 		}
 
-		// Touching/dragging inside chat box
-		m_isDragging = true;
-		m_dragStartY = y;
-		m_dragStartScrollY = m_scrollY;
-		return;
+		if (y < height - 14) {
+			// Touching/dragging inside chat box
+			m_isDragging = true;
+			m_dragStartY = y;
+			m_dragStartScrollY = m_scrollY;
+			return;
+		}
 	}
 	Screen::mouseClicked(x, y, buttonNum);
 }
