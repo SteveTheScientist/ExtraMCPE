@@ -41,6 +41,7 @@ public:
 	void setupClearColor(float a);
 	float getFov(float a, bool applyEffects);
 private:
+	void updateEnhancedFog(float a);
 	void setupFog(int i);
 
 	void tickFov();

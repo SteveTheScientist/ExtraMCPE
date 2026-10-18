@@ -41,11 +41,10 @@ public:
 
     bool isInitialized() const { return m_initialized; }
     Color3f getCurrentColor() const { return m_currentColor; }
-    Color3f getTargetColor() const { return m_targetColor; }
 
 private:
+    Color3f m_currentBaseColor;
     Color3f m_currentColor;
-    Color3f m_targetColor;
     Color3f m_cachedDayColor;
     Color3f m_cachedNightColor;
     float m_undergroundFactor;

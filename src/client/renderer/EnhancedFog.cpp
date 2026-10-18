@@ -7,8 +7,8 @@
 #include <algorithm>
 
 EnhancedFog::EnhancedFog()
-    : m_currentColor(0.8f, 0.85f, 0.9f),
-      m_targetColor(0.8f, 0.85f, 0.9f),
+    : m_currentBaseColor(0.8f, 0.85f, 0.9f),
+      m_currentColor(0.8f, 0.85f, 0.9f),
       m_cachedDayColor(0.8f, 0.85f, 0.9f),
       m_cachedNightColor(0.15f, 0.18f, 0.35f),
       m_undergroundFactor(0.0f),
@@ -153,11 +153,11 @@ void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float 
     float camY = cameraEntity->y;
     float camZ = cameraEntity->z;
 
+    daylight = Mth::clamp(daylight, 0.0f, 1.0f);
+
     if (!m_initialized) {
         sampleBiomeGridDayNight(level, camX, camZ, m_cachedDayColor, m_cachedNightColor);
-        daylight = Mth::clamp(daylight, 0.0f, 1.0f);
-        m_targetColor = m_cachedDayColor * daylight + m_cachedNightColor * (1.0f - daylight);
-        m_currentColor = m_targetColor;
+        m_currentBaseColor = m_cachedDayColor * daylight + m_cachedNightColor * (1.0f - daylight);
         m_sampleTimer = 0;
         m_initialized = true;
     } else {
@@ -167,13 +167,11 @@ void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float 
             sampleBiomeGridDayNight(level, camX, camZ, m_cachedDayColor, m_cachedNightColor);
         }
 
-        daylight = Mth::clamp(daylight, 0.0f, 1.0f);
-        m_targetColor = m_cachedDayColor * daylight + m_cachedNightColor * (1.0f - daylight);
-
-        m_currentColor = updateSmoothing(m_currentColor, m_targetColor, dt, settings.transitionSpeed);
+        Color3f targetBase = m_cachedDayColor * daylight + m_cachedNightColor * (1.0f - daylight);
+        m_currentBaseColor = updateSmoothing(m_currentBaseColor, targetBase, dt, settings.transitionSpeed);
     }
 
-    Color3f colWithTint = applySunsetTint(m_currentColor, td, settings.sunsetTint, isBetaSky);
+    Color3f colWithTint = applySunsetTint(m_currentBaseColor, td, settings.sunsetTint, isBetaSky);
     Color3f colWithAlt = applyHighAltitudeBlend(colWithTint, skyColLookUp, camY, settings.highAltitudeBlend, isBetaSky);
 
     float targetUgFactor = calculateUndergroundFactor(camY, surfaceY, canSeeSky, settings.undergroundFog, isBetaSky);
@@ -186,7 +184,6 @@ void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float 
         m_undergroundFactor = targetUgFactor;
     }
 
-    // Darken fog color toward near-black (e.g. 0.02, 0.02, 0.03) based on underground factor
     Color3f nearBlack(0.02f, 0.02f, 0.03f);
     m_currentColor = colWithAlt * (1.0f - m_undergroundFactor * 0.90f) + nearBlack * (m_undergroundFactor * 0.90f);
 }
