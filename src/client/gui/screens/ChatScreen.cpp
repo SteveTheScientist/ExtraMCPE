@@ -269,14 +269,12 @@ void ChatScreen::keyPressed(int key) {
 		return;
 	}
 
-	if (key == Keyboard::KEY_BACKSPACE) {
+	if (key == Keyboard::KEY_BACKSPACE || key == 127) {
 		if (!m_input.empty()) {
 			m_input.pop_back();
 		}
 		return;
 	}
-
-	Screen::keyPressed(key);
 }
 
 void ChatScreen::keyboardNewChar(char c) {

@@ -46,6 +46,7 @@ public:
 	virtual bool isErrorScreen();
 	virtual bool isInGameScreen();
     virtual bool closeOnPlayerHurt();
+	bool hasFocusedTextBox() const;
 
     virtual void confirmResult(bool result, int id) {}
 	virtual void lostFocus();

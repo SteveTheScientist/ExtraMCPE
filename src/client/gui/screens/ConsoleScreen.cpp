@@ -41,11 +41,9 @@ void ConsoleScreen::keyPressed(int eventKey)
         minecraft->setScreen(NULL);
     } else if (eventKey == Keyboard::KEY_RETURN) {
         execute();
-    } else if (eventKey == Keyboard::KEY_BACKSPACE) {
+    } else if (eventKey == Keyboard::KEY_BACKSPACE || eventKey == 127) {
         if (!_input.empty())
             _input.erase(_input.size() - 1, 1);
-    } else {
-        Screen::keyPressed(eventKey);
     }
 }
 

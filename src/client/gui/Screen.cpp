@@ -186,8 +186,37 @@ bool Screen::closeOnPlayerHurt() {
     return false;
 }
 
+bool Screen::hasFocusedTextBox() const {
+	for (const auto& tb : textBoxes) {
+		if (tb && tb->focused) return true;
+	}
+	return false;
+}
+
 void Screen::keyPressed( int eventKey )
 {
+	if (hasFocusedTextBox()) {
+		if (eventKey == Keyboard::KEY_ESCAPE) {
+			minecraft->setScreen(NULL);
+			return;
+		}
+
+		if (eventKey == Keyboard::KEY_RETURN) {
+			if (!tabButtons.empty() && tabButtons[0] && tabButtons[0]->active) {
+				minecraft->soundEngine->playUI("random.click", 1, 1);
+				buttonClicked(tabButtons[0]);
+				return;
+			}
+		}
+
+		for (auto& textbox : textBoxes) {
+			if (textbox && textbox->focused) {
+				textbox->keyPressed(minecraft, eventKey);
+			}
+		}
+		return;
+	}
+
 	if (eventKey == Keyboard::KEY_ESCAPE) {
 		minecraft->setScreen(NULL);
 		//minecraft->grabMouse();

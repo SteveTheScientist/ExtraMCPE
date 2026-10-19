@@ -57,8 +57,10 @@ void TextBox::charPressed(Minecraft* minecraft, char c)  {
 }
 
 void TextBox::keyPressed(Minecraft* minecraft, int key) {
-    if (focused && key == Keyboard::KEY_BACKSPACE && !text.empty()) {
-        text.pop_back();
+    if (focused) {
+        if ((key == Keyboard::KEY_BACKSPACE || key == 127) && !text.empty()) {
+            text.pop_back();
+        }
     }
 }
 
