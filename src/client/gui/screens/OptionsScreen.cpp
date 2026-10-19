@@ -347,21 +347,12 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-    if (optionId == OPTIONS_BETA_SKY) {
-        bool tallOn = minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS);
-        active = !tallOn;
-    }
-
     bool state = minecraft->options.getBooleanValue(optionId);
     msg = baseName + (state ? ": ON" : ": OFF");
 }
 
 void OptionControl::toggleValue(Minecraft* minecraft) {
     if (controlType == CONTROL_ACTION || controlType == CONTROL_KEY) return;
-
-    if (optionId == OPTIONS_BETA_SKY && minecraft->options.getBooleanValue(OPTIONS_TALL_CLOUDS)) {
-        return;
-    }
 
     if (optionId == OPTIONS_VIEW_DISTANCE) {
         int cur = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);
@@ -1111,7 +1102,6 @@ void GraphicsOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SMOOTH_CAMERA, "Smooth Camera"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ANAGLYPH_3D, "3D Anaglyph"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_NORMAL_LIGHTING, "Classic Lighting"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BETA_SKY, "Beta Sky"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BEAUTIFUL_SKY, "Beautiful Skies"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_VIGNETTE, "Vignette"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_FOLIAGE_TINT, "Foliage Tinting"));

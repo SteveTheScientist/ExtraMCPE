@@ -100,8 +100,8 @@ void EnhancedFog::calculateFogDistances(float renderDistance, float startPct, fl
     outEnd = renderDistance * (endPct / 100.0f);
 }
 
-Color3f EnhancedFog::applySunsetTint(Color3f fogCol, float td, bool enabled, bool isBetaSky) {
-    if (!enabled || isBetaSky) {
+Color3f EnhancedFog::applySunsetTint(Color3f fogCol, float td, bool enabled) {
+    if (!enabled) {
         return fogCol;
     }
 
@@ -115,8 +115,8 @@ Color3f EnhancedFog::applySunsetTint(Color3f fogCol, float td, bool enabled, boo
     return fogCol * (1.0f - tintAmount) + warmTint * tintAmount;
 }
 
-Color3f EnhancedFog::applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled, bool isBetaSky) {
-    if (!enabled || isBetaSky) {
+Color3f EnhancedFog::applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled) {
+    if (!enabled) {
         return fogCol;
     }
 
@@ -130,8 +130,8 @@ Color3f EnhancedFog::applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp
     return fogCol * (1.0f - blendWeight) + skyColLookUp * blendWeight;
 }
 
-float EnhancedFog::calculateUndergroundFactor(float cameraY, float surfaceY, bool canSeeSky, bool enabled, bool isBetaSky) {
-    if (!enabled || isBetaSky || canSeeSky) {
+float EnhancedFog::calculateUndergroundFactor(float cameraY, float surfaceY, bool canSeeSky, bool enabled) {
+    if (!enabled || canSeeSky) {
         return 0.0f;
     }
 
@@ -146,7 +146,7 @@ float EnhancedFog::calculateUndergroundFactor(float cameraY, float surfaceY, boo
     return Mth::clamp(factor, 0.0f, 1.0f);
 }
 
-void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky, float surfaceY, bool canSeeSky) {
+void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, float surfaceY, bool canSeeSky) {
     if (!cameraEntity) return;
 
     float camX = cameraEntity->x;
@@ -171,10 +171,10 @@ void EnhancedFog::update(Level* level, Mob* cameraEntity, float daylight, float 
         m_currentBaseColor = updateSmoothing(m_currentBaseColor, targetBase, dt, settings.transitionSpeed);
     }
 
-    Color3f colWithTint = applySunsetTint(m_currentBaseColor, td, settings.sunsetTint, isBetaSky);
-    Color3f colWithAlt = applyHighAltitudeBlend(colWithTint, skyColLookUp, camY, settings.highAltitudeBlend, isBetaSky);
+    Color3f colWithTint = applySunsetTint(m_currentBaseColor, td, settings.sunsetTint);
+    Color3f colWithAlt = applyHighAltitudeBlend(colWithTint, skyColLookUp, camY, settings.highAltitudeBlend);
 
-    float targetUgFactor = calculateUndergroundFactor(camY, surfaceY, canSeeSky, settings.undergroundFog, isBetaSky);
+    float targetUgFactor = calculateUndergroundFactor(camY, surfaceY, canSeeSky, settings.undergroundFog);
     if (dt > 0.0f) {
         float easeSpeed = settings.transitionSpeed;
         float factor = 1.0f - std::exp(-easeSpeed * dt);

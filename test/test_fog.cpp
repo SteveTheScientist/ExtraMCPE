@@ -105,10 +105,10 @@ int main() {
 
     // 4. Sunset Tint Unit Test
     Color3f baseFog(0.7f, 0.8f, 0.9f);
-    Color3f middayTint = EnhancedFog::applySunsetTint(baseFog, 0.0f, true, false);
-    Color3f midnightTint = EnhancedFog::applySunsetTint(baseFog, 0.5f, true, false);
-    Color3f sunsetTintCol = EnhancedFog::applySunsetTint(baseFog, 0.25f, true, false);
-    Color3f sunriseTintCol = EnhancedFog::applySunsetTint(baseFog, 0.75f, true, false);
+    Color3f middayTint = EnhancedFog::applySunsetTint(baseFog, 0.0f, true);
+    Color3f midnightTint = EnhancedFog::applySunsetTint(baseFog, 0.5f, true);
+    Color3f sunsetTintCol = EnhancedFog::applySunsetTint(baseFog, 0.25f, true);
+    Color3f sunriseTintCol = EnhancedFog::applySunsetTint(baseFog, 0.75f, true);
 
     assert(isCloseCol(middayTint, baseFog));
     assert(isCloseCol(midnightTint, baseFog));
@@ -116,20 +116,18 @@ int main() {
     assert(sunriseTintCol.r > baseFog.r); // warmer red at sunrise
     assert(isCloseCol(sunsetTintCol, sunriseTintCol));
 
-    // Sunset tint disabled or Beta Sky mode should return unchanged color
-    Color3f disabledTint = EnhancedFog::applySunsetTint(baseFog, 0.25f, false, false);
-    Color3f betaSkyTint = EnhancedFog::applySunsetTint(baseFog, 0.25f, true, true);
+    // Sunset tint disabled should return unchanged color
+    Color3f disabledTint = EnhancedFog::applySunsetTint(baseFog, 0.25f, false);
     assert(isCloseCol(disabledTint, baseFog));
-    assert(isCloseCol(betaSkyTint, baseFog));
 
     // 5. High-Altitude Blend Unit Test
     Color3f baseFogCol(0.7f, 0.8f, 0.9f);
     Color3f skyLookUpCol(0.2f, 0.4f, 0.9f);
 
-    Color3f lowAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 64.0f, true, false); // sea level y=64
-    Color3f startAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 84.0f, true, false); // start y=84
-    Color3f midAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 114.0f, true, false); // mid y=114
-    Color3f highAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, true, false); // max y>=144
+    Color3f lowAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 64.0f, true); // sea level y=64
+    Color3f startAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 84.0f, true); // start y=84
+    Color3f midAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 114.0f, true); // mid y=114
+    Color3f highAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, true); // max y>=144
 
     assert(isCloseCol(lowAlt, baseFogCol));
     assert(isCloseCol(startAlt, baseFogCol));
@@ -139,27 +137,23 @@ int main() {
     Color3f expectedMax = baseFogCol * 0.30f + skyLookUpCol * 0.70f;
     assert(isCloseCol(highAlt, expectedMax));
 
-    // High-altitude blend disabled or Beta Sky mode should return unchanged color
-    Color3f disabledAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, false, false);
-    Color3f betaSkyAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, true, true);
+    // High-altitude blend disabled should return unchanged color
+    Color3f disabledAlt = EnhancedFog::applyHighAltitudeBlend(baseFogCol, skyLookUpCol, 150.0f, false);
     assert(isCloseCol(disabledAlt, baseFogCol));
-    assert(isCloseCol(betaSkyAlt, baseFogCol));
 
     // 6. Underground Fog Factor Unit Test
     float surfaceY = 64.0f;
-    float ugSky = EnhancedFog::calculateUndergroundFactor(20.0f, surfaceY, true, true, false); // can see sky -> 0
-    float ugSurface = EnhancedFog::calculateUndergroundFactor(63.0f, surfaceY, false, true, false); // depth <= 2 -> 0
-    float ugMid = EnhancedFog::calculateUndergroundFactor(51.0f, surfaceY, false, true, false); // depth = 13 -> 11/18 ~= 0.611
-    float ugDeep = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, true, false); // depth = 34 >= 20 -> 1.0
-    float ugDisabled = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, false, false); // disabled -> 0
-    float ugBetaSky = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, true, true); // Beta Sky -> 0
+    float ugSky = EnhancedFog::calculateUndergroundFactor(20.0f, surfaceY, true, true); // can see sky -> 0
+    float ugSurface = EnhancedFog::calculateUndergroundFactor(63.0f, surfaceY, false, true); // depth <= 2 -> 0
+    float ugMid = EnhancedFog::calculateUndergroundFactor(51.0f, surfaceY, false, true); // depth = 13 -> 11/18 ~= 0.611
+    float ugDeep = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, true); // depth = 34 >= 20 -> 1.0
+    float ugDisabled = EnhancedFog::calculateUndergroundFactor(30.0f, surfaceY, false, false); // disabled -> 0
 
     assert(isClose(ugSky, 0.0f));
     assert(isClose(ugSurface, 0.0f));
     assert(isClose(ugMid, (13.0f - 2.0f) / 18.0f));
     assert(isClose(ugDeep, 1.0f));
     assert(isClose(ugDisabled, 0.0f));
-    assert(isClose(ugBetaSky, 0.0f));
 
     std::cout << "All EnhancedFog unit tests passed successfully!" << std::endl;
     return 0;

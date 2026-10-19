@@ -31,13 +31,11 @@ This document describes the recreated cloud rendering system and its customizati
   * **Interface & Game...** (`InterfaceOptionsScreen`)
 * **Customizations Menu:** Contains the **Clouds...** sub-screen button (`CloudsScreen`) alongside all restored customization toggles.
 * **Button Styling:** Action and sub-menu entry buttons ("Controls & Input...", "Graphics & Visuals...", "Interface & Game...", "Username...", "Key Binds...", "Credits...", "Clouds...") use full 310px width.
-* **Beta Sky Interaction:** When **Tall Clouds** is enabled, the **Beta Sky** toggle in the Options menu is automatically disabled (`active = false`) and displays the disabled button texture.
 
 All cloud settings are saved in `options.txt`:
 
 | Option Name | Range | Default | Options-File Key | Description |
 |---|---|---|---|---|
-| **Tall Clouds** | `ON` / `OFF` | `ON` (`true`) | `options.tall_clouds` | Toggles volumetric tall clouds. When `OFF`, restores original cloud rendering and re-enables Beta Sky option. |
 | **Cloud Height** | `32` to `192` | `108` (`108.0`) | `options.cloud_y_level` | Adjusts the Y world level of the cloud layer base height. |
 | **Cloud Thickness** | `1.0x` to `4.0x` | `2.5x` (`2.5`) | `options.cloud_thickness` | Multiplier for vertical cloud thickness (`thicknessScale`). Clouds grow upward from the configured base height. |
 | **Cloud Fade** | `0%` to `100%` | `100%` (`1.0`) | `options.cloud_fade` | Strength of view-dependent vertical alpha fade. 100% enables full vertical gradient, 0% applies uniform opacity. |
@@ -71,7 +69,6 @@ $$\alpha_{faded} = \text{max}(0, \text{baseAlpha} \times (\text{opacity} - fade)
 ### Tested
 * **Mathematical Accuracy:** Verified all test cases in `cloudAlpha` via the unit test binary `test_clouds`.
 * **Desktop Build & Compilation:** Compiled and linked the desktop C++ binary (`MinecraftPE`) using CMake with zero errors.
-* **Option Persistence & UI Integration:** Verified `Options.cpp` serialization/parsing, slider label formatting, `CloudsScreen` menu navigation, categorized sub-screens, disabled Beta Sky state, restored Customizations menu toggles, 310px button styling, and build file updates.
 
 ### Untested
 * **On-Device Physical Rendering:** Visual testing on an actual physical Android/iOS device with touch inputs or mobile GPU drivers (headless build environment without attached physical device).

@@ -106,22 +106,12 @@ void GameRenderer::setupCamera(float a, int eye) {
 
 	float stereoScale = 0.07f;
 	if (mc->options.getBooleanValue(OPTIONS_ANAGLYPH_3D)) glTranslatef2(-(eye * 2 - 1) * stereoScale, 0, 0);
-	if (mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		if (zoom != 1) {
-			glTranslatef2((float) zoom_x, (float) -zoom_y, 0);
-			glScalef2(zoom, zoom, 1);
-			gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance * 2.0f);
-		} else {
-			gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance * 2.0f);
-		}
+	if (zoom != 1) {
+		glTranslatef2((float) zoom_x, (float) -zoom_y, 0);
+		glScalef2(zoom, zoom, 1);
+		gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
 	} else {
-		if (zoom != 1) {
-			glTranslatef2((float) zoom_x, (float) -zoom_y, 0);
-			glScalef2(zoom, zoom, 1);
-			gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
-		} else {
-			gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
-		}
+		gluPerspective(_setupCameraFov = getFov(a, true), mc->width / (float) mc->height, 0.05f, renderDistance);
 	}
 
 	glMatrixMode(GL_MODELVIEW);
@@ -250,7 +240,7 @@ void GameRenderer::updateEnhancedFog(float a) {
 
 	FogSettings fogSettings = mc->options.getFogSettings();
 	bool inLiquid = player && (player->isUnderLiquid(Material::water) || player->isUnderLiquid(Material::lava));
-	m_useEnhancedFogThisFrame = fogSettings.enhancedFog && !mc->options.getBooleanValue(OPTIONS_BETA_SKY) && !inLiquid;
+	m_useEnhancedFogThisFrame = fogSettings.enhancedFog && !inLiquid;
 
 	if (m_useEnhancedFogThisFrame) {
 		float td = level->getTimeOfDay(a);
@@ -265,7 +255,6 @@ void GameRenderer::updateEnhancedFog(float a) {
 		if (dt <= 0.0f || dt > 1.0f) dt = 1.0f / 60.0f;
 		m_lastFrameTimeSec = now;
 
-		bool isBetaSky = mc->options.getBooleanValue(OPTIONS_BETA_SKY);
 		float camX = player ? player->x : 0.0f;
 		float camY = player ? player->y : 64.0f;
 		float camZ = player ? player->z : 0.0f;
@@ -273,7 +262,7 @@ void GameRenderer::updateEnhancedFog(float a) {
 		float surfaceY = (float)level->getTopSolidBlock(Mth::floor(camX), Mth::floor(camZ));
 		bool canSeeSky = level->canSeeSky(Mth::floor(camX), Mth::floor(camY), Mth::floor(camZ));
 
-		m_enhancedFogModule.update(level, player, daylight, td, skyColLookUp, dt, fogSettings, isBetaSky, surfaceY, canSeeSky);
+		m_enhancedFogModule.update(level, player, daylight, td, skyColLookUp, dt, fogSettings, surfaceY, canSeeSky);
 		Color3f fogCol = m_enhancedFogModule.getCurrentColor();
 
 		fr = fogCol.r;
@@ -368,26 +357,18 @@ void GameRenderer::renderLevel(float a) {
 //		if(mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS)) {
 			setupFog(-1);
 			TIMER_POP_PUSH("sky");
-			// @TODO - EXTREME JANK BELOW, it works but i have to do heavy cleanup here, also to test if the glfogf commands even affect fog in anyway.
-			if(mc->options.getBooleanValue(OPTIONS_BETA_SKY) && (mc->options.getIntValue(OPTIONS_VIEW_DISTANCE) < 2)){
-			levelRenderer->renderSky(a); // how java renders the sky instead of how pe doing prepareandrenderclouds.
-			} else if (!mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
 			if (!m_useEnhancedFogThisFrame) {
-			glFogf(GL_FOG_START, renderDistance  * 0.2f);
-			glFogf(GL_FOG_END, renderDistance *0.75);
+				glFogf(GL_FOG_START, renderDistance  * 0.2f);
+				glFogf(GL_FOG_END, renderDistance *0.75);
 
-			glFogf(GL_FOG_START, renderDistance  * 0.6f);
-			glFogf(GL_FOG_END, renderDistance);
-			}
+				glFogf(GL_FOG_START, renderDistance  * 0.6f);
+				glFogf(GL_FOG_END, renderDistance);
 			}
 //		}
 		glEnable2(GL_FOG);
 		setupFog(1);
-		// MCPE renders clouds using this, but this method breaks 3d clouds and also breaks 2d clouds transparency viewed from above, add as a Legacy Sky or Fast Sky option. - shredder
-		if(!mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
 		if(mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS)) {
 			prepareAndRenderClouds(levelRenderer, a);
-		}
 		}
 
 		setupFog(0);
@@ -469,14 +450,6 @@ void GameRenderer::renderLevel(float a) {
 		}
 
 		glDisable2(GL_FOG);
-		// Normally this is commented out, but this is how java does it and should fix both 2d/3d clouds, a
-		if(mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		       setupFog(0);
-		       glEnable2(GL_FOG);
-		        levelRenderer->renderClouds(a);
-		        glDisable2(GL_FOG);
-		}
-		// SHREDDER END
 		setupFog(1);
 
 		if (zoom == 1 && !mc->options.getBooleanValue(OPTIONS_HIDEGUI)) {

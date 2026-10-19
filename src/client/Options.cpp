@@ -70,7 +70,6 @@ OptionInt fogType("fogType", 0, 0, 2);
 
 OptionBool javaHud("javaHud", false);
 
-OptionBool betaSky("betaSky", false);
 OptionBool tintedSide("tintedSide", false);
 OptionBool blockOutline("blockOutline", false);
 
@@ -227,7 +226,6 @@ void Options::initTable() {
 
 	m_options[OPTIONS_DEBUG_STYLE] = &debugStyle;
 
-	m_options[OPTIONS_BETA_SKY] = &betaSky;
 	m_options[OPTIONS_TINTED_SIDE] = &tintedSide;
 	m_options[OPTIONS_JAVA_HUD] = &javaHud;
 

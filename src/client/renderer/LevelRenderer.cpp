@@ -1161,10 +1161,6 @@ void LevelRenderer::renderSky(float alpha) {
 	glColor4f2(sr, sg, Mth::Min(1.0f, sb), 1);
 
 	Tesselator& t = Tesselator::instance;
-	// @TODO shredder - should not enable or disable depth mask if using legacy sky because mcpe sky rendering is awful and will render clouds above terrain
-	if(mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		glDepthMask(false);
-	}
 	glEnable2(GL_FOG);
 	glColor4f2(sr, sg, sb, 1.0f);
 
@@ -1257,20 +1253,9 @@ void LevelRenderer::renderSky(float alpha) {
 	glEnable(GL_FOG);
 	glPopMatrix();
 
-	// ported over void plane (the blue bottom plane seen in java) because pocket edition lacks it @TODO test if it's buggy - shredder
-
-//	glColor3f(sc.x * 0.2f + 0.04f, sc.y * 0.2f + 0.04f, sc.z * 0.6f + 0.1f);
 	glColor4f(sc.x * 0.2f + 0.04f, sc.y * 0.2f + 0.04f, sc.z * 0.6f + 0.1f, 1.0f);
 	glDisable(GL_TEXTURE_2D);
-	if(mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		drawArrayVT(voidBuffer, voidVertexCount);
-	}
 	glEnable(GL_TEXTURE_2D);
-
-	// @TODO shredder - should not enable or disable depth mask if using legacy sky because mcpe sky rendering is awful and will render clouds above terrain
-	if(mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
-		glDepthMask(true);
-	}
 }
 
 static bool isCloudCell(int u, int v, const int* pixels, int w, int h) {
@@ -1284,10 +1269,6 @@ static bool isCloudCell(int u, int v, const int* pixels, int w, int h) {
 
 void LevelRenderer::renderClouds( float alpha ) {
 	if (mc->options.getBooleanValue(OPTIONS_TALL_CLOUDS)) {
-		renderAdvancedClouds(alpha);
-		return;
-	}
-	if (mc->options.getBooleanValue(OPTIONS_FANCY_GRAPHICS) && mc->options.getBooleanValue(OPTIONS_BETA_SKY)){
 		renderAdvancedClouds(alpha);
 		return;
 	}

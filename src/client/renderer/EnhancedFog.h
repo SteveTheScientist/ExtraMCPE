@@ -30,12 +30,12 @@ public:
     static Color3f updateSmoothing(Color3f current, Color3f target, float dt, float transitionSpeed);
     static void calculateFogDistances(float renderDistance, float startPct, float endPct, float& outStart, float& outEnd);
 
-    static Color3f applySunsetTint(Color3f fogCol, float td, bool enabled, bool isBetaSky);
-    static Color3f applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled, bool isBetaSky);
-    static float calculateUndergroundFactor(float cameraY, float surfaceY, bool canSeeSky, bool enabled, bool isBetaSky);
+    static Color3f applySunsetTint(Color3f fogCol, float td, bool enabled);
+    static Color3f applyHighAltitudeBlend(Color3f fogCol, Color3f skyColLookUp, float cameraY, bool enabled);
+    static float calculateUndergroundFactor(float cameraY, float surfaceY, bool canSeeSky, bool enabled);
 
     void reset();
-    void update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, bool isBetaSky, float surfaceY, bool canSeeSky);
+    void update(Level* level, Mob* cameraEntity, float daylight, float td, Color3f skyColLookUp, float dt, const FogSettings& settings, float surfaceY, bool canSeeSky);
 
     float getUndergroundFactor() const { return m_undergroundFactor; }
 
