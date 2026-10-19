@@ -282,6 +282,7 @@ jobs:
 
   publish:
     name: Publish
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: [ build-windows, build-ios, build-linux, build-android, build-web ]
     steps:
@@ -345,6 +346,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: dev
+          target_commitish: ${{ github.sha }}
           name: 'Development Release'
           body: |
             MinecraftPE development release for commit ${{ github.sha }}.
