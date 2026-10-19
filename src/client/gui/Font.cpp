@@ -147,7 +147,7 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
                     info.cellW = cellW;
                     info.cellH = cellH;
                     info.glyphWidth = rightmost + 1;
-                    info.advance = (int)round((rightmost + 1) * scale) + 1;
+                    info.advance = (int)floor(((rightmost + 1) * scale) + 0.5f) + 1;
                     info.scale = scale;
                     info.ascent = ascentVal;
 

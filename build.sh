@@ -223,6 +223,7 @@ function build_ndk_abi() {
 
   echo "  ndk-build for $abi..."
   if ! "$ANDROID_NDK_PATH/ndk-build" \
+      -j"$(nproc)" \
       NDK_PROJECT_PATH="$REPO_ROOT/project/android" \
       APP_BUILD_SCRIPT="$JNI_DIR/Android.mk" \
       "${extra_flags[@]}" \
@@ -391,14 +392,14 @@ if [[ "$NO_JAVA" == false && "$NO_BUILD" == false ]]; then
   rm -rf "$BUILD_DIR/classes"
   ensure_dir "$BUILD_DIR/classes"
 
-  JAVAC_ARGS=(-source 1.8 -target 1.8 -encoding UTF-8 -bootclasspath "$ANDROID_PLATFORM_DIR/android.jar")
+  JAVAC_ARGS=(-source 1.8 -target 1.8 -g:none -encoding UTF-8 -bootclasspath "$ANDROID_PLATFORM_DIR/android.jar")
 
   "$JAVAC_CMD" "${JAVAC_ARGS[@]}" -cp "$ANDROID_PLATFORM_DIR/android.jar" -d "$BUILD_DIR/classes" "${JAVA_SOURCES[@]}"
   echo "  javac OK"
 
   # convert class files into dex
   JAVA_CLASS_FILES=( $(find "$BUILD_DIR/classes" -name "*.class" -print) )
-  "$DEX_TOOL" --min-api 21 --output "$BUILD_DIR" "${JAVA_CLASS_FILES[@]}"
+  "$DEX_TOOL" --min-api 21 --lib "$ANDROID_PLATFORM_DIR/android.jar" --output "$BUILD_DIR" "${JAVA_CLASS_FILES[@]}"
   echo "  d8 -> $DEX_OUTPUT"
 fi
 
@@ -435,7 +436,7 @@ popd >/dev/null
 rm -rf "$TMP_ASSETS_DIR"
 
 "$ZIPALIGN" -p 4 "$APK_UNSIGNED" "$APK_ALIGNED"
-"$APKSIGNER" sign --ks "$KEYSTORE_FILE" --ks-pass pass:android --key-pass pass:android --out "$APK_SIGNED" "$APK_ALIGNED"
+"$APKSIGNER" sign --v1-signing-enabled true --v2-signing-enabled true --ks "$KEYSTORE_FILE" --ks-pass pass:android --key-pass pass:android --out "$APK_SIGNED" "$APK_ALIGNED"
 
 echo "  signed -> $APK_SIGNED"
 

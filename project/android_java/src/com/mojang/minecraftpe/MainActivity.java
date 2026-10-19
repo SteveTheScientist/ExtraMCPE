@@ -171,6 +171,24 @@ public class MainActivity extends Activity {
     	}
     }
 
+    private static class DialogCancelListener implements OnCancelListener {
+        private final MainActivity activity;
+        DialogCancelListener(MainActivity a) { this.activity = a; }
+        @Override public void onCancel(DialogInterface dialog) { activity.onDialogCanceled(); }
+    }
+
+    private static class DialogOkClickListener implements OnClickListener {
+        private final MainActivity activity;
+        DialogOkClickListener(MainActivity a) { this.activity = a; }
+        @Override public void onClick(DialogInterface dialog, int which) { activity.onDialogCompleted(); }
+    }
+
+    private static class DialogCancelClickListener implements OnClickListener {
+        private final MainActivity activity;
+        DialogCancelClickListener(MainActivity a) { this.activity = a; }
+        @Override public void onClick(DialogInterface dialog, int which) { activity.onDialogCanceled(); }
+    }
+
     private void createAlertDialog(boolean hasOkButton, boolean hasCancelButton, boolean preventBackKey) {
     	AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -178,20 +196,13 @@ public class MainActivity extends Activity {
     	if (preventBackKey)
     		builder.setCancelable(false);
 
-    	builder.setOnCancelListener(new OnCancelListener() {
-			//@Override
-			public void onCancel(DialogInterface dialog) {
-				onDialogCanceled();
-			}
-		});
+	builder.setOnCancelListener(new DialogCancelListener(this));
 
     	if (hasOkButton)
-    		builder.setPositiveButton("Ok", new OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) { onDialogCompleted(); }});
+		builder.setPositiveButton("Ok", new DialogOkClickListener(this));
 
     	if (hasCancelButton)
-	    	builder.setNegativeButton("Cancel", new OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) { onDialogCanceled(); }});
+		builder.setNegativeButton("Cancel", new DialogCancelClickListener(this));
 
     	mDialog = builder.create();
     	mDialog.setOwnerActivity(this);
@@ -445,9 +456,14 @@ public class MainActivity extends Activity {
     	}
     }
     
+    private static class QuitRunnable implements Runnable {
+        private final MainActivity activity;
+        QuitRunnable(MainActivity a) { this.activity = a; }
+        @Override public void run() { activity.finish(); }
+    }
+
     public void quit() {
-		runOnUiThread(new Runnable() {
-			public void run() { finish(); } });
+		runOnUiThread(new QuitRunnable(this));
     }
 
     public void displayDialog(int dialogId) {
@@ -482,51 +498,81 @@ public class MainActivity extends Activity {
     void chooseDialog(final int layoutId, final int[] viewIds, final boolean hasCancelButton, final boolean preventBackKey) {
     	chooseDialog(layoutId, viewIds, preventBackKey, 0, hasCancelButton? 0 : -1);
     }
+
+    private static class ButtonOkClickListener implements View.OnClickListener {
+        private final MainActivity activity;
+        ButtonOkClickListener(MainActivity a) { this.activity = a; }
+        @Override public void onClick(View v) {
+            if (activity.mDialog != null) activity.mDialog.dismiss();
+            activity.onDialogCompleted();
+        }
+    }
+
+    private static class ButtonCancelClickListener implements View.OnClickListener {
+        private final MainActivity activity;
+        ButtonCancelClickListener(MainActivity a) { this.activity = a; }
+        @Override public void onClick(View v) {
+            if (activity.mDialog != null) activity.mDialog.cancel();
+            activity.onDialogCanceled();
+        }
+    }
+
+    private static class ChooseDialogRunnable implements Runnable {
+        private final MainActivity activity;
+        private final int layoutId;
+        private final int[] viewIds;
+        private final boolean preventBackKey;
+        private final int okButtonId;
+        private final int cancelButtonId;
+
+        ChooseDialogRunnable(MainActivity a, int layoutId, int[] viewIds, boolean preventBackKey, int okButtonId, int cancelButtonId) {
+            this.activity = a;
+            this.layoutId = layoutId;
+            this.viewIds = viewIds;
+            this.preventBackKey = preventBackKey;
+            this.okButtonId = okButtonId;
+            this.cancelButtonId = cancelButtonId;
+        }
+
+        @Override public void run() {
+            activity.createAlertDialog(okButtonId == 0, cancelButtonId == 0, preventBackKey);
+            LayoutInflater li = LayoutInflater.from(activity);
+
+            try {
+                View view = li.inflate(layoutId, null);
+                if (okButtonId != 0 && okButtonId != -1) {
+                    View b = view.findViewById(okButtonId);
+                    if (b != null) b.setOnClickListener(new ButtonOkClickListener(activity));
+                }
+                if (cancelButtonId != 0 && cancelButtonId != -1) {
+                    View b = view.findViewById(cancelButtonId);
+                    if (b != null) b.setOnClickListener(new ButtonCancelClickListener(activity));
+                }
+
+                activity.mDialog.setView(view);
+
+                if (viewIds != null) {
+                    for (int viewId : viewIds) {
+                        View v = view.findViewById(viewId);
+                        if (v instanceof StringValue)
+                            activity._userInputValues.add((StringValue) v);
+                        else if (v instanceof TextView)
+                            activity._userInputValues.add(new TextViewReader((TextView) v));
+                    }
+                }
+            } catch (Error e) {
+                e.printStackTrace();
+            }
+
+            activity.mDialog.show();
+            activity.mDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            activity.mDialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        }
+    }
+
     void chooseDialog(final int layoutId, final int[] viewIds, final boolean preventBackKey, final int okButtonId, final int cancelButtonId) {
-    	_userInputValues.clear();
-
-    	runOnUiThread(new Runnable() {
-    	    public void run() {
-    	    	createAlertDialog(okButtonId==0, cancelButtonId==0, preventBackKey);
-    	        LayoutInflater li = LayoutInflater.from(MainActivity.this);
-    	        
-    	        try {
-                    View view = li.inflate(layoutId, null);
-                    if (okButtonId != 0 && okButtonId != -1) {
-                    	View b = view.findViewById(okButtonId);
-                    	if (b != null)
-                    		b.setOnClickListener(new View.OnClickListener()
-                    			{ public void onClick(View v) { if (mDialog != null) mDialog.dismiss(); onDialogCompleted(); }});
-                    }
-                    if (cancelButtonId != 0 && cancelButtonId != -1) {
-                    	View b = view.findViewById(cancelButtonId);
-                    	if (b != null)
-                    		b.setOnClickListener(new View.OnClickListener()
-                    			{ public void onClick(View v) { if (mDialog != null) mDialog.cancel(); onDialogCanceled(); }});
-                    }
-
-                    //mDialog.setO
-                    MainActivity.this.mDialog.setView(view);
-
-                    if (viewIds != null)
-                    	for (int viewId : viewIds) {
-                    		View v = view.findViewById(viewId);
-                    		if (v instanceof StringValue)
-                    			_userInputValues.add( (StringValue) v );
-                    		else if (v instanceof TextView)
-                    			_userInputValues.add(new TextViewReader((TextView)v));
-                    	}
-
-    	        } catch (Error e) {
-    	        	e.printStackTrace();
-    	        }
-
-    	        MainActivity.this.mDialog.show();
-    	        MainActivity.this.mDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    	        MainActivity.this.mDialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    	        //MainActivity.this.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    	    }
-    	});
+	_userInputValues.clear();
+	runOnUiThread(new ChooseDialogRunnable(this, layoutId, viewIds, preventBackKey, okButtonId, cancelButtonId));
     }
     
     public void tick() {}

@@ -90,8 +90,8 @@ int main(int numArguments, char* pszArgs[]) {
             throw std::runtime_error("Config cannot be empty");
         }
 
-		port = std::stoi(findStringInConfig("port", propString));
-		worldSize = std::stoi(findStringInConfig("world-size", propString));
+		port = atoi(findStringInConfig("port", propString).c_str());
+		worldSize = atoi(findStringInConfig("world-size", propString).c_str());
 
 		if (worldSize < 16 || worldSize > 32) {
 			throw std::runtime_error("Incorrect world size.");

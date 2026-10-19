@@ -211,8 +211,8 @@ public class SoundPlayer
 
 	static private final int DefaultPriority = 1;
 
-	public class SoundId {
-		SoundId(int soundId, String name) {
+	public static class SoundId {
+		public SoundId(int soundId, String name) {
 			this.soundId = soundId;
 			this.name = name;
 		}
