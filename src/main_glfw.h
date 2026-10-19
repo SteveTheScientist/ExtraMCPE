@@ -185,6 +185,16 @@ int main(void) {
 		return 1;
 	}
 
+	TextureData iconData = platform->loadTexture("pack.png", true);
+	if (iconData.data) {
+		GLFWimage iconImage;
+		iconImage.width = iconData.w;
+		iconImage.height = iconData.h;
+		iconImage.pixels = iconData.data;
+		glfwSetWindowIcon(platform->window, 1, &iconImage);
+		delete[] iconData.data;
+	}
+
 	glfwSetKeyCallback(platform->window, key_callback);
 	glfwSetCharCallback(platform->window, character_callback);
 	glfwSetCursorPosCallback(platform->window, cursor_position_callback);

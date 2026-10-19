@@ -91,10 +91,15 @@ void StartMenuScreen::init()
 void StartMenuScreen::setupPositions() {
 	int centerX = width / 2;
 
+	TextureId id = minecraft->textures->loadTexture("gui/title.png");
+	const TextureData* data = minecraft->textures->getTemporaryTextureData(id);
+	float texW = (data && data->w > 0) ? (float)data->w : 565.0f;
+	float texH = (data && data->h > 0) ? (float)data->h : 105.0f;
+
 	float logoY = 4.0f;
-	float wh = Mth::Min((float)width * 0.35f, 85.0f);
-	float scale = 2.0f * wh / 256.0f;
-	float logoH = scale * 64.0f;
+	float wh = Mth::Min((float)width * 0.35f, 95.0f);
+	float scale = 2.0f * wh / texW;
+	float logoH = scale * texH;
 	int logoBottom = (int)(logoY + logoH);
 
 	int available = height - logoBottom;
@@ -192,7 +197,7 @@ void StartMenuScreen::render( int xm, int ym, float a )
 
 		const float x = (float)width / 2;
 		const float y = 4.0f;
-		const float wh = Mth::Min((float)width * 0.35f, 85.0f);
+		const float wh = Mth::Min((float)width * 0.35f, 95.0f);
 		const float scale = 2.0f * wh / (float)data->w;
 		const float h = scale * (float)data->h;
 
