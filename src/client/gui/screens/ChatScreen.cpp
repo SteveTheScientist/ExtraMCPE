@@ -19,9 +19,9 @@ ChatScreen::ChatScreen()
 	  m_scrollY(0.0f),
 	  m_maxScroll(0.0f),
 	  m_isDragging(false),
-	  m_isBarDragging(false),
 	  m_dragStartY(0),
-	  m_dragStartScrollY(0.0f)
+	  m_startTouchY(0),
+	  m_dragAccumulatorY(0.0f)
 {
 }
 
@@ -34,7 +34,7 @@ void ChatScreen::init() {
 	m_blinkTimer = 0;
 	m_scrollY = 0.0f;
 	m_isDragging = false;
-	m_isBarDragging = false;
+	m_dragAccumulatorY = 0.0f;
 }
 
 void ChatScreen::tick() {
@@ -69,26 +69,24 @@ void ChatScreen::tick() {
 	int maxScroll = totalLines - maxLines;
 
 	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
-		if (m_isBarDragging && maxScroll > 0) {
-			const float baseY = screenHeightF - posY - lineH;
-			float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
-			float barH = maxLines * lineH;
+		if (m_isDragging && maxScroll > 0) {
+			float deltaY = (float)(ym - m_dragStartY);
+			m_dragStartY = ym;
+			m_dragAccumulatorY += deltaY;
 
-			float relY = (float)(ym - barTop) / barH;
-			relY = Mth::clamp(relY, 0.0f, 1.0f);
-			int targetScroll = (int)((1.0f - relY) * maxScroll + 0.5f);
-			minecraft->gui.scrollChat(targetScroll - minecraft->gui.getChatScrollOffset());
-		} else if (m_isDragging && maxScroll > 0) {
-			int deltaY = ym - m_dragStartY;
-			int linesChange = (int)(deltaY / std::max(1.0f, lineH));
-			if (linesChange != 0) {
-				minecraft->gui.scrollChat(-linesChange);
-				m_dragStartY = ym;
+			if (m_dragAccumulatorY >= lineH) {
+				int steps = (int)(m_dragAccumulatorY / lineH);
+				minecraft->gui.scrollChat(steps);
+				m_dragAccumulatorY -= steps * lineH;
+			} else if (m_dragAccumulatorY <= -lineH) {
+				int steps = (int)(-m_dragAccumulatorY / lineH);
+				minecraft->gui.scrollChat(-steps);
+				m_dragAccumulatorY += steps * lineH;
 			}
 		}
 	} else {
 		m_isDragging = false;
-		m_isBarDragging = false;
+		m_dragAccumulatorY = 0.0f;
 	}
 }
 
@@ -292,7 +290,6 @@ void ChatScreen::keyboardNewChar(char c) {
 
 void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 	if (buttonNum == MouseAction::ACTION_LEFT) {
-		// Calculate chat box and scroll bar bounds
 		float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
 		configuredWidth = Mth::clamp(configuredWidth, 40.0f, 320.0f);
 		float boxWidth = std::min(configuredWidth, (float)width - 4.0f);
@@ -323,30 +320,14 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 		int maxLines = std::max(1, std::min(desiredMaxLines, allowedLines));
 
 		const float baseY = screenHeightF - posY - lineH;
-		float barTop = baseY - (maxLines - 1) * lineH - 1.0f;
-		float barH = maxLines * lineH;
-		float barX = posX + boxWidth - 2.0f;
+		float boxTop = baseY - (maxLines - 1) * lineH - 1.0f;
 
-		// Scrollbar touch hit region: full height of chat box and at least 24px wide (12px on each side of bar)
-		if (x >= barX - 12.0f && x <= barX + 12.0f && y >= barTop - 4.0f && y <= barTop + barH + 4.0f) {
-			m_isBarDragging = true;
-			m_dragStartY = y;
-			int totalLines = (int)minecraft->gui.getGuiMessages().size();
-			int maxScroll = totalLines - maxLines;
-			if (maxScroll > 0) {
-				float relY = (float)(y - barTop) / barH;
-				relY = Mth::clamp(relY, 0.0f, 1.0f);
-				int targetScroll = (int)((1.0f - relY) * maxScroll + 0.5f);
-				minecraft->gui.scrollChat(targetScroll - minecraft->gui.getChatScrollOffset());
-			}
-			return;
-		}
-
-		// Chat box touch region: from posX to posX + boxWidth, and from barTop to baseY + lineH
-		if (x >= posX && x <= posX + boxWidth && y >= barTop - 4.0f && y <= baseY + lineH + 4.0f) {
+		// Chat box touch region
+		if (x >= posX && x <= posX + boxWidth && y >= boxTop - 4.0f && y <= baseY + lineH + 4.0f) {
 			m_isDragging = true;
 			m_dragStartY = y;
-			m_dragStartScrollY = m_scrollY;
+			m_startTouchY = y;
+			m_dragAccumulatorY = 0.0f;
 			return;
 		}
 	}
@@ -355,12 +336,13 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 
 void ChatScreen::mouseReleased(int x, int y, int buttonNum) {
 	m_isDragging = false;
-	m_isBarDragging = false;
+	m_dragAccumulatorY = 0.0f;
 	Screen::mouseReleased(x, y, buttonNum);
 }
 
 void ChatScreen::mouseWheel(int dx, int dy, int xm, int ym) {
 	if (dy != 0) {
-		minecraft->gui.scrollChat(dy);
+		int steps = (dy > 0 ? 3 : -3);
+		minecraft->gui.scrollChat(steps);
 	}
 }

@@ -282,13 +282,34 @@ void Gui::scrollChat(int delta) {
 	if (delta == 0)
 		return;
 
-	int screenHeight = (int)(minecraft->height * InvGuiScale);
-	int maxVisible = (screenHeight - 48) / 9;
-	if (maxVisible <= 0)
-		return;
+	const float screenHeightF = (float)(minecraft->height * InvGuiScale);
 
-	int maxScroll = (int)guiMessages.size() - maxVisible;
+	float textSizeScale = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_SIZE) / 100.0f;
+	textSizeScale = Mth::clamp(textSizeScale, 0.5f, 1.0f);
+
+	float lineSpacingPct = minecraft->options.getProgressValue(OPTIONS_CHAT_LINE_SPACING) / 100.0f;
+	float lineH = (9.0f + lineSpacingPct * 9.0f) * textSizeScale;
+	if (lineH < 4.0f) lineH = 4.0f;
+
+	float focusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_FOCUSED_HEIGHT);
+	if (focusedHeightPx < 20.0f) focusedHeightPx = 20.0f;
+	if (focusedHeightPx > 180.0f) focusedHeightPx = 180.0f;
+
+	float unfocusedHeightPx = minecraft->options.getProgressValue(OPTIONS_CHAT_UNFOCUSED_HEIGHT);
+	if (unfocusedHeightPx < 20.0f) unfocusedHeightPx = 20.0f;
+	if (unfocusedHeightPx > 90.0f) unfocusedHeightPx = 90.0f;
+
+	float maxY = std::max(40.0f, screenHeightF - unfocusedHeightPx - 4.0f);
+	float posY = minecraft->options.getProgressValue(OPTIONS_CHAT_POS_Y);
+	posY = Mth::clamp(posY, 0.0f, maxY);
+
+	unsigned int desiredMaxLines = std::max(1u, (unsigned int)(focusedHeightPx / lineH));
+	unsigned int allowedLines = (unsigned int)((screenHeightF - posY) / lineH);
+	unsigned int maxLines = std::max(1u, std::min(desiredMaxLines, allowedLines));
+
+	int maxScroll = (int)guiMessages.size() - (int)maxLines;
 	if (maxScroll < 0) maxScroll = 0;
+
 	int desired = chatScrollOffset + delta;
 	if (desired < 0) desired = 0;
 	if (desired > maxScroll) desired = maxScroll;
@@ -1243,27 +1264,6 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 
 			Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
 			renderedCount++;
-		}
-
-		// Scroll bar for focused height
-		int totalLines = (int)guiMessages.size();
-		if (totalLines > (int)maxLines) {
-			float barX = (x + boxWidth - 2.0f) * invScale;
-			float barTop = (baseY - (maxLines - 1) * lineH - 1.0f) * invScale;
-			float barH = (maxLines * lineH) * invScale;
-
-			fill(barX, barTop, barX + 2.0f * invScale, barTop + barH, 0x80303030);
-
-			float thumbH = std::max(6.0f, barH * ((float)maxLines / (float)totalLines));
-			int maxScroll = totalLines - (int)maxLines;
-			float scrollPct = (float)chatScrollOffset / (float)maxScroll;
-			scrollPct = Mth::clamp(scrollPct, 0.0f, 1.0f);
-
-			float thumbY = (barTop + barH - thumbH) - scrollPct * (barH - thumbH);
-			bool isDragging = Mouse::isButtonDown(MouseAction::ACTION_LEFT);
-			uint32_t thumbColor = isDragging ? 0xffcccccc : 0xff808080;
-
-			fill(barX, thumbY, barX + 2.0f * invScale, thumbY + thumbH, thumbColor);
 		}
 	} else {
 		// Unfocused Height & Message Time

@@ -33,9 +33,9 @@ private:
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDragging;
-	bool m_isBarDragging;
 	int m_dragStartY;
-	float m_dragStartScrollY;
+	int m_startTouchY;
+	float m_dragAccumulatorY;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__ChatScreen_H__*/
