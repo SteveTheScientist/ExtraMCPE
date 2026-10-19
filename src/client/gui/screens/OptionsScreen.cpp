@@ -4,6 +4,7 @@
 #include "CreditsScreen.h"
 #include "UsernameScreen.h"
 #include "KeyBindsScreen.h"
+#include "AudioScreen.h"
 #include "../../Minecraft.h"
 #include "../../sound/SoundEngine.h"
 #include "../../../util/Mth.h"
@@ -492,17 +493,14 @@ void OptionsScreen::init() {
 	m_controls.clear();
 	int idSeq = 10;
 
-	// Top controls: Username, Music, Sound
+	// Top controls: Username
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username...", true, 0.0f, 1.0f, ACTION_USERNAME));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_MUSIC_VOLUME, "Music", false, 0.0f, 1.0f));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_SOUND_VOLUME, "Sound", false, 0.0f, 1.0f));
 
 	// Sub-menu buttons in 2-column grid
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics & Visuals...", false, 0.0f, 1.0f, ACTION_GRAPHICS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics...", false, 0.0f, 1.0f, ACTION_GRAPHICS));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Audio...", false, 0.0f, 1.0f, ACTION_AUDIO));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Controls...", false, 0.0f, 1.0f, ACTION_CONTROLS));
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Interface...", false, 0.0f, 1.0f, ACTION_INTERFACE));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Key Binds...", false, 0.0f, 1.0f, ACTION_KEYBINDS));
-	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Credits...", false, 0.0f, 1.0f, ACTION_CREDITS));
 
 	for (size_t i = 0; i < m_controls.size(); ++i) {
 		m_controls[i]->updateLabel(minecraft);
@@ -734,6 +732,8 @@ void OptionsScreen::buttonClicked(Button* button) {
 				minecraft->setScreen(new GraphicsOptionsScreen());
 			} else if (ctrl->actionId == ACTION_INTERFACE) {
 				minecraft->setScreen(new InterfaceOptionsScreen());
+			} else if (ctrl->actionId == ACTION_AUDIO) {
+				minecraft->setScreen(new AudioScreen());
 			}
 		}
 	}

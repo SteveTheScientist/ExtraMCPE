@@ -734,6 +734,9 @@
     <ClCompile Include="..\..\src\client\gui\screens\OptionsScreen.cpp">
       <Filter>Source Files\client\gui\screens</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\client\gui\screens\AudioScreen.cpp">
+      <Filter>Source Files\client\gui\screens</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\client\gui\components\Button.cpp">
       <Filter>Source Files\client\gui\components</Filter>
     </ClCompile>
@@ -2253,6 +2256,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\client\gui\screens\OptionsScreen.h">
       <Filter>Source Files\client\gui\screens</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\client\gui\screens\AudioScreen.h">
+      <Filter>Header Files\client\gui\screens</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\client\gui\components\Button.h">
       <Filter>Source Files\client\gui\components</Filter>

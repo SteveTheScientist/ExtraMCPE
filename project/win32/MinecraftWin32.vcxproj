@@ -58,6 +58,7 @@
     <ClCompile Include="..\..\src\client\gui\screens\IngameBlockSelectionScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\JoinGameScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\OptionsScreen.cpp" />
+    <ClCompile Include="..\..\src\client\gui\screens\AudioScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\FogScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\ChatSettingsScreen.cpp" />
     <ClCompile Include="..\..\src\client\gui\screens\PauseScreen.cpp" />
@@ -409,6 +410,7 @@
     <ClInclude Include="..\..\src\client\gui\screens\InvalidLicenseScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\JoinGameScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\OptionsScreen.h" />
+    <ClInclude Include="..\..\src\client\gui\screens\AudioScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\FogScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\ChatSettingsScreen.h" />
     <ClInclude Include="..\..\src\client\gui\screens\PauseScreen.h" />
