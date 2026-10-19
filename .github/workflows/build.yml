@@ -342,6 +342,7 @@ jobs:
 
       - name: Update Development Release
         uses: softprops/action-gh-release@v2
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
