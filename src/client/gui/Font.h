@@ -33,10 +33,8 @@ public:
     void init(Options* options);
     void onGraphicsReset();
 
-    void draw(const char* str, float x, float y, int color, bool isPlayerText = false);
-    void draw(const std::string& str, float x, float y, int color, bool isPlayerText = false);
-    void draw(const char* str, float x, float y, int color, bool darken, bool isPlayerText);
-    void draw(const std::string& str, float x, float y, int color, bool darken, bool isPlayerText);
+    void draw(const char* str, float x, float y, int color, bool darken = false, bool isPlayerText = false);
+    void draw(const std::string& str, float x, float y, int color, bool darken = false, bool isPlayerText = false);
     void drawShadow(const std::string& str, float x, float y, int color, bool isPlayerText = false);
     void drawShadow(const char* str, float x, float y, int color, bool isPlayerText = false);
     void drawWordWrap(const std::string& str, float x, float y, float w, int col, bool isPlayerText = false);

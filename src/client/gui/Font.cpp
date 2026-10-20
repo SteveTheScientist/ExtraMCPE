@@ -331,24 +331,14 @@ void Font::drawShadow(const char* str, float x, float y, int color, bool isPlaye
     renderString(str, x, y, color, false, isPlayerText);
 }
 
-void Font::draw(const std::string& str, float x, float y, int color, bool isPlayerText)
+void Font::draw(const std::string& str, float x, float y, int color, bool darken, bool isPlayerText)
 {
-    renderString(str.c_str(), x, y, color, false, isPlayerText);
-}
-
-void Font::draw(const char* str, float x, float y, int color, bool isPlayerText)
-{
-    renderString(str, x, y, color, false, isPlayerText);
+    renderString(str.c_str(), x, y, color, darken, isPlayerText);
 }
 
 void Font::draw(const char* str, float x, float y, int color, bool darken, bool isPlayerText)
 {
     renderString(str, x, y, color, darken, isPlayerText);
-}
-
-void Font::draw(const std::string& str, float x, float y, int color, bool darken, bool isPlayerText)
-{
-    renderString(str.c_str(), x, y, color, darken, isPlayerText);
 }
 
 void Font::renderString(const char* str, float x, float y, int color, bool darken, bool isPlayerText)

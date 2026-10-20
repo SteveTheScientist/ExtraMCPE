@@ -49,9 +49,9 @@ void SignRenderer::render( TileEntity* te, float x, float y, float z, float a )
         std::string& msg = sign->messages[i];
         if (i == sign->selectedLine) {
             std::string s = "> " + msg + " <";
-            font->draw(s, (float)-font->width(s, true) / 2, yy, col, true);
+            font->draw(s, (float)-font->width(s, true) / 2, yy, col, false, true);
         } else {
-            font->draw(msg, (float)-font->width(msg, true) / 2, yy, col, true);
+            font->draw(msg, (float)-font->width(msg, true) / 2, yy, col, false, true);
         }
 		yy += 10;
     }

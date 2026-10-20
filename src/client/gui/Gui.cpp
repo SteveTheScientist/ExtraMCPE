@@ -1148,17 +1148,6 @@ static void parseColorTags(const std::string& in, std::vector<ColorSegment>& out
 }
 
 void Gui::drawColoredString(Font* font, const std::string& text, float x, float y, int alpha, bool isPlayerText) {
-	bool allowFormatting = true;
-	if (isPlayerText && minecraft) {
-		allowFormatting = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
-	}
-
-	if (!allowFormatting) {
-		int color = 0xffffff + (alpha << 24);
-		font->drawShadow(text, x, y, color, true);
-		return;
-	}
-
 	std::vector<ColorSegment> segs;
 	parseColorTags(text, segs);
 	float cx = x;
@@ -1170,15 +1159,6 @@ void Gui::drawColoredString(Font* font, const std::string& text, float x, float 
 }
 
 float Gui::getColoredWidth(Font* font, const std::string& text, bool isPlayerText) {
-	bool allowFormatting = true;
-	if (isPlayerText && minecraft) {
-		allowFormatting = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
-	}
-
-	if (!allowFormatting) {
-		return (float)font->width(text, true);
-	}
-
 	std::vector<ColorSegment> segs;
 	parseColorTags(text, segs);
 	float w = 0;
