@@ -14,7 +14,7 @@
 #include <sstream>
 
 ChatScreen::ChatScreen()
-	: m_inputBox(1, 2, 0, 100, 16, ""),
+	: m_inputBox(1, 0, 0, 100, 14, ""),
 	  m_scrollY(0.0f),
 	  m_maxScroll(0.0f),
 	  m_isDragging(false),
@@ -28,7 +28,8 @@ ChatScreen::~ChatScreen() {
 }
 
 void ChatScreen::init() {
-	m_inputBox = TextBox(1, 2, height - 18, width - 4, 16, "");
+	m_inputBox = TextBox(1, 0, height - 14, width, 14, "");
+	m_inputBox.setChatStyle(true);
 	m_inputBox.setFocus(minecraft);
 
 	textBoxes.clear();

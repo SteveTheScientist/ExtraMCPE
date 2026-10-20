@@ -28,6 +28,8 @@ public:
 	virtual void charPressed(Minecraft* minecraft, char c);
 	virtual void tick(Minecraft* minecraft);
 
+	void setChatStyle(bool b) { isChatStyle = b; }
+
 	// Selection, cursor and text insertion helpers
 	bool hasSelection() const { return cursorPos != selectAnchor; }
 	int getSelectionStart() const { return cursorPos < selectAnchor ? cursorPos : selectAnchor; }
@@ -50,6 +52,7 @@ public:
 
 	bool focused;
 	bool blink;
+	bool isChatStyle;
 
 	int cursorPos;
 	int selectAnchor;

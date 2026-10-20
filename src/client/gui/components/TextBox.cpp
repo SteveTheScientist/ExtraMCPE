@@ -23,7 +23,7 @@ TextBox::TextBox(int id, int x, int y, const std::string& msg)
 
 TextBox::TextBox(int id, int x, int y, int w, int h, const std::string& msg)
  : GuiElement(true, true, x, y, w, h),
-   id(id), hint(msg), focused(false), blink(false), blinkTicks(0),
+   id(id), hint(msg), focused(false), blink(false), isChatStyle(false), blinkTicks(0),
    cursorPos(0), selectAnchor(0),
    isPressing(false), isDraggingMouse(false), isDraggingHandleStart(false), isDraggingHandleEnd(false),
    pressStartTime(0), pressStartX(0), pressStartY(0),
@@ -493,10 +493,14 @@ void TextBox::tick(Minecraft* minecraft) {
 }
 
 void TextBox::render(Minecraft* minecraft, int xm, int ym) {
-    uint32_t bgColor = focused ? 0xffa0a0a0 : 0xffa0a0a0;
-    uint32_t borderColor = focused ? 0xff000000 : 0xff000000;
-    fill(x, y, x + width, y + height, bgColor);
-    fill(x + 1, y + 1, x + width - 1, y + height - 1, borderColor);
+    if (isChatStyle) {
+        fill(x, y, x + width, y + height, 0x80000000); // 50% transparent black bar with no border
+    } else {
+        uint32_t bgColor = focused ? 0xffa0a0a0 : 0xffa0a0a0;
+        uint32_t borderColor = focused ? 0xff000000 : 0xff000000;
+        fill(x, y, x + width, y + height, bgColor);
+        fill(x + 1, y + 1, x + width - 1, y + height - 1, borderColor);
+    }
 
     int _y = y + (height - Font::DefaultLineHeight) / 2;
 
@@ -538,23 +542,27 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
 
     glScissor(scissorX, physY, scissorW, scissorH);
 
-    // Draw selection highlight background
+    // Draw translucent blue selection highlight background
     if (hasSelection()) {
         int selS = getSelectionStart();
         int selE = getSelectionEnd();
         float xStart = textX + (float)font->width(text.substr(0, selS), true);
         float xEnd = textX + (float)font->width(text.substr(0, selE), true);
 
-        fill((int)xStart, _y - 1, (int)xEnd, _y + Font::DefaultLineHeight + 1, 0xff2a62ac);
+        fill((int)xStart, _y - 1, (int)xEnd, _y + Font::DefaultLineHeight + 1, 0x802a62ac);
     }
 
     // Draw text
     drawString(font, text, (int)textX, _y, 0xffffffff, true);
 
-    // Draw cursor bar
+    // Draw cursor
     if (focused && blink) {
         float cursorX = textX + (float)font->width(text.substr(0, cursorPos), true);
-        fill((int)cursorX, _y - 1, (int)cursorX + 1, _y + Font::DefaultLineHeight + 1, 0xffffffff);
+        if (isChatStyle) {
+            drawString(font, "_", (int)cursorX, _y, 0xffffffff, true);
+        } else {
+            fill((int)cursorX, _y - 1, (int)cursorX + 1, _y + Font::DefaultLineHeight + 1, 0xffffffff);
+        }
     }
 
     // Draw selection handles (for phone/touch interface)
