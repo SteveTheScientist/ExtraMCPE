@@ -213,13 +213,26 @@ Java_com_mojang_minecraftpe_GLRenderer_nativeUpdate(JNIEnv* env) {
 // helper to convert Android keycodes to our internal Keyboard constants
 static int androidKeyToInternal(int androidKey) {
     switch(androidKey) {
-        case AKEYCODE_DEL: return Keyboard::KEY_BACKSPACE;
+        case AKEYCODE_DEL:
+            return Keyboard::KEY_BACKSPACE;
         case AKEYCODE_ENTER:
         case AKEYCODE_NUMPAD_ENTER:
+        case AKEYCODE_DPAD_CENTER:
             return Keyboard::KEY_RETURN;
-        // letters are delivered via nativeTextChar so no need to map here
+        case AKEYCODE_ESCAPE:
+            return Keyboard::KEY_ESCAPE;
+        case AKEYCODE_TAB:
+            return Keyboard::KEY_TAB;
+        case AKEYCODE_DPAD_UP:
+            return 38;
+        case AKEYCODE_DPAD_DOWN:
+            return 40;
+        case AKEYCODE_DPAD_LEFT:
+            return 37;
+        case AKEYCODE_DPAD_RIGHT:
+            return 39;
         default:
-            return androidKey; // fall back to raw code
+            return 0; // non-control keys return 0 so Android keycodes (e.g. AKEYCODE_6 = 13) do not collide with Keyboard::KEY_RETURN (13)
     }
 }
 

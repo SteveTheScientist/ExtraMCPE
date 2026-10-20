@@ -326,37 +326,16 @@ handle_xperia_input( struct android_app* app, AInputEvent* event )
 }
 static int convertAndroidKeyCodeToWindowsKeyCode(int keyCode) {
 	switch(keyCode) {
-        /*
-	case 29: return Keyboard::KEY_A;
-		case 30: return Keyboard::KEY_B;
-		case 31: return Keyboard::KEY_C;
-		case 32: return Keyboard::KEY_D;
-		case 33: return Keyboard::KEY_E;
-		case 34: return Keyboard::KEY_F;
-		case 35: return Keyboard::KEY_G;
-		case 36: return Keyboard::KEY_H;
-		case 37: return Keyboard::KEY_I;
-		case 38: return Keyboard::KEY_J;
-		case 39: return Keyboard::KEY_K;
-		case 40: return Keyboard::KEY_L;
-		case 41: return Keyboard::KEY_M;
-		case 42: return Keyboard::KEY_N;
-		case 43: return Keyboard::KEY_O;
-		case 44: return Keyboard::KEY_P;
-		case 45: return Keyboard::KEY_Q;
-		case 46: return Keyboard::KEY_R;
-		case 47: return Keyboard::KEY_S;
-		case 48: return Keyboard::KEY_T;
-		case 49: return Keyboard::KEY_U;
-		case 50: return Keyboard::KEY_V;
-		case 51: return Keyboard::KEY_W;
-		case 52: return Keyboard::KEY_X;
-		case 53: return Keyboard::KEY_Y;
-		case 54: return Keyboard::KEY_Z;
-		*/
-		case 67: return Keyboard::KEY_BACKSPACE;
-		case 66: return Keyboard::KEY_RETURN;
-//		case 62: return Keyboard::KEY_SPACE;
+		case 67: return Keyboard::KEY_BACKSPACE; // AKEYCODE_DEL
+		case 66: return Keyboard::KEY_RETURN;    // AKEYCODE_ENTER
+		case 160: return Keyboard::KEY_RETURN;   // AKEYCODE_NUMPAD_ENTER
+		case 23: return Keyboard::KEY_RETURN;    // AKEYCODE_DPAD_CENTER
+		case 111: return Keyboard::KEY_ESCAPE;   // AKEYCODE_ESCAPE
+		case 61: return Keyboard::KEY_TAB;       // AKEYCODE_TAB
+		case 19: return 38;                      // AKEYCODE_DPAD_UP
+		case 20: return 40;                      // AKEYCODE_DPAD_DOWN
+		case 21: return 37;                      // AKEYCODE_DPAD_LEFT
+		case 22: return 39;                      // AKEYCODE_DPAD_RIGHT;
 		default: return 0;
 	}
 }
@@ -386,8 +365,9 @@ handle_keyboard_input( struct android_app* app, AInputEvent* event )
 		   if (!pressedBack) {
 
                int key = convertAndroidKeyCodeToWindowsKeyCode(keyCode);
-               if (key == 0) key = keyCode;
-			   Keyboard::feed(key, isDown);
+               if (key != 0) {
+                   Keyboard::feed(key, isDown);
+               }
 			   if(isDown) {
 				   int uniChar = ((struct ENGINE*)app->userData)->appContext.platform->getKeyFromKeyCode(keyCode, metaState, deviceId);
 				   char charI = (char)uniChar;

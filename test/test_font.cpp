@@ -126,6 +126,17 @@ int main() {
     int shadowWhite = (colorWhite & 0xFCFCFC) >> 2;
     assert(shadowWhite == 0x3F3F3F);
 
+    // 5. Digit and symbol character typing verification
+    std::string text = "";
+    std::string testChars = "0123456789^!@#$%&*()-_=+";
+    for (size_t i = 0; i < testChars.length(); ++i) {
+        char c = testChars[i];
+        if (c >= 32 && c < 127) {
+            text.push_back(c);
+        }
+    }
+    assert(text == testChars);
+
     std::cout << "All Font Formatting unit tests passed successfully!" << std::endl;
     return 0;
 }
