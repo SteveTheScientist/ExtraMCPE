@@ -4,11 +4,12 @@
 #include "../../world/entity/player/Player.h"
 #include "../../world/entity/player/Inventory.h"
 
-HumanoidModel::HumanoidModel( float g /*= 0*/, float yOffset /*= 0*/, int texW /*= 64*/, int texH /*= 32*/ )
-:    holdingLeftHand(false),
+HumanoidModel::HumanoidModel( float g /*= 0*/, float yOffset /*= 0*/, int texW /*= 64*/, int texH /*= 32*/, bool slim /*= false*/ )
+:   holdingLeftHand(false),
 	holdingRightHand(false),
 	sneaking(false),
 	bowAndArrow(false),
+	slim(slim),
 	head(0, 0),
 	hair(32, 0),
 	//ear (24, 0),
@@ -20,9 +21,6 @@ HumanoidModel::HumanoidModel( float g /*= 0*/, float yOffset /*= 0*/, int texW /
 {
 	texWidth = texW;
 	texHeight = texH;
-
-	// texWidth = 64;
-	// texHeight = 32;
 
 	head.setModel(this);
 	hair.setModel(this);
@@ -46,16 +44,24 @@ HumanoidModel::HumanoidModel( float g /*= 0*/, float yOffset /*= 0*/, int texW /
 	hair.addBox(-4, -8, -4, 8, 8, 8, g + 0.5f); // Outer head layer (hat)
 	hair.setPos(0, 0 + yOffset, 0);
 
-
 	body.addBox(-4, 0, -2, 8, 12, 4, g); // Body
 	body.setPos(0, 0 + yOffset, 0);
 
-	arm0.addBox(-3, -2, -2, 4, 12, 4, g); // Arm0
-	arm0.setPos(-5, 2 + yOffset, 0);
+	if (slim) {
+		arm0.addBox(-2, -2, -2, 3, 12, 4, g); // Slim Arm0
+		arm0.setPos(-5.0f + 0.5f, 2 + yOffset, 0); // Shifted by half a pixel (-4.5f)
 
-	arm1.mirror = true;
-	arm1.addBox(-1, -2, -2, 4, 12, 4, g); // Arm1
-	arm1.setPos(5, 2 + yOffset, 0);
+		arm1.mirror = true;
+		arm1.addBox(-1, -2, -2, 3, 12, 4, g); // Slim Arm1
+		arm1.setPos(5.0f - 0.5f, 2 + yOffset, 0); // Shifted by half a pixel (4.5f)
+	} else {
+		arm0.addBox(-3, -2, -2, 4, 12, 4, g); // Arm0
+		arm0.setPos(-5, 2 + yOffset, 0);
+
+		arm1.mirror = true;
+		arm1.addBox(-1, -2, -2, 4, 12, 4, g); // Arm1
+		arm1.setPos(5, 2 + yOffset, 0);
+	}
 
 	leg0.addBox(-2, 0, -2, 4, 12, 4, g); // Leg0
 	leg0.setPos(-2, 12 + yOffset, 0);
@@ -69,11 +75,19 @@ HumanoidModel::HumanoidModel( float g /*= 0*/, float yOffset /*= 0*/, int texW /
 		body.texOffs(16, 32);
 		body.addBox(-4, 0, -2, 8, 12, 4, g + 0.5f);
 
-		arm0.texOffs(40, 32);
-		arm0.addBox(-3, -2, -2, 4, 12, 4, g + 0.5f);
+		if (slim) {
+			arm0.texOffs(40, 32);
+			arm0.addBox(-2, -2, -2, 3, 12, 4, g + 0.5f);
 
-		arm1.texOffs(48, 48);
-		arm1.addBox(-1, -2, -2, 4, 12, 4, g + 0.5f);
+			arm1.texOffs(48, 48);
+			arm1.addBox(-1, -2, -2, 3, 12, 4, g + 0.5f);
+		} else {
+			arm0.texOffs(40, 32);
+			arm0.addBox(-3, -2, -2, 4, 12, 4, g + 0.5f);
+
+			arm1.texOffs(48, 48);
+			arm1.addBox(-1, -2, -2, 4, 12, 4, g + 0.5f);
+		}
 
 		leg0.texOffs(0, 32);
 		leg0.addBox(-2, 0, -2, 4, 12, 4, g + 0.5f);
@@ -85,7 +99,7 @@ HumanoidModel::HumanoidModel( float g /*= 0*/, float yOffset /*= 0*/, int texW /
 
 void HumanoidModel::render(Entity* e, float time, float r, float bob, float yRot, float xRot, float scale )
 {
-	if(e != NULL && e->isMob()) {		
+	if(e != NULL && e->isMob()) {
 		Mob* mob = (Mob*)(e);
 		ItemInstance* item = mob->getCarriedItem();
 		if(item != NULL) {
@@ -97,21 +111,17 @@ void HumanoidModel::render(Entity* e, float time, float r, float bob, float yRot
 			}
 		}
 	}
-	
+
 	setupAnim(time, r, bob, yRot, xRot, scale);
-	
+
 	// Sync overlay with head rotation/position
-	
 	hair.xRot = head.xRot;
 	hair.yRot = head.yRot;
 	hair.zRot = head.zRot;
 	hair.y = head.y;
-	
 
 	head.render(scale);
-	
 	hair.render(scale);
-	
 	body.render(scale);
 	arm0.render(scale);
 	arm1.render(scale);
@@ -125,12 +135,11 @@ void HumanoidModel::render( HumanoidModel* model, float scale )
 	head.yRot = model->head.yRot;
 	head.y = model->head.y;
 	head.xRot = model->head.xRot;
-	
+
 	hair.yRot = head.yRot;
 	hair.xRot = head.xRot;
 	hair.zRot = head.zRot;
 	hair.y = head.y;
-	
 
 	arm0.xRot = model->arm0.xRot;
 	arm0.zRot = model->arm0.zRot;
@@ -161,9 +170,8 @@ void HumanoidModel::renderHorrible( float time, float r, float bob, float yRot, 
 	arm1.renderHorrible(scale);
 	leg0.renderHorrible(scale);
 	leg1.renderHorrible(scale);
-	//hair.renderHorrible(scale);
 }
-// Updated to match Minecraft Java, all except hair.
+
 void HumanoidModel::setupAnim( float time, float r, float bob, float yRot, float xRot, float scale )
 {
 	head.yRot = yRot / (180 / Mth::PI);
@@ -277,18 +285,3 @@ void HumanoidModel::onGraphicsReset()
 	leg1.onGraphicsReset();
 	hair.onGraphicsReset();
 }
-
-//void renderHair(float scale) {
-//    hair.yRot = head.yRot;
-//    hair.xRot = head.xRot;
-//    hair.render(scale);
-//}
-//
-//void renderEars(float scale) {
-//    ear.yRot = head.yRot;
-//    ear.xRot = head.xRot;
-//    ear.x=0;
-//    ear.y=0;
-//    ear.render(scale);
-//}
-//

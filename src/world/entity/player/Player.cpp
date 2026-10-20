@@ -27,6 +27,7 @@ static void loadArmor(ItemInstance* armor, ListTag* listTag);
 Player::Player(Level* level, bool isCreative)
 :	super(level),
 	userType(0),
+	slimModel(false),
 	playerHasRespawnPosition(false),
 	hasFakeInventory(false),
 	containerMenu(NULL),

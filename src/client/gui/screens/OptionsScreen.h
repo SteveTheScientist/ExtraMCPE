@@ -23,7 +23,8 @@ enum ActionId {
     ACTION_INTERFACE,
     ACTION_AUDIO,
     ACTION_FOG,
-    ACTION_CHAT_SETTINGS
+    ACTION_CHAT_SETTINGS,
+    ACTION_SKIN_SETTINGS
 };
 
 class OptionControl : public Button {

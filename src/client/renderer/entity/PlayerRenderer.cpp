@@ -4,6 +4,8 @@
 #include "../../../world/entity/player/Player.h"
 #include "../../../world/level/Level.h"
 #include "../../../world/item/ArmorItem.h"
+#include "../../Minecraft.h"
+#include "client/Options.h"
 
 static const std::string armorFilenames[10] = {
 	"armor/cloth_1.png",	"armor/cloth_2.png",
@@ -16,6 +18,7 @@ static const std::string armorFilenames[10] = {
 PlayerRenderer::PlayerRenderer( HumanoidModel* humanoidModel, float shadow )
 :	super(humanoidModel, shadow),
 	playerModel64(humanoidModel),
+	playerModel64Slim(new HumanoidModel(0, 0, 64, 64, true)),
 	playerModel32(new HumanoidModel(0, 0, 64, 32)),
 	armorParts1(new HumanoidModel(1.0f, 0, 64, 32)),
 	armorParts2(new HumanoidModel(0.5f, 0, 64, 32))
@@ -31,6 +34,7 @@ PlayerRenderer::~PlayerRenderer() {
 
 	delete playerModel32;
 	delete playerModel64;
+	delete playerModel64Slim;
 	delete armorParts1;
 	delete armorParts2;
 }
@@ -60,7 +64,50 @@ bool PlayerRenderer::isModernPlayerSkin(Mob* mob) {
 	if (!Textures::isTextureIdValid(texId))
 		return false;
 	const TextureData* texData = entityRenderDispatcher->textures->getTemporaryTextureData(texId);
-	return texData && texData->w == 64 && texData->h == 64;
+
+	if (texData && texData->w == 64 && texData->h == 64) {
+		// Perform slim check whenever skin texture is loaded/checked
+		Player* player = Player::asPlayer(mob);
+		if (player) {
+			bool detectedSlim = true;
+			if (texData->data) {
+				// Right arm area in 64x64 skin: x=54..55, y=20..31
+				for (int py = 20; py <= 31; ++py) {
+					for (int px = 54; px <= 55; ++px) {
+						int idx = (py * 64 + px) * 4 + 3; // Alpha channel
+						if (texData->data[idx] != 0) {
+							detectedSlim = false;
+							break;
+						}
+					}
+					if (!detectedSlim) break;
+				}
+			} else {
+				detectedSlim = false;
+			}
+
+			// Check option for local player or auto-detect for other players
+			if (entityRenderDispatcher && entityRenderDispatcher->minecraft && mob == (Mob*)entityRenderDispatcher->minecraft->player) {
+				std::string opt = entityRenderDispatcher->minecraft->options.getStringValue(OPTIONS_SKIN_MODEL);
+				if (opt == "Slim") {
+					player->slimModel = true;
+				} else if (opt == "Classic") {
+					player->slimModel = false;
+				} else { // "Auto"
+					player->slimModel = detectedSlim;
+				}
+			} else {
+				player->slimModel = detectedSlim;
+			}
+		}
+		return true;
+	} else {
+		Player* player = Player::asPlayer(mob);
+		if (player) {
+			player->slimModel = false; // 64x32 skins are always classic
+		}
+		return false;
+	}
 }
 
 void PlayerRenderer::renderName( Mob* mob, float x, float y, float z ){
@@ -72,7 +119,17 @@ void PlayerRenderer::renderName( Mob* mob, float x, float y, float z ){
 
 // @note fix player skin system
 void PlayerRenderer::setModernSkin(Mob* mob) {
-	HumanoidModel* desired = isModernPlayerSkin(mob) ? playerModel64 : playerModel32;
+	bool is64 = isModernPlayerSkin(mob);
+	HumanoidModel* desired = playerModel32;
+	if (is64) {
+		Player* player = Player::asPlayer(mob);
+		if (player && player->slimModel) {
+			desired = playerModel64Slim;
+		} else {
+			desired = playerModel64;
+		}
+	}
+
 	if (model != desired || humanoidModel != desired) {
 		model = desired;
 		humanoidModel = desired;
@@ -82,10 +139,6 @@ void PlayerRenderer::setModernSkin(Mob* mob) {
 void PlayerRenderer::render(Entity* mob_, float x, float y, float z, float rot, float a) {
 	Mob* mob = (Mob*) mob_;
 	setModernSkin(mob);
-	/* LOGI("[PlayerRenderer] %s: skin=%s, modelTex=%dx%d, desired=%s\n", 
-		((Player*)mob)->name.c_str(), mob->getTexture().c_str(), 
-		humanoidModel->texWidth, humanoidModel->texHeight,
-		(desired == playerModel64 ? "64" : "32")); */
 	HumanoidMobRenderer::render(mob_, x, y, z, rot, a);
 }
 
@@ -121,6 +174,7 @@ int PlayerRenderer::prepareArmor(Mob* mob, int layer, float a) {
 void PlayerRenderer::onGraphicsReset() {
 	if (playerModel32) playerModel32->onGraphicsReset();
 	if (playerModel64) playerModel64->onGraphicsReset();
+	if (playerModel64Slim) playerModel64Slim->onGraphicsReset();
 
 	if (armorParts1) armorParts1->onGraphicsReset();
 	if (armorParts2) armorParts2->onGraphicsReset();
