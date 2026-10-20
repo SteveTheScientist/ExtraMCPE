@@ -89,7 +89,7 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
     if (focused && blink) displayed.push_back('_');
 
     Font* font = minecraft->font;
-    float textW = Gui::getColoredWidth(font, displayed);
+    float textW = Gui::getColoredWidth(font, displayed, true);
     float maxVisibleW = (float)(width - 4); // 2px margin inside box
 
     float textX = (float)(x + 2);
@@ -110,7 +110,7 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
 
     glScissor(scissorX, physY, scissorW, scissorH);
 
-    drawString(font, displayed, textX, _y, 0xffffffff);
+    drawString(font, displayed, textX, _y, 0xffffffff, true);
 
     glDisable(GL_SCISSOR_TEST);
 }

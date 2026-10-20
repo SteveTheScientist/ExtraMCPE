@@ -61,14 +61,14 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	glLoadIdentity();
 	glOrthof(0.0f, (float)minecraft->width, (float)minecraft->height, 0,  -1, 1);
 	glMatrixMode(GL_MODELVIEW);
-	
+
 	minecraft->textures->loadAndBindTexture("item/sign.png");
     glColor4f2(1, 1, 1, 1);
 
 	static float minUV[] = {0.03126f, 0.06249f};
     static float maxUV[] = {0.39063f, 0.4374f};
 	float scale = ((minecraft->height / 2) / 32) * 0.9f;
-	
+
 	glTranslatef(minecraft->width / 2.0f, 5.0f, 0.0f);
 	glScalef2(scale,scale,1);
 	t.begin(GL_QUADS);
@@ -77,10 +77,10 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	t.vertexUV(32, 0 + 32, 0.0f, maxUV[0], maxUV[1]);
 	t.vertexUV(-32, 0 + 32, 0.0f, minUV[0], maxUV[1]);
 	t.draw();
-	
+
 	sign->selectedLine = line;
 	float textScale = 8.0f / 11.0f;
-	
+
 	glTranslatef(0, 2 ,0);
 	glScalef2(textScale, textScale, 1);
 	for(int i = 0; i < 4; ++i) {
@@ -88,14 +88,14 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 		std::string msg = sign->messages[i];
 		if (i == sign->selectedLine && msg.length() < 14) {
 			std::string s = "> " + msg + " <";
-			font->draw(s, -(float)font->width(s) / 2.0f, 10.0f * i, 0xFF000000, false);
+			font->draw(s, -(float)font->width(s, true) / 2.0f, 10.0f * i, 0xFF000000, false, true);
 		} else {
-			font->draw(msg, -(float)font->width(msg) / 2.0f, 10.0f * i, 0xFF000000, false);
+			font->draw(msg, -(float)font->width(msg, true) / 2.0f, 10.0f * i, 0xFF000000, false, true);
 		}
 	}
 	sign->selectedLine  = -1;
 	//font->draw("Hej", minecraft->width / 2, 100, 0xFFFFFFFF, false);
-	
+
 	glPopMatrix();
 	glEnable(GL_CULL_FACE);
 	glMatrixMode(GL_PROJECTION);

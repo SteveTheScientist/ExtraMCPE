@@ -52,8 +52,8 @@ public:
 	// draw a string containing simple [color]...[/color] tags; color names are matched
 	// case-insensitively and default to white. alpha is applied to each segment.
 	// draw tagged string (ignores simple [color]…[/color] tags)
-	static void drawColoredString(Font* font, const std::string& text, float x, float y, int alpha);
-	static float getColoredWidth(Font* font, const std::string& text);
+	static void drawColoredString(Font* font, const std::string& text, float x, float y, int alpha, bool isPlayerText = false);
+	static float getColoredWidth(Font* font, const std::string& text, bool isPlayerText = false);
 
 	void renderOnSelectItemNameText( const int screenWidth, Font* font, int ySlot );
 
@@ -115,7 +115,7 @@ private:
 
 	RenderChunk _inventoryRc;
 	bool _inventoryNeedsUpdate;
-	
+
 	int _flashSlotId;
 	float _flashSlotStartTime;
 

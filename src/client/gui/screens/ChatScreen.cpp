@@ -113,7 +113,7 @@ static void wrapInputText(Font* font, const std::string& input, float maxW, std:
 		if (c == ' ') {
 			if (!currentWord.empty()) {
 				if (!currentLine.empty()) {
-					if (Gui::getColoredWidth(font, currentLine + " " + currentWord) <= maxW) {
+					if (Gui::getColoredWidth(font, currentLine + " " + currentWord, true) <= maxW) {
 						currentLine += " " + currentWord;
 					} else {
 						outLines.push_back(currentLine);
@@ -127,7 +127,7 @@ static void wrapInputText(Font* font, const std::string& input, float maxW, std:
 		} else {
 			currentWord += c;
 			std::string testLine = currentLine.empty() ? currentWord : (currentLine + " " + currentWord);
-			if (Gui::getColoredWidth(font, testLine) > maxW) {
+			if (Gui::getColoredWidth(font, testLine, true) > maxW) {
 				if (!currentLine.empty()) {
 					std::string prefix = currentLine + " ";
 					size_t k = 0;
@@ -143,7 +143,7 @@ static void wrapInputText(Font* font, const std::string& input, float maxW, std:
 						currentLine = "";
 					}
 				}
-				while (Gui::getColoredWidth(font, currentWord) > maxW) {
+				while (Gui::getColoredWidth(font, currentWord, true) > maxW) {
 					size_t k = 1;
 					while (k < currentWord.length() && Gui::getColoredWidth(font, currentWord.substr(0, k + 1)) <= maxW) {
 						k++;
@@ -156,7 +156,7 @@ static void wrapInputText(Font* font, const std::string& input, float maxW, std:
 	}
 
 	if (!currentWord.empty()) {
-		if (!currentLine.empty() && Gui::getColoredWidth(font, currentLine + " " + currentWord) <= maxW) {
+		if (!currentLine.empty() && Gui::getColoredWidth(font, currentLine + " " + currentWord, true) <= maxW) {
 			currentLine += " " + currentWord;
 		} else if (currentLine.empty()) {
 			currentLine = currentWord;
@@ -216,7 +216,7 @@ void ChatScreen::render(int xm, int ym, float a) {
 	for (int i = 0; i < visibleLines && (startLineIdx + i) < lineCount; i++) {
 		const std::string& lineStr = inputLines[startLineIdx + i];
 		float lineY = (float)(barY + 2 + i * 12);
-		font->drawShadow(lineStr, (float)(barX + 4), lineY, 0xffffffff);
+		font->drawShadow(lineStr, (float)(barX + 4), lineY, 0xffffffff, true);
 	}
 
 	glDisable(GL_SCISSOR_TEST);

@@ -46,6 +46,7 @@ void ChatSettingsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_CHAT_MESSAGE_TIME, "Message Time"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_POS_X, "Chat Position X", false, 0.0f, 320.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_POS_Y, "Chat Position Y", false, 0.0f, 240.0f));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TEXT_FORMATTING, "Text Formatting"));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -257,6 +258,7 @@ void ChatSettingsScreen::buttonClicked(Button* button) {
         minecraft->options.set(OPTIONS_CHAT_MESSAGE_TIME, 1); // 10s
         minecraft->options.set(OPTIONS_CHAT_POS_X, 2.0f);
         minecraft->options.set(OPTIONS_CHAT_POS_Y, 40.0f);
+        minecraft->options.set(OPTIONS_TEXT_FORMATTING, true);
         minecraft->options.save();
 
         for (size_t i = 0; i < m_controls.size(); ++i) {

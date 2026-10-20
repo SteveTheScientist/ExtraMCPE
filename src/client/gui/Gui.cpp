@@ -349,7 +349,7 @@ void Gui::addMessage(const std::string& _string) {
 		char c = _string[i];
 		if (c == '\n') {
 			if (!currentWord.empty()) {
-				if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+				if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord, true) <= maxTextWidth) {
 					currentLine += " " + currentWord;
 				} else if (currentLine.empty()) {
 					currentLine = currentWord;
@@ -364,7 +364,7 @@ void Gui::addMessage(const std::string& _string) {
 		} else if (c == ' ') {
 			if (!currentWord.empty()) {
 				if (!currentLine.empty()) {
-					if (getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+					if (getColoredWidth(minecraft->font, currentLine + " " + currentWord, true) <= maxTextWidth) {
 						currentLine += " " + currentWord;
 					} else {
 						lines.push_back(currentLine);
@@ -379,7 +379,7 @@ void Gui::addMessage(const std::string& _string) {
 			currentWord += c;
 			// Small wrap fix: if a long word with no spaces does not fit in the rest of the line, break it by character on the same line (after "<name> "). Do not move the whole word to the next line and leave "<name>" alone.
 			std::string testLine = currentLine.empty() ? currentWord : (currentLine + " " + currentWord);
-			if (getColoredWidth(minecraft->font, testLine) > maxTextWidth) {
+			if (getColoredWidth(minecraft->font, testLine, true) > maxTextWidth) {
 				if (!currentLine.empty()) {
 					// Fill remaining space on currentLine character by character
 					std::string prefix = currentLine + " ";
@@ -398,7 +398,7 @@ void Gui::addMessage(const std::string& _string) {
 					}
 				}
 				// If currentWord alone still exceeds maxTextWidth, break it by character
-				while (getColoredWidth(minecraft->font, currentWord) > maxTextWidth) {
+				while (getColoredWidth(minecraft->font, currentWord, true) > maxTextWidth) {
 					size_t k = 1;
 					while (k < currentWord.length() && getColoredWidth(minecraft->font, currentWord.substr(0, k + 1)) <= maxTextWidth) {
 						k++;
@@ -411,7 +411,7 @@ void Gui::addMessage(const std::string& _string) {
 	}
 
 	if (!currentWord.empty()) {
-		if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord) <= maxTextWidth) {
+		if (!currentLine.empty() && getColoredWidth(minecraft->font, currentLine + " " + currentWord, true) <= maxTextWidth) {
 			currentLine += " " + currentWord;
 		} else if (currentLine.empty()) {
 			currentLine = currentWord;
@@ -1147,23 +1147,43 @@ static void parseColorTags(const std::string& in, std::vector<ColorSegment>& out
 	}
 }
 
-void Gui::drawColoredString(Font* font, const std::string& text, float x, float y, int alpha) {
+void Gui::drawColoredString(Font* font, const std::string& text, float x, float y, int alpha, bool isPlayerText) {
+	bool allowFormatting = true;
+	if (isPlayerText && minecraft) {
+		allowFormatting = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
+	}
+
+	if (!allowFormatting) {
+		int color = 0xffffff + (alpha << 24);
+		font->drawShadow(text, x, y, color, true);
+		return;
+	}
+
 	std::vector<ColorSegment> segs;
 	parseColorTags(text, segs);
 	float cx = x;
 	for (auto &s : segs) {
 		int color = s.color + (alpha << 24);
-		font->drawShadow(s.text, cx, y, color);
-		cx += font->width(s.text);
+		font->drawShadow(s.text, cx, y, color, isPlayerText);
+		cx += font->width(s.text, isPlayerText);
 	}
 }
 
-float Gui::getColoredWidth(Font* font, const std::string& text) {
+float Gui::getColoredWidth(Font* font, const std::string& text, bool isPlayerText) {
+	bool allowFormatting = true;
+	if (isPlayerText && minecraft) {
+		allowFormatting = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
+	}
+
+	if (!allowFormatting) {
+		return (float)font->width(text, true);
+	}
+
 	std::vector<ColorSegment> segs;
 	parseColorTags(text, segs);
 	float w = 0;
 	for (auto &s : segs) {
-		w += font->width(s.text);
+		w += font->width(s.text, isPlayerText);
 	}
 	return w;
 }
@@ -1262,7 +1282,7 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 			fill((x) * invScale, (y - 1.0f) * invScale, (x + boxWidth) * invScale, (y + lineH - 1.0f) * invScale, (bgAlpha << 24));
 			glEnable(GL_BLEND);
 
-			Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
+			Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha, true);
 			renderedCount++;
 		}
 	} else {
@@ -1294,7 +1314,7 @@ void Gui::renderChatMessages( const int screenHeight, unsigned int max, bool isC
 				fill((x) * invScale, (y - 1.0f) * invScale, (x + boxWidth) * invScale, (y + lineH - 1.0f) * invScale, (bgAlpha << 24));
 				glEnable(GL_BLEND);
 
-				Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha);
+				Gui::drawColoredString(font, message.message, (x + 2.0f) * invScale, y * invScale, textAlpha, true);
 				renderedCount++;
 			}
 		}
