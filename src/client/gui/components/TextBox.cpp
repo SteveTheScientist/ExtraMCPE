@@ -87,8 +87,56 @@ void TextBox::selectWordAt(int idx) {
     getWordBounds(text, idx, selectAnchor, cursorPos);
 }
 
+void TextBox::updatePopupPosition(Minecraft* minecraft) {
+    Font* font = minecraft->font;
+    static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
+    int totalW = 0;
+    for (int i = 0; i < 4; i++) {
+        totalW += font->width(btnLabels[i]) + 12;
+    }
+
+    int screenW = (int)(minecraft->width * Gui::InvGuiScale);
+    int screenH = (int)(minecraft->height * Gui::InvGuiScale);
+
+    popupW = totalW;
+    popupH = 20;
+
+    float fullTextW = (float)font->width(text, true);
+    float maxVisibleW = (float)(width - 4);
+    float scrollX = 0.0f;
+    float cursorPixelOffset = (float)font->width(text.substr(0, cursorPos), true);
+    if (cursorPixelOffset > maxVisibleW) {
+        scrollX = cursorPixelOffset - maxVisibleW;
+    }
+    if (fullTextW <= maxVisibleW) {
+        scrollX = 0.0f;
+    }
+    float textX = (float)(x + 2) - scrollX;
+
+    int selCenterX = x + width / 2;
+    if (hasSelection()) {
+        int selS = getSelectionStart();
+        int selE = getSelectionEnd();
+        float xStart = textX + (float)font->width(text.substr(0, selS), true);
+        float xEnd = textX + (float)font->width(text.substr(0, selE), true);
+        selCenterX = (int)((xStart + xEnd) / 2.0f);
+    }
+
+    popupX = selCenterX - popupW / 2;
+    popupX = Mth::clamp(popupX, 2, screenW - popupW - 2);
+
+    if (y - popupH - 4 >= 2) {
+        popupY = y - popupH - 4;
+    } else {
+        popupY = y + height + 4;
+    }
+    popupY = Mth::clamp(popupY, 2, screenH - popupH - 2);
+}
+
 void TextBox::insertText(Minecraft* minecraft, const std::string& inputStr) {
     if (!focused || inputStr.empty()) return;
+
+    showPopup = false;
 
     int selLen = hasSelection() ? (getSelectionEnd() - getSelectionStart()) : 0;
     int maxAllowed = 256 - (int)text.length() + selLen;
@@ -183,12 +231,15 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
 
                 if (btnIndex == 0) { // Select All
                     selectAll();
+                    showPopup = true;
+                    updatePopupPosition(minecraft);
                 } else if (btnIndex == 1) { // Copy
                     std::string sel = getSelectedText();
                     if (sel.empty()) sel = text;
                     if (!sel.empty()) {
                         minecraft->platform()->setClipboardText(sel);
                     }
+                    showPopup = false;
                 } else if (btnIndex == 2) { // Cut
                     std::string sel = getSelectedText();
                     if (sel.empty()) sel = text;
@@ -201,13 +252,14 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
                             cursorPos = selectAnchor = 0;
                         }
                     }
+                    showPopup = false;
                 } else if (btnIndex == 3) { // Paste
                     std::string clip = minecraft->platform()->getClipboardText();
                     if (!clip.empty()) {
                         insertText(minecraft, clip);
                     }
+                    showPopup = false;
                 }
-                showPopup = false;
                 return;
             } else {
                 showPopup = false;
@@ -257,6 +309,9 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
                 lastClickTime = 0;
                 isDraggingMouse = false;
                 isPressing = false;
+
+                showPopup = true;
+                updatePopupPosition(minecraft);
                 return;
             }
             lastClickTime = now;
@@ -323,6 +378,7 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
                     cursorPos = selectAnchor = 0;
                 }
             }
+            showPopup = false;
             return;
         }
         if (key == Keyboard::KEY_V || key == 'v' || key == 'V') {
@@ -334,6 +390,8 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
         }
         if (key == Keyboard::KEY_A || key == 'a' || key == 'A') {
             selectAll();
+            showPopup = true;
+            updatePopupPosition(minecraft);
             return;
         }
     }
@@ -341,6 +399,8 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
     if (key == Keyboard::KEY_LEFT) {
         if (shiftDown) {
             if (cursorPos > 0) cursorPos--;
+            showPopup = true;
+            updatePopupPosition(minecraft);
         } else {
             if (hasSelection()) {
                 cursorPos = getSelectionStart();
@@ -348,6 +408,7 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
                 cursorPos--;
             }
             selectAnchor = cursorPos;
+            showPopup = false;
         }
         blink = true;
         blinkTicks = 0;
@@ -357,6 +418,8 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
     if (key == Keyboard::KEY_RIGHT) {
         if (shiftDown) {
             if (cursorPos < (int)text.length()) cursorPos++;
+            showPopup = true;
+            updatePopupPosition(minecraft);
         } else {
             if (hasSelection()) {
                 cursorPos = getSelectionEnd();
@@ -364,6 +427,7 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
                 cursorPos++;
             }
             selectAnchor = cursorPos;
+            showPopup = false;
         }
         blink = true;
         blinkTicks = 0;
@@ -372,7 +436,13 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
 
     if (key == Keyboard::KEY_HOME) {
         cursorPos = 0;
-        if (!shiftDown) selectAnchor = 0;
+        if (!shiftDown) {
+            selectAnchor = 0;
+            showPopup = false;
+        } else {
+            showPopup = true;
+            updatePopupPosition(minecraft);
+        }
         blink = true;
         blinkTicks = 0;
         return;
@@ -380,13 +450,20 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
 
     if (key == Keyboard::KEY_END) {
         cursorPos = (int)text.length();
-        if (!shiftDown) selectAnchor = cursorPos;
+        if (!shiftDown) {
+            selectAnchor = cursorPos;
+            showPopup = false;
+        } else {
+            showPopup = true;
+            updatePopupPosition(minecraft);
+        }
         blink = true;
         blinkTicks = 0;
         return;
     }
 
     if (key == Keyboard::KEY_BACKSPACE || key == 127) {
+        showPopup = false;
         if (hasSelection()) {
             deleteSelection();
         } else if (cursorPos > 0) {
@@ -400,6 +477,7 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
     }
 
     if (key == Keyboard::KEY_DELETE || key == 255) {
+        showPopup = false;
         if (hasSelection()) {
             deleteSelection();
         } else if (cursorPos < (int)text.length()) {
@@ -439,14 +517,23 @@ void TextBox::tick(Minecraft* minecraft) {
         if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
             if (isDraggingHandleStart) {
                 selectAnchor = getCharIndexAtX(font, text, xm, textX);
+                showPopup = true;
+                updatePopupPosition(minecraft);
             } else if (isDraggingHandleEnd) {
                 cursorPos = getCharIndexAtX(font, text, xm, textX);
+                showPopup = true;
+                updatePopupPosition(minecraft);
             } else if (isDraggingMouse) {
                 int dragIdx = getCharIndexAtX(font, text, xm, textX);
                 cursorPos = dragIdx;
 
                 if (std::abs(xm - pressStartX) > 4 || std::abs(ym - pressStartY) > 4) {
                     isPressing = false;
+                }
+
+                if (hasSelection()) {
+                    showPopup = true;
+                    updatePopupPosition(minecraft);
                 }
             }
 
@@ -460,30 +547,16 @@ void TextBox::tick(Minecraft* minecraft) {
                     selectWordAt(touchIdx);
 
                     showPopup = true;
-                    static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
-                    int totalW = 0;
-                    for (int i = 0; i < 4; i++) {
-                        totalW += font->width(btnLabels[i]) + 12;
-                    }
-
-                    int screenW = (int)(minecraft->width * Gui::InvGuiScale);
-                    int screenH = (int)(minecraft->height * Gui::InvGuiScale);
-
-                    popupW = totalW;
-                    popupH = 20;
-
-                    popupX = x + (width - popupW) / 2;
-                    popupX = Mth::clamp(popupX, 2, screenW - popupW - 2);
-
-                    if (y - popupH - 4 >= 2) {
-                        popupY = y - popupH - 4;
-                    } else {
-                        popupY = y + height + 4;
-                    }
-                    popupY = Mth::clamp(popupY, 2, screenH - popupH - 2);
+                    updatePopupPosition(minecraft);
                 }
             }
         } else {
+            if (isDraggingMouse || isDraggingHandleStart || isDraggingHandleEnd) {
+                if (hasSelection()) {
+                    showPopup = true;
+                    updatePopupPosition(minecraft);
+                }
+            }
             isPressing = false;
             isDraggingMouse = false;
             isDraggingHandleStart = false;

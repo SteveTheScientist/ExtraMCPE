@@ -39,6 +39,7 @@ public:
 	void selectAll();
 	void selectWordAt(int idx);
 	void insertText(Minecraft* minecraft, const std::string& inputStr);
+	void updatePopupPosition(Minecraft* minecraft);
 
 	static int getCharIndexAtX(Font* font, const std::string& str, int clickX, float textX);
 	static void getWordBounds(const std::string& str, int idx, int& outStart, int& outEnd);
