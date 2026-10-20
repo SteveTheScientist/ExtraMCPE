@@ -36,6 +36,7 @@ void ChatSettingsScreen::init() {
     int idSeq = 3000;
 
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_CHAT_SHOWN, "Chat"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_TEXT_FORMATTING, "Text Formatting"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_TEXT_OPACITY, "Text Opacity", false, 10.0f, 100.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_BG_OPACITY, "Background Opacity", false, 0.0f, 100.0f));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_SLIDER, OPTIONS_CHAT_TEXT_SIZE, "Text Size", false, 50.0f, 100.0f));
@@ -247,6 +248,7 @@ void ChatSettingsScreen::buttonClicked(Button* button) {
 
     if (button == btnReset) {
         minecraft->options.set(OPTIONS_CHAT_SHOWN, true);
+        minecraft->options.set(OPTIONS_TEXT_FORMATTING, true);
         minecraft->options.set(OPTIONS_CHAT_TEXT_OPACITY, 100.0f);
         minecraft->options.set(OPTIONS_CHAT_BG_OPACITY, 50.0f);
         minecraft->options.set(OPTIONS_CHAT_TEXT_SIZE, 100.0f);

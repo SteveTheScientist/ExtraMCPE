@@ -33,26 +33,23 @@ public:
     void init(Options* options);
     void onGraphicsReset();
 
-    void draw(const char* str, float x, float y, int color);
-    void draw(const std::string& str, float x, float y, int color);
-    void draw(const char* str, float x, float y, int color, bool darken);
-    void draw(const std::string& str, float x, float y, int color, bool darken);
-    void drawShadow(const std::string& str, float x, float y, int color);
-    void drawShadow(const char* str, float x, float y, int color);
-    void drawWordWrap(const std::string& str, float x, float y, float w, int col);
+    void draw(const char* str, float x, float y, int color, bool darken = false, bool isPlayerText = false);
+    void draw(const std::string& str, float x, float y, int color, bool darken = false, bool isPlayerText = false);
+    void drawShadow(const std::string& str, float x, float y, int color, bool isPlayerText = false);
+    void drawShadow(const char* str, float x, float y, int color, bool isPlayerText = false);
+    void drawWordWrap(const std::string& str, float x, float y, float w, int col, bool isPlayerText = false);
 
-    int width(const std::string& str);
+    int width(const std::string& str, bool isPlayerText = false);
     int height(const std::string& str);
 
-    static std::string sanitize(const std::string& str);
-    static std::string sanitize(const std::string& str, bool allowAmpersand);
+    static std::string sanitize(const std::string& str, bool allowAmpersand = true);
 
     int getGuiScale() const;
 
     void setFormattingOption(bool enabled) { formattingOption = enabled; }
     bool isFormattingOptionEnabled() const { return formattingOption; }
 
-    static int getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode);
+    int getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode, bool isPlayerText = false) const;
 
 public:
     int fontTexture;
@@ -63,7 +60,7 @@ public:
 private:
     void loadFontProviders();
     void addBitmapProvider(const std::string& relativeTexPath, int heightVal, int ascentVal, const std::vector<std::string>& charGrid);
-    void renderString(const char* str, float x, float y, int color, bool darken);
+    void renderString(const char* str, float x, float y, int color, bool darken, bool isPlayerText = false);
     const GlyphInfo* getGlyph(uint32_t codepoint) const;
     const GlyphInfo* getRandomGlyphWithWidth(int width) const;
 

@@ -263,6 +263,12 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_TEXT_FORMATTING) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
+        msg = "Text Formatting: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
     if (optionId == OPTIONS_CHAT_TEXT_OPACITY) {
         float val = minecraft->options.getProgressValue(OPTIONS_CHAT_TEXT_OPACITY);
         int pct = (int)(val + 0.5f);

@@ -14,14 +14,14 @@ GuiComponent::~GuiComponent()
 {
 }
 
-void GuiComponent::drawCenteredString( Font* font, const std::string& str, int x, int y, int color )
+void GuiComponent::drawCenteredString( Font* font, const std::string& str, int x, int y, int color, bool isPlayerText )
 {
-	font->drawShadow(str, (float)(x - font->width(str) / 2), (float)y, color);
+	font->drawShadow(str, (float)(x - font->width(str, isPlayerText) / 2), (float)y, color, isPlayerText);
 }
 
-void GuiComponent::drawString( Font* font, const std::string& str, int x, int y, int color )
+void GuiComponent::drawString( Font* font, const std::string& str, int x, int y, int color, bool isPlayerText )
 {
-	font->drawShadow(str, (float)x, (float)y /*- font->height(str)/2*/, color);
+	font->drawShadow(str, (float)x, (float)y /*- font->height(str)/2*/, color, isPlayerText);
 }
 
 void GuiComponent::blit( int x, int y, int sx, int sy, int w, int h, int sw/*=0*/, int sh/*=0*/ )
@@ -58,18 +58,11 @@ void GuiComponent::fill( int x0, int y0, int x1, int y1, int col ) {
 }
 void GuiComponent::fill( float x0, float y0, float x1, float y1, int col )
 {
-	//float a = ((col >> 24) & 0xff) / 255.0f;
-	//float r = ((col >> 16) & 0xff) / 255.0f;
-	//float g = ((col >> 8) & 0xff) / 255.0f;
-	//float b = ((col) & 0xff) / 255.0f;
-	//glColor4f2(r, g, b, a);
-
 	Tesselator& t = Tesselator::instance;
 	glEnable2(GL_BLEND);
 	glDisable2(GL_TEXTURE_2D);
 	glBlendFunc2(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	//LOGI("col: %f, %f, %f, %f\n", r, g, b, a);
+
 	t.begin();
 	const int color = (col&0xff00ff00) | ((col&0xff0000) >> 16) | ((col&0xff) << 16);
 	t.colorABGR(color);

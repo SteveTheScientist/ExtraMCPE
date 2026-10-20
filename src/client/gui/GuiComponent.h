@@ -13,8 +13,8 @@ public:
 	GuiComponent();
 	virtual ~GuiComponent();
 
-	void drawString(Font* font, const std::string& str, int x, int y, int color);
-	void drawCenteredString(Font* font, const std::string& str, int x, int y, int color);
+	void drawString(Font* font, const std::string& str, int x, int y, int color, bool isPlayerText = false);
+	void drawCenteredString(Font* font, const std::string& str, int x, int y, int color, bool isPlayerText = false);
 
 	void blit(int x, int y, int sx, int sy, int w, int h, int sw=0, int sh=0);
 	void blit(float x, float y, int sx, int sy, float w, float h, int sw=0, int sh=0);

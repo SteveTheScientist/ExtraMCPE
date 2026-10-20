@@ -26,59 +26,69 @@ TextureId Textures::loadAndBindTexture(const std::string& name) { return 0; }
 int main() {
     std::cout << "Running Font Formatting Unit Tests..." << std::endl;
 
+    Font font(NULL, "gui/default.png", NULL);
+
     // 1. Format Code Parsing Unit Tests
     char outCode = 0;
 
     // UTF-8 section sign §a (\xc2\xa7 + "aHello")
     const char* utf8Code = "\xc2\xa7" "aHello";
-    int lenUtf8 = Font::getFormatCodeLength(utf8Code, true, outCode);
+    int lenUtf8 = font.getFormatCodeLength(utf8Code, true, outCode, false);
     assert(lenUtf8 == 3);
     assert(outCode == 'a');
 
     // Single-byte section sign \xa7b
     const char* sbCode = "\xa7" "bWorld";
-    int lenSb = Font::getFormatCodeLength(sbCode, true, outCode);
+    int lenSb = font.getFormatCodeLength(sbCode, true, outCode, false);
     assert(lenSb == 2);
     assert(outCode == 'b');
 
     // Ampersand code &c (formatting option ON)
+    font.setFormattingOption(true);
     const char* ampCode = "&cText";
-    int lenAmp = Font::getFormatCodeLength(ampCode, true, outCode);
+    int lenAmp = font.getFormatCodeLength(ampCode, true, outCode, true);
     assert(lenAmp == 2);
     assert(outCode == 'c');
 
-    // Ampersand code &c (formatting option OFF)
-    int lenAmpOff = Font::getFormatCodeLength(ampCode, false, outCode);
-    assert(lenAmpOff == 0);
+    // Player text with formatting option OFF
+    font.setFormattingOption(false);
+    int lenPlayerOff1 = font.getFormatCodeLength(ampCode, true, outCode, true);
+    assert(lenPlayerOff1 == 0); // & not parsed as code when OFF
 
-    // Section sign code \xa7c (formatting option OFF)
-    int lenSecOff = Font::getFormatCodeLength(sbCode, false, outCode);
-    assert(lenSecOff == 2);
+    int lenPlayerOff2 = font.getFormatCodeLength(sbCode, true, outCode, true);
+    assert(lenPlayerOff2 == 0); // § not parsed as code for player text when OFF
+
+    // Built-in text with formatting option OFF (built-in text MUST NEVER BE AFFECTED)
+    int lenBuiltinOff = font.getFormatCodeLength(sbCode, true, outCode, false);
+    assert(lenBuiltinOff == 2); // § IS parsed for built-in text even when option is OFF
     assert(outCode == 'b');
+
+    // Reset formatting option to ON
+    font.setFormattingOption(true);
 
     // Case-insensitivity: &L, §R
     const char* upperCode1 = "&LBold";
-    int lenUpper1 = Font::getFormatCodeLength(upperCode1, true, outCode);
+    int lenUpper1 = font.getFormatCodeLength(upperCode1, true, outCode, false);
     assert(lenUpper1 == 2);
     assert(outCode == 'l');
 
     const char* upperCode2 = "\xa7" "RReset";
-    int lenUpper2 = Font::getFormatCodeLength(upperCode2, true, outCode);
+    int lenUpper2 = font.getFormatCodeLength(upperCode2, true, outCode, false);
     assert(lenUpper2 == 2);
     assert(outCode == 'r');
 
     // Unknown format codes: &z, §z
     const char* unknown1 = "&zTest";
-    int lenUnknown1 = Font::getFormatCodeLength(unknown1, true, outCode);
+    int lenUnknown1 = font.getFormatCodeLength(unknown1, true, outCode, false);
     assert(lenUnknown1 == 0);
 
     const char* unknown2 = "\xa7" "zTest";
-    int lenUnknown2 = Font::getFormatCodeLength(unknown2, true, outCode);
+    int lenUnknown2 = font.getFormatCodeLength(unknown2, true, outCode, false);
     assert(lenUnknown2 == 0);
 
     // End of string edge cases
     const char* endStr = "&";
-    int lenEnd = Font::getFormatCodeLength(endStr, true, outCode);
+    int lenEnd = font.getFormatCodeLength(endStr, true, outCode, false);
     assert(lenEnd == 0);
 
     // 2. Sanitization Unit Tests

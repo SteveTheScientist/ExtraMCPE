@@ -211,7 +211,7 @@ void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
     for (int i = 0; i < visibleLines && (startLineIdx + i) < lineCount; i++) {
         const std::string& lineStr = inputLines[startLineIdx + i];
         float lineY = (float)(boxY + 2 + i * 12);
-        font->drawShadow(lineStr, (float)(boxX0 + 4), lineY, 0xffffffff);
+        font->drawShadow(lineStr, (float)(boxX0 + 4), lineY, 0xffffffff, true);
     }
 
     glDisable(GL_SCISSOR_TEST);

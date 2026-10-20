@@ -1153,8 +1153,8 @@ void Gui::drawColoredString(Font* font, const std::string& text, float x, float 
 	float cx = x;
 	for (auto &s : segs) {
 		int color = s.color + (alpha << 24);
-		font->drawShadow(s.text, cx, y, color);
-		cx += font->width(s.text);
+		font->drawShadow(s.text, cx, y, color, true);
+		cx += font->width(s.text, true);
 	}
 }
 
@@ -1163,7 +1163,7 @@ float Gui::getColoredWidth(Font* font, const std::string& text) {
 	parseColorTags(text, segs);
 	float w = 0;
 	for (auto &s : segs) {
-		w += font->width(s.text);
+		w += font->width(s.text, true);
 	}
 	return w;
 }

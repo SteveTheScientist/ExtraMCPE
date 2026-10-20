@@ -72,16 +72,23 @@ static uint32_t decodeUTF8(const char*& ptr) {
     return c;
 }
 
-int Font::getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode)
+int Font::getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode, bool isPlayerText) const
 {
     if (!ptr || *ptr == '\0') return 0;
+
+    if (isPlayerText) {
+        bool enabled = options ? options->getBooleanValue(OPTIONS_TEXT_FORMATTING) : formattingOption;
+        if (!enabled) {
+            return 0;
+        }
+    }
 
     int prefixLen = 0;
     if ((unsigned char)ptr[0] == 0xC2 && (unsigned char)ptr[1] == 0xA7) {
         prefixLen = 2;
     } else if ((unsigned char)ptr[0] == 0xA7) {
         prefixLen = 1;
-    } else if (allowAmpersand && ptr[0] == '&') {
+    } else if ((allowAmpersand || isPlayerText) && ptr[0] == '&') {
         prefixLen = 1;
     }
 
@@ -222,7 +229,6 @@ void Font::loadFontProviders()
         ss << jsonFile.rdbuf();
         std::string jsonStr = ss.str();
 
-        // Minimal JSON parsing for providers
         size_t providersPos = jsonStr.find("\"providers\"");
         if (providersPos != std::string::npos) {
             // Process providers list
@@ -289,7 +295,7 @@ void Font::loadFontProviders()
 void Font::init(Options* options)
 {
     if (options) {
-        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
+        formattingOption = options->getBooleanValue(OPTIONS_TEXT_FORMATTING);
     }
     loadFontProviders();
 }
@@ -306,43 +312,33 @@ const GlyphInfo* Font::getGlyph(uint32_t codepoint) const
     return NULL;
 }
 
-void Font::drawShadow(const std::string& str, float x, float y, int color)
+void Font::drawShadow(const std::string& str, float x, float y, int color, bool isPlayerText)
 {
-    drawShadow(str.c_str(), x, y, color);
+    drawShadow(str.c_str(), x, y, color, isPlayerText);
 }
 
-void Font::drawShadow(const char* str, float x, float y, int color)
+void Font::drawShadow(const char* str, float x, float y, int color, bool isPlayerText)
 {
-    renderString(str, x + 1.0f, y + 1.0f, color, true);
-    renderString(str, x, y, color, false);
+    renderString(str, x + 1.0f, y + 1.0f, color, true, isPlayerText);
+    renderString(str, x, y, color, false, isPlayerText);
 }
 
-void Font::draw(const std::string& str, float x, float y, int color)
+void Font::draw(const std::string& str, float x, float y, int color, bool darken, bool isPlayerText)
 {
-    renderString(str.c_str(), x, y, color, false);
+    renderString(str.c_str(), x, y, color, darken, isPlayerText);
 }
 
-void Font::draw(const char* str, float x, float y, int color)
+void Font::draw(const char* str, float x, float y, int color, bool darken, bool isPlayerText)
 {
-    renderString(str, x, y, color, false);
+    renderString(str, x, y, color, darken, isPlayerText);
 }
 
-void Font::draw(const char* str, float x, float y, int color, bool darken)
-{
-    renderString(str, x, y, color, darken);
-}
-
-void Font::draw(const std::string& str, float x, float y, int color, bool darken)
-{
-    renderString(str.c_str(), x, y, color, darken);
-}
-
-void Font::renderString(const char* str, float x, float y, int color, bool darken)
+void Font::renderString(const char* str, float x, float y, int color, bool darken, bool isPlayerText)
 {
     if (!str || !*str) return;
 
     if (options) {
-        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
+        formattingOption = options->getBooleanValue(OPTIONS_TEXT_FORMATTING);
     }
 
     Tesselator& t = Tesselator::instance;
@@ -385,7 +381,7 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
     const char* ptr = str;
     while (*ptr != '\0') {
         char codeChar = 0;
-        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar, isPlayerText);
         if (codeBytes > 0) {
             ptr += codeBytes;
             if ((codeChar >= '0' && codeChar <= '9') || (codeChar >= 'a' && codeChar <= 'f')) {
@@ -512,12 +508,12 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
     }
 }
 
-int Font::width(const std::string& str)
+int Font::width(const std::string& str, bool isPlayerText)
 {
     if (str.empty()) return 0;
 
     if (options) {
-        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
+        formattingOption = options->getBooleanValue(OPTIONS_TEXT_FORMATTING);
     }
 
     int maxLen = 0;
@@ -529,7 +525,7 @@ int Font::width(const std::string& str)
     const char* ptr = str.c_str();
     while (*ptr != '\0') {
         char codeChar = 0;
-        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar, isPlayerText);
         if (codeBytes > 0) {
             ptr += codeBytes;
             if ((codeChar >= '0' && codeChar <= '9') || (codeChar >= 'a' && codeChar <= 'f') || codeChar == 'r') {
@@ -567,11 +563,6 @@ int Font::height(const std::string& str)
     return h;
 }
 
-std::string Font::sanitize(const std::string& str)
-{
-    return sanitize(str, true);
-}
-
 std::string Font::sanitize(const std::string& str, bool allowAmpersand)
 {
     std::string sanitized = "";
@@ -580,10 +571,26 @@ std::string Font::sanitize(const std::string& str, bool allowAmpersand)
     const char* ptr = str.c_str();
     while (*ptr != '\0') {
         char codeChar = 0;
-        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+        int codeBytes = 0;
+        if ((unsigned char)ptr[0] == 0xC2 && (unsigned char)ptr[1] == 0xA7) {
+            codeBytes = 2;
+        } else if ((unsigned char)ptr[0] == 0xA7) {
+            codeBytes = 1;
+        } else if (allowAmpersand && ptr[0] == '&') {
+            codeBytes = 1;
+        }
+
         if (codeBytes > 0) {
-            ptr += codeBytes;
-            continue;
+            char nextChar = ptr[codeBytes];
+            if (nextChar != '\0') {
+                char c = tolower((unsigned char)nextChar);
+                bool isValid = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+                               (c == 'k' || c == 'l' || c == 'm' || c == 'n' || c == 'o' || c == 'r');
+                if (isValid) {
+                    ptr += codeBytes + 1;
+                    continue;
+                }
+            }
         }
 
         sanitized += *ptr++;
@@ -591,12 +598,12 @@ std::string Font::sanitize(const std::string& str, bool allowAmpersand)
     return sanitized;
 }
 
-void Font::drawWordWrap(const std::string& str, float x, float y, float w, int col)
+void Font::drawWordWrap(const std::string& str, float x, float y, float w, int col, bool isPlayerText)
 {
     if (str.empty()) return;
 
     if (options) {
-        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
+        formattingOption = options->getBooleanValue(OPTIONS_TEXT_FORMATTING);
     }
 
     bool allowAmpersand = formattingOption;
@@ -660,7 +667,7 @@ void Font::drawWordWrap(const std::string& str, float x, float y, float w, int c
 
         while (*ptr != '\0' && *ptr != '\n' && *ptr != ' ') {
             char codeChar = 0;
-            int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+            int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar, isPlayerText);
             if (codeBytes > 0) {
                 tempState.update(codeChar);
                 for (int b = 0; b < codeBytes; b++) {
@@ -680,7 +687,7 @@ void Font::drawWordWrap(const std::string& str, float x, float y, float w, int c
             ptr++;
         }
 
-        if (width(currentLine + wordCandidate) <= w || currentLine.empty() || currentLine == activeState.getPrefix(allowAmpersand)) {
+        if (width(currentLine + wordCandidate, isPlayerText) <= w || currentLine.empty() || currentLine == activeState.getPrefix(allowAmpersand)) {
             currentLine += wordCandidate;
             activeState = tempState;
         } else {
@@ -695,7 +702,7 @@ void Font::drawWordWrap(const std::string& str, float x, float y, float w, int c
     }
 
     for (size_t i = 0; i < lines.size(); ++i) {
-        drawShadow(lines[i], x, y, col);
+        drawShadow(lines[i], x, y, col, isPlayerText);
         y += lineHeight;
     }
 }
