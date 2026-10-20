@@ -30,10 +30,11 @@
 #include "player/input/XperiaPlayInput.h"
 #include "world/level/chunk/ChunkSource.h"
 
+#include "gui/Screen.h"
+
 #ifndef STANDALONE_SERVER
 #include "player/input/touchscreen/TouchInputHolder.h"
 #include "particle/ParticleEngine.h"
-#include "gui/Screen.h"
 #include "gui/Font.h"
 #include "gui/screens/RenameMPLevelScreen.h"
 #include "gui/screens/ConsoleScreen.h"
@@ -1080,6 +1081,14 @@ void Minecraft::gameLostFocus() {
 #endif
 }
 
+
+void Minecraft::handleCommitText(const std::string& str) {
+#ifndef STANDALONE_SERVER
+	if (screen) {
+		screen->insertTextIntoFocused(str);
+	}
+#endif
+}
 
 void Minecraft::setScreen( Screen* screen )
 {

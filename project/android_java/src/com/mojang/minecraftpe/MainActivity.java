@@ -50,6 +50,11 @@ import android.view.WindowManager;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.text.InputType;
+import android.view.inputmethod.InputMethodManager;
 
 import com.mojang.minecraftpe.R;
 import com.mojang.minecraftpe.sound.SoundPlayer;
@@ -744,12 +749,17 @@ public class MainActivity extends Activity {
     }
 
     protected boolean isDemo() { return false; }
-    
+
+    public void onCommitText(String text) {
+        nativeCommitText(text);
+    }
+
     //
     // Native interface
     //
     native void nativeRegisterThis();
     native void nativeUnregisterThis();
+    native static void nativeCommitText(String text);
     native static void nativeOnCreate(int screenWidth, int screenHeight);
     native static void nativeOnDestroy();
     native static void nativeOnKeyDown(int key);
@@ -794,7 +804,17 @@ class GLView extends GLSurfaceView {
         super(context);
         _activity = activity;
         _renderer = new GLRenderer(activity);
-        
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+    }
+
+    @Override
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        if (outAttrs != null) {
+            outAttrs.inputType = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        }
+        return new GameInputConnection(this, true, _activity);
     }
 
 	@Override
@@ -870,4 +890,49 @@ class TextViewReader implements StringValue {
 		return _view.getText().toString();
 	}
 	private TextView _view;
+}
+
+class GameInputConnection extends BaseInputConnection {
+    private final MainActivity _activity;
+
+    public GameInputConnection(View targetView, boolean fullEditor, MainActivity activity) {
+        super(targetView, fullEditor);
+        this._activity = activity;
+    }
+
+    @Override
+    public boolean commitText(CharSequence text, int newCursorPosition) {
+        if (text != null && text.length() > 0) {
+            _activity.onCommitText(text.toString());
+        }
+        return super.commitText(text, newCursorPosition);
+    }
+
+    @Override
+    public boolean setComposingText(CharSequence text, int newCursorPosition) {
+        return super.setComposingText(text, newCursorPosition);
+    }
+
+    @Override
+    public boolean finishComposingText() {
+        return super.finishComposingText();
+    }
+
+    @Override
+    public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+        if (beforeLength > 0) {
+            for (int i = 0; i < beforeLength; i++) {
+                _activity.handleKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+                _activity.handleKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL));
+            }
+            return true;
+        }
+        return super.deleteSurroundingText(beforeLength, afterLength);
+    }
+
+    @Override
+    public boolean sendKeyEvent(KeyEvent event) {
+        _activity.handleKeyEvent(event);
+        return super.sendKeyEvent(event);
+    }
 }

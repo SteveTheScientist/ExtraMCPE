@@ -193,6 +193,15 @@ bool Screen::hasFocusedTextBox() const {
 	return false;
 }
 
+void Screen::insertTextIntoFocused(const std::string& str) {
+	for (auto& tb : textBoxes) {
+		if (tb && tb->focused) {
+			tb->insertText(minecraft, str);
+			break;
+		}
+	}
+}
+
 void Screen::keyPressed( int eventKey )
 {
 	if (hasFocusedTextBox()) {

@@ -259,6 +259,19 @@ Java_com_mojang_minecraftpe_MainActivity_nativeTextChar(JNIEnv* env, jclass cls,
         Keyboard::feedText((char)unicodeChar);
     }
 }
+
+JNIEXPORT void JNICALL
+Java_com_mojang_minecraftpe_MainActivity_nativeCommitText(JNIEnv* env, jclass cls, jstring text) {
+    if (!text) return;
+    const char* str = env->GetStringUTFChars(text, NULL);
+    if (str) {
+        LOGI("@nativeCommitText: '%s'\n", str);
+        if (gApp) {
+            ((Minecraft*)gApp)->handleCommitText(str);
+        }
+        env->ReleaseStringUTFChars(text, str);
+    }
+}
 JNIEXPORT void JNICALL
 Java_com_mojang_minecraftpe_MainActivity_nativeOnKeyUp(JNIEnv* env, jclass cls, jint keyCode) {
     LOGI("@nativeOnKeyUp: %d\n", (int)keyCode);

@@ -47,6 +47,7 @@ public:
 	virtual bool isInGameScreen();
     virtual bool closeOnPlayerHurt();
 	bool hasFocusedTextBox() const;
+	void insertTextIntoFocused(const std::string& str);
 
     virtual void confirmResult(bool result, int id) {}
 	virtual void lostFocus();

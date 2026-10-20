@@ -68,6 +68,7 @@ public:
 	bool isCreativeMode();
 	void setIsCreativeMode(bool isCreative);
 	void setScreen(Screen*);
+	void handleCommitText(const std::string& str);
 
 	virtual void selectLevel(const std::string& levelId, const std::string& levelName, const LevelSettings& settings);
 	virtual void setLevel(Level* level, const std::string& message = "", LocalPlayer* forceInsertPlayer = NULL);
@@ -119,10 +120,10 @@ public:
 	bool isLevelGenerated();
 
 	void handleMouseDown(int button, bool down);
-	
+
     void audioEngineOn();
     void audioEngineOff();
-    
+
 	bool isPowerVR() { return _powerVr; }
 	bool isKindleFire(int kindleVersion);
 	bool transformResolution(int* w, int* h);
