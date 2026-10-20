@@ -48,6 +48,7 @@ public:
 
     void setFormattingOption(bool enabled) { formattingOption = enabled; }
     bool isFormattingOptionEnabled() const { return formattingOption; }
+    bool isFormattingEnabled(bool isPlayerText = false) const;
 
     int getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode, bool isPlayerText = false) const;
 

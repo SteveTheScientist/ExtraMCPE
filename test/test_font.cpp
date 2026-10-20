@@ -63,6 +63,22 @@ int main() {
     assert(lenBuiltinOff == 2); // § IS parsed for built-in text even when option is OFF
     assert(outCode == 'b');
 
+    // 2. Width Measurement Unit Tests
+    // Formatting ON: codes take no width
+    font.setFormattingOption(true);
+    int wPlain = font.width("Hello", true);
+    int wCodeOn = font.width("&8Hello", true);
+    assert(wCodeOn == wPlain);
+
+    // Formatting OFF: codes count for full width
+    font.setFormattingOption(false);
+    int wCodeOff = font.width("&8Hello", true);
+    assert(wCodeOff > wPlain);
+
+    // Built-in text width when option is OFF: section sign still ignored
+    int wBuiltin = font.width("\xa7" "8Hello", false);
+    assert(wBuiltin == font.width("Hello", false));
+
     // Reset formatting option to ON
     font.setFormattingOption(true);
 
@@ -91,7 +107,7 @@ int main() {
     int lenEnd = font.getFormatCodeLength(endStr, true, outCode, false);
     assert(lenEnd == 0);
 
-    // 2. Sanitization Unit Tests
+    // 3. Sanitization Unit Tests
     std::string s1 = Font::sanitize("\xc2\xa7" "aHello &bWorld", true);
     assert(s1 == "Hello World");
 
@@ -101,7 +117,7 @@ int main() {
     std::string s3 = Font::sanitize("&aHello &bWorld", false);
     assert(s3 == "&aHello &bWorld");
 
-    // 3. Drop Shadow Color Darkening Calculation Test
+    // 4. Drop Shadow Color Darkening Calculation Test
     int colorGreen = 0x55FF55;
     int shadowGreen = (colorGreen & 0xFCFCFC) >> 2;
     assert(shadowGreen == 0x153F15);

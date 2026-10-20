@@ -72,15 +72,23 @@ static uint32_t decodeUTF8(const char*& ptr) {
     return c;
 }
 
+bool Font::isFormattingEnabled(bool isPlayerText) const
+{
+    if (isPlayerText) {
+        if (options) {
+            return options->getBooleanValue(OPTIONS_TEXT_FORMATTING);
+        }
+        return formattingOption;
+    }
+    return true;
+}
+
 int Font::getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode, bool isPlayerText) const
 {
     if (!ptr || *ptr == '\0') return 0;
 
-    if (isPlayerText) {
-        bool enabled = options ? options->getBooleanValue(OPTIONS_TEXT_FORMATTING) : formattingOption;
-        if (!enabled) {
-            return 0;
-        }
+    if (!isFormattingEnabled(isPlayerText)) {
+        return 0;
     }
 
     int prefixLen = 0;
@@ -376,7 +384,7 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
     float yOffset = 0.0f;
 
     std::string currentTexture = "";
-    bool allowAmpersand = formattingOption;
+    bool allowAmpersand = isFormattingEnabled(isPlayerText);
 
     const char* ptr = str;
     while (*ptr != '\0') {
@@ -520,7 +528,7 @@ int Font::width(const std::string& str, bool isPlayerText)
     int len = 0;
     bool bold = false;
 
-    bool allowAmpersand = formattingOption;
+    bool allowAmpersand = isFormattingEnabled(isPlayerText);
 
     const char* ptr = str.c_str();
     while (*ptr != '\0') {
@@ -606,7 +614,7 @@ void Font::drawWordWrap(const std::string& str, float x, float y, float w, int c
         formattingOption = options->getBooleanValue(OPTIONS_TEXT_FORMATTING);
     }
 
-    bool allowAmpersand = formattingOption;
+    bool allowAmpersand = isFormattingEnabled(isPlayerText);
 
     struct FormatState {
         char colorCode = 0;
