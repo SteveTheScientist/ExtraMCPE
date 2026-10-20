@@ -56,6 +56,9 @@ public:
     virtual bool isSuperFast();
     virtual void showKeyboard();
     virtual void hideKeyboard();
+
+    virtual std::string getClipboardText() override;
+    virtual void setClipboardText(const std::string& text) override;
 private:
     
     std::string _basePath;

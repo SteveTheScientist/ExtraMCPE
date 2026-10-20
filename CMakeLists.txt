@@ -58,7 +58,7 @@ if(${PLATFORM} MATCHES "Web")
 
     add_library(png INTERFACE IMPORTED)
     set_target_properties(png PROPERTIES
-        INTERFACE_COMPILE_OPTIONS "-sUSE_LIBPNG=1" 
+        INTERFACE_COMPILE_OPTIONS "-sUSE_LIBPNG=1"
         INTERFACE_LINK_OPTIONS "-sUSE_LIBPNG=1"
     )
 
@@ -217,9 +217,9 @@ file(GLOB SERVER_SOURCES
 
     "src/world/phys/HitResult.cpp"
     "src/commands/*.cpp"
-) 
+)
 
-file(GLOB CLIENT_SOURCES 
+file(GLOB CLIENT_SOURCES
     "src/client/*.cpp"
 
     "src/client/gamemode/*.cpp"
@@ -245,9 +245,9 @@ file(GLOB CLIENT_SOURCES
     "src/client/renderer/tileentity/*.cpp"
 
     "src/client/sound/*.cpp"
-    
+
     "src/locale/*.cpp"
-    
+
     "src/nbt/*.cpp"
 
     "src/network/*.cpp"
@@ -258,9 +258,9 @@ file(GLOB CLIENT_SOURCES
     "src/platform/input/*.cpp"
 
     "src/raknet/**.cpp"
-    
+
     "src/server/**.cpp"
-    
+
     "src/util/**.cpp"
 
     "src/util/Color.cpp"
@@ -313,7 +313,7 @@ add_executable("${PROJECT_NAME}-server" ${SERVER_SOURCES})
 
 target_compile_definitions("${PROJECT_NAME}-server" PUBLIC "STANDALONE_SERVER" "SERVER_PROFILER")
 
-target_include_directories("${PROJECT_NAME}-server" PUBLIC 
+target_include_directories("${PROJECT_NAME}-server" PUBLIC
     "${CMAKE_SOURCE_DIR}/src/"
     "project/lib_projects/raknet/jni/RaknetSources"
 )
@@ -322,13 +322,13 @@ target_link_libraries("${PROJECT_NAME}-server" ${CMAKE_THREAD_LIBS_INIT} ${EXTRA
 
 add_executable(${PROJECT_NAME} ${CLIENT_SOURCES})
 
-if(WIN32) 
+if(WIN32)
     target_sources(${PROJECT_NAME} PRIVATE data/images/pe.rc)
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${PLATFORM_CPP})
 
-target_include_directories(${PROJECT_NAME} PUBLIC 
+target_include_directories(${PROJECT_NAME} PUBLIC
     "${CMAKE_SOURCE_DIR}/glad/include/"
     "${CMAKE_SOURCE_DIR}/src"
     "${openal_SOURCE_DIR}/include"
@@ -340,7 +340,7 @@ if(${PLATFORM} MATCHES "Web")
     set(CMAKE_CXX_STANDARD 11)
     # uuuh i hate it
     set(EM_FLAGS "-pthread -sUSE_PTHREADS=1 -sUSE_LIBPNG=1 -sSHARED_MEMORY=1")
-    
+
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EM_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EM_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EM_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/data@/data")
@@ -390,22 +390,22 @@ endif()
 
 if (NOT UNIX)
     add_custom_command(
-        TARGET ${PROJECT_NAME} 
+        TARGET ${PROJECT_NAME}
         POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> $<TARGET_FILE_DIR:${PROJECT_NAME}> 
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> $<TARGET_FILE_DIR:${PROJECT_NAME}>
             COMMAND_EXPAND_LISTS
     )
 endif()
 
 if(NOT ${PLATFORM} MATCHES "Web")
     add_custom_command(
-        TARGET ${PROJECT_NAME} 
+        TARGET ${PROJECT_NAME}
         POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/data" $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
     )
 else()
     add_custom_command(
-        TARGET ${PROJECT_NAME} 
+        TARGET ${PROJECT_NAME}
         POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/misc/web/index.html" $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
@@ -435,6 +435,7 @@ add_executable(test_font
     src/util/StringUtils.cpp
     glad/src/glad.c
 )
+target_compile_definitions(test_font PUBLIC "OPENGL_ES" "NO_EGL")
 target_include_directories(test_font PUBLIC
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/glad/include"
