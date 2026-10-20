@@ -426,3 +426,20 @@ target_include_directories(test_fog PUBLIC
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/project/lib_projects/raknet/jni/RaknetSources"
 )
+
+add_executable(test_font
+    test/test_font.cpp
+    src/client/gui/Font.cpp
+    src/client/Options.cpp
+    src/client/Option.cpp
+    src/client/OptionsFile.cpp
+    src/client/renderer/Tesselator.cpp
+    src/util/StringUtils.cpp
+    src/util/Mth.cpp
+    glad/src/glad.c
+)
+target_compile_definitions(test_font PUBLIC "OPENGL_ES" "NO_EGL" ${PLATFORM_CPP})
+target_include_directories(test_font PUBLIC
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_SOURCE_DIR}/glad/include"
+)

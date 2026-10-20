@@ -48,6 +48,54 @@ int Font::getGuiScale() const
     return intScale;
 }
 
+bool Font::parseFormattingCode(const char* ptr, bool allowAmpersand, int& codeLength, char& codeChar)
+{
+    if (!ptr || !*ptr) return false;
+
+    int prefixLen = 0;
+    if ((unsigned char)ptr[0] == 0xC2 && (unsigned char)ptr[1] == 0xA7) {
+        prefixLen = 2;
+    } else if ((unsigned char)ptr[0] == 0xA7) {
+        prefixLen = 1;
+    } else if (allowAmpersand && ptr[0] == '&') {
+        prefixLen = 1;
+    }
+
+    if (prefixLen == 0) return false;
+
+    char nextC = ptr[prefixLen];
+    if (nextC == '\0') return false;
+
+    char lower = tolower((unsigned char)nextC);
+    bool isValid = (lower >= '0' && lower <= '9') ||
+                   (lower >= 'a' && lower <= 'f') ||
+                   lower == 'k' || lower == 'l' || lower == 'm' ||
+                   lower == 'n' || lower == 'o' || lower == 'r';
+
+    if (isValid) {
+        codeLength = prefixLen + 1;
+        codeChar = nextC;
+        return true;
+    }
+
+    return false;
+}
+
+std::string Font::updateFormatPrefix(const std::string& currentPrefix, char codeChar)
+{
+    char lower = tolower((unsigned char)codeChar);
+    if ((lower >= '0' && lower <= '9') || (lower >= 'a' && lower <= 'f')) {
+        return std::string("§") + lower;
+    } else if (lower == 'r') {
+        return "";
+    } else if (lower == 'k' || lower == 'l' || lower == 'm' || lower == 'n' || lower == 'o') {
+        if (currentPrefix.find(lower) == std::string::npos) {
+            return currentPrefix + "§" + lower;
+        }
+    }
+    return currentPrefix;
+}
+
 static uint32_t decodeUTF8(const char*& ptr) {
     unsigned char c = (unsigned char)(*ptr++);
     if (c < 0x80) return c;
@@ -152,6 +200,9 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
                     info.ascent = ascentVal;
 
                     glyphMap[codepoint] = info;
+                    if (info.advance >= 0 && info.advance < 32) {
+                        glyphsByAdvance[info.advance].push_back(codepoint);
+                    }
                     if (codepoint == '?') {
                         missingGlyph = info;
                         hasMissingGlyph = true;
@@ -166,6 +217,9 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
 void Font::loadFontProviders()
 {
     glyphMap.clear();
+    for (int i = 0; i < 32; ++i) {
+        glyphsByAdvance[i].clear();
+    }
     hasMissingGlyph = false;
 
     // Check for assets/minecraft/font/default.json
@@ -273,8 +327,7 @@ void Font::drawShadow(const std::string& str, float x, float y, int color)
 
 void Font::drawShadow(const char* str, float x, float y, int color)
 {
-    int shadowColor = ((color & 0xFCFCFC) >> 2) | (color & 0xFF000000);
-    renderString(str, x + 1.0f, y + 1.0f, shadowColor, false); // Pass false to prevent double-darkening
+    renderString(str, x + 1.0f, y + 1.0f, color, true); // true = darken
     renderString(str, x, y, color, false);
 }
 
@@ -302,13 +355,9 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
 {
     if (!str || !*str) return;
 
-    if (darken) {
-        int oldAlpha = color & 0xFF000000;
-        color = ((color & 0xFCFCFC) >> 2) | oldAlpha;
-    }
-
     Tesselator& t = Tesselator::instance;
 
+    int initialColor = color;
     int alpha = (0xFF000000 & color) >> 24;
     if (!alpha) alpha = 0xFF;
 
@@ -320,10 +369,28 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
         0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
     };
 
-    int curColor = color;
+    int curColor = initialColor;
+    if (darken) {
+        curColor = ((initialColor & 0xFCFCFC) >> 2) | (initialColor & 0xFF000000);
+    }
+
     int curR = (curColor >> 16) & 0xFF;
     int curG = (curColor >> 8) & 0xFF;
     int curB = curColor & 0xFF;
+
+    bool obfuscated = false;
+    bool bold = false;
+    bool strikethrough = false;
+    bool underline = false;
+    bool italic = false;
+
+    bool allowAmpersand = options ? options->getBooleanValue(OPTIONS_TEXT_FORMATTING) : true;
+
+    struct TextLineSegment {
+        float x0, y0, x1, y1;
+        int r, g, b, a;
+    };
+    std::vector<TextLineSegment> lineSegments;
 
     // Pixel snapping starting coordinates
     float startX = (float)std::floor((double)x + 0.5);
@@ -336,10 +403,12 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
 
     const char* ptr = str;
     while (*ptr != '\0') {
-        if (*ptr == '\xa7' && *(ptr + 1) != '\0') {
-            ptr++;
-            char codeChar = tolower((unsigned char)*ptr++);
-            int codeIdx = hex.find(codeChar);
+        int codeLen = 0;
+        char codeChar = 0;
+        if (parseFormattingCode(ptr, allowAmpersand, codeLen, codeChar)) {
+            ptr += codeLen;
+            char lower = tolower((unsigned char)codeChar);
+            int codeIdx = hex.find(lower);
             if (codeIdx >= 0 && codeIdx < 16) {
                 int cCode = colorCodes[codeIdx];
                 if (darken) {
@@ -348,6 +417,35 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
                 curR = (cCode >> 16) & 0xFF;
                 curG = (cCode >> 8) & 0xFF;
                 curB = cCode & 0xFF;
+                // A color code resets active styles
+                obfuscated = false;
+                bold = false;
+                strikethrough = false;
+                underline = false;
+                italic = false;
+            } else if (lower == 'k') {
+                obfuscated = true;
+            } else if (lower == 'l') {
+                bold = true;
+            } else if (lower == 'm') {
+                strikethrough = true;
+            } else if (lower == 'n') {
+                underline = true;
+            } else if (lower == 'o') {
+                italic = true;
+            } else if (lower == 'r') {
+                int rCol = initialColor;
+                if (darken) {
+                    rCol = ((initialColor & 0xFCFCFC) >> 2) | (initialColor & 0xFF000000);
+                }
+                curR = (rCol >> 16) & 0xFF;
+                curG = (rCol >> 8) & 0xFF;
+                curB = rCol & 0xFF;
+                obfuscated = false;
+                bold = false;
+                strikethrough = false;
+                underline = false;
+                italic = false;
             }
             continue;
         }
@@ -362,12 +460,19 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
         const GlyphInfo* g = getGlyph(codepoint);
         if (!g) continue;
 
-        if (g->textureName.length() > 0 && g->glyphWidth > 0) {
-            if (g->textureName != currentTexture) {
+        const GlyphInfo* renderG = g;
+        if (obfuscated && g->advance > 0 && g->advance < 32 && !glyphsByAdvance[g->advance].empty()) {
+            uint32_t rndCp = glyphsByAdvance[g->advance][rand() % glyphsByAdvance[g->advance].size()];
+            const GlyphInfo* obfG = getGlyph(rndCp);
+            if (obfG) renderG = obfG;
+        }
+
+        if (renderG->textureName.length() > 0 && renderG->glyphWidth > 0) {
+            if (renderG->textureName != currentTexture) {
                 if (currentTexture.length() > 0) {
                     t.draw();
                 }
-                currentTexture = g->textureName;
+                currentTexture = renderG->textureName;
                 _textures->loadAndBindTexture(currentTexture);
 
                 glTexParameteri2(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -382,27 +487,81 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
 
             // Baseline alignment: glyphTopY = textY + 7 - ascent
             float gx = (float)std::floor((double)(startX + xOffset) + 0.5);
-            float gy = (float)std::floor((double)(startY + yOffset + 7 - g->ascent) + 0.5);
+            float gy = (float)std::floor((double)(startY + yOffset + 7 - renderG->ascent) + 0.5);
 
-            float quadW = (float)g->glyphWidth;
-            float quadH = (float)g->cellH * g->scale;
+            float quadW = (float)renderG->glyphWidth;
+            float quadH = (float)renderG->cellH * renderG->scale;
 
-            float u0 = (float)g->cellX / (float)g->textureWidth;
-            float v0 = (float)g->cellY / (float)g->textureHeight;
-            float u1 = (float)(g->cellX + g->glyphWidth) / (float)g->textureWidth;
-            float v1 = (float)(g->cellY + g->cellH) / (float)g->textureHeight;
+            float u0 = (float)renderG->cellX / (float)renderG->textureWidth;
+            float v0 = (float)renderG->cellY / (float)renderG->textureHeight;
+            float u1 = (float)(renderG->cellX + renderG->glyphWidth) / (float)renderG->textureWidth;
+            float v1 = (float)(renderG->cellY + renderG->cellH) / (float)renderG->textureHeight;
 
+            float italicOffset = italic ? 1.0f : 0.0f;
+
+            // First quad
             t.vertexUV(gx, gy + quadH, 0.0f, u0, v1);
             t.vertexUV(gx + quadW, gy + quadH, 0.0f, u1, v1);
-            t.vertexUV(gx + quadW, gy, 0.0f, u1, v0);
-            t.vertexUV(gx, gy, 0.0f, u0, v0);
+            t.vertexUV(gx + quadW + italicOffset, gy, 0.0f, u1, v0);
+            t.vertexUV(gx + italicOffset, gy, 0.0f, u0, v0);
+
+            // Bold second quad offset by +1.0f in X
+            if (bold) {
+                t.vertexUV(gx + 1.0f, gy + quadH, 0.0f, u0, v1);
+                t.vertexUV(gx + quadW + 1.0f, gy + quadH, 0.0f, u1, v1);
+                t.vertexUV(gx + quadW + 1.0f + italicOffset, gy, 0.0f, u1, v0);
+                t.vertexUV(gx + 1.0f + italicOffset, gy, 0.0f, u0, v0);
+            }
         }
 
-        xOffset += g->advance;
+        float charWidth = (float)g->advance + (bold ? 1.0f : 0.0f);
+
+        if (strikethrough) {
+            TextLineSegment seg;
+            seg.x0 = (float)std::floor((double)(startX + xOffset) + 0.5);
+            seg.x1 = seg.x0 + charWidth;
+            seg.y0 = (float)std::floor((double)(startY + yOffset + 4.0f) + 0.5);
+            seg.y1 = seg.y0 + 1.0f;
+            seg.r = curR;
+            seg.g = curG;
+            seg.b = curB;
+            seg.a = alpha;
+            lineSegments.push_back(seg);
+        }
+
+        if (underline) {
+            TextLineSegment seg;
+            seg.x0 = (float)std::floor((double)(startX + xOffset) + 0.5);
+            seg.x1 = seg.x0 + charWidth;
+            seg.y0 = (float)std::floor((double)(startY + yOffset + 8.0f) + 0.5);
+            seg.y1 = seg.y0 + 1.0f;
+            seg.r = curR;
+            seg.g = curG;
+            seg.b = curB;
+            seg.a = alpha;
+            lineSegments.push_back(seg);
+        }
+
+        xOffset += charWidth;
     }
 
     if (currentTexture.length() > 0) {
         t.draw();
+    }
+
+    if (!lineSegments.empty()) {
+        glDisable2(GL_TEXTURE_2D);
+        t.begin();
+        for (size_t i = 0; i < lineSegments.size(); ++i) {
+            const TextLineSegment& seg = lineSegments[i];
+            t.color(seg.r, seg.g, seg.b, seg.a);
+            t.vertex(seg.x0, seg.y1, 0.0f);
+            t.vertex(seg.x1, seg.y1, 0.0f);
+            t.vertex(seg.x1, seg.y0, 0.0f);
+            t.vertex(seg.x0, seg.y0, 0.0f);
+        }
+        t.draw();
+        glEnable2(GL_TEXTURE_2D);
     }
 }
 
@@ -411,10 +570,21 @@ int Font::width(const std::string& str)
     int maxLen = 0;
     int len = 0;
 
+    bool bold = false;
+    bool allowAmpersand = options ? options->getBooleanValue(OPTIONS_TEXT_FORMATTING) : true;
+
     const char* ptr = str.c_str();
     while (*ptr != '\0') {
-        if (*ptr == '\xa7' && *(ptr + 1) != '\0') {
-            ptr += 2;
+        int codeLen = 0;
+        char codeChar = 0;
+        if (parseFormattingCode(ptr, allowAmpersand, codeLen, codeChar)) {
+            ptr += codeLen;
+            char lower = tolower((unsigned char)codeChar);
+            if ((lower >= '0' && lower <= '9') || (lower >= 'a' && lower <= 'f') || lower == 'r') {
+                bold = false;
+            } else if (lower == 'l') {
+                bold = true;
+            }
             continue;
         }
 
@@ -425,7 +595,7 @@ int Font::width(const std::string& str)
         } else {
             const GlyphInfo* g = getGlyph(codepoint);
             if (g) {
-                len += g->advance;
+                len += g->advance + (bold ? 1 : 0);
             }
         }
     }
@@ -443,45 +613,150 @@ int Font::height(const std::string& str)
     return h;
 }
 
-std::string Font::sanitize(const std::string& str)
+std::string Font::sanitize(const std::string& str, bool allowAmpersand)
 {
-    std::string sanitized(str.length() + 1, 0);
-    int j = 0;
+    std::string result = "";
+    const char* ptr = str.c_str();
+    while (*ptr != '\0') {
+        int codeLen = 0;
+        char codeChar = 0;
+        if (parseFormattingCode(ptr, allowAmpersand, codeLen, codeChar)) {
+            ptr += codeLen;
+            continue;
+        }
+        result += *ptr++;
+    }
+    return result;
+}
 
-    for (size_t i = 0; i < str.length(); i++) {
-        if (str[i] == '\xa7') {
-            i++;
+std::vector<std::string> Font::wrapText(const std::string& str, float w)
+{
+    std::vector<std::string> lines;
+    if (str.empty()) return lines;
+
+    bool allowAmpersand = options ? options->getBooleanValue(OPTIONS_TEXT_FORMATTING) : true;
+
+    // Split input string by explicit '\n'
+    std::vector<std::string> paragraphs;
+    std::string currentPara = "";
+    for (size_t i = 0; i < str.length(); ++i) {
+        if (str[i] == '\n') {
+            paragraphs.push_back(currentPara);
+            currentPara = "";
         } else {
-            sanitized[j++] = str[i];
+            currentPara += str[i];
         }
     }
-    return sanitized.erase(j);
+    paragraphs.push_back(currentPara);
+
+    std::string activePrefix = "";
+
+    for (size_t p = 0; p < paragraphs.size(); ++p) {
+        const std::string& para = paragraphs[p];
+
+        if (para.empty()) {
+            lines.push_back(activePrefix);
+            continue;
+        }
+
+        // Tokenize paragraph into words (preserving spaces)
+        std::vector<std::string> words;
+        std::string word = "";
+        for (size_t i = 0; i < para.length(); ++i) {
+            char c = para[i];
+            if (c == ' ') {
+                word += c;
+                words.push_back(word);
+                word = "";
+            } else {
+                word += c;
+            }
+        }
+        if (!word.empty()) {
+            words.push_back(word);
+        }
+
+        std::string currentLine = activePrefix;
+
+        for (size_t i = 0; i < words.size(); ++i) {
+            const std::string& wToken = words[i];
+
+            if (width(currentLine) > width(activePrefix) && width(currentLine + wToken) > w) {
+                lines.push_back(currentLine);
+
+                const char* cptr = currentLine.c_str();
+                while (*cptr != '\0') {
+                    int codeLen = 0;
+                    char codeChar = 0;
+                    if (parseFormattingCode(cptr, allowAmpersand, codeLen, codeChar)) {
+                        cptr += codeLen;
+                        activePrefix = updateFormatPrefix(activePrefix, codeChar);
+                    } else {
+                        decodeUTF8(cptr);
+                    }
+                }
+
+                std::string trimmedToken = wToken;
+                while (!trimmedToken.empty() && trimmedToken[0] == ' ') {
+                    trimmedToken = trimmedToken.substr(1);
+                }
+
+                currentLine = activePrefix + trimmedToken;
+            } else {
+                if (currentLine == activePrefix && width(currentLine + wToken) > w) {
+                    const char* wptr = wToken.c_str();
+                    while (*wptr != '\0') {
+                        int codeLen = 0;
+                        char codeChar = 0;
+                        if (parseFormattingCode(wptr, allowAmpersand, codeLen, codeChar)) {
+                            wptr += codeLen;
+                            currentLine += std::string(wptr - codeLen, codeLen);
+                            activePrefix = updateFormatPrefix(activePrefix, codeChar);
+                            continue;
+                        }
+
+                        const char* savePtr = wptr;
+                        decodeUTF8(wptr);
+                        std::string charStr(savePtr, wptr - savePtr);
+
+                        if (width(currentLine + charStr) > w && width(currentLine) > width(activePrefix)) {
+                            lines.push_back(currentLine);
+                            currentLine = activePrefix + charStr;
+                        } else {
+                            currentLine += charStr;
+                        }
+                    }
+                } else {
+                    currentLine += wToken;
+                }
+            }
+        }
+
+        if (!currentLine.empty()) {
+            lines.push_back(currentLine);
+
+            const char* cptr = currentLine.c_str();
+            while (*cptr != '\0') {
+                int codeLen = 0;
+                char codeChar = 0;
+                if (parseFormattingCode(cptr, allowAmpersand, codeLen, codeChar)) {
+                    cptr += codeLen;
+                    activePrefix = updateFormatPrefix(activePrefix, codeChar);
+                } else {
+                    decodeUTF8(cptr);
+                }
+            }
+        }
+    }
+
+    return lines;
 }
 
 void Font::drawWordWrap(const std::string& str, float x, float y, float w, int col)
 {
-    char* cstr = new char[str.length() + 1];
-    strncpy(cstr, str.c_str(), str.length());
-    cstr[str.length()] = 0;
-
-    const char* lims = " \n\t\r";
-    char* ptok = strtok(cstr, lims);
-
-    std::vector<std::string> words;
-    while (ptok != NULL) {
-        words.push_back(ptok);
-        ptok = strtok(NULL, lims);
-    }
-
-    delete[] cstr;
-
-    int pos = 0;
-    while (pos < (int)words.size()) {
-        std::string line = words[pos++] + " ";
-        while (pos < (int)words.size() && width(line + words[pos]) < w) {
-            line += words[pos++] + " ";
-        }
-        drawShadow(line, x, y, col);
+    std::vector<std::string> lines = wrapText(str, w);
+    for (size_t i = 0; i < lines.size(); ++i) {
+        drawShadow(lines[i], x, y, col);
         y += lineHeight;
     }
 }

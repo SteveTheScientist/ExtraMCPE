@@ -44,9 +44,13 @@ public:
     int width(const std::string& str);
     int height(const std::string& str);
 
-    static std::string sanitize(const std::string& str);
+    static std::string sanitize(const std::string& str, bool allowAmpersand = true);
 
     int getGuiScale() const;
+
+    static bool parseFormattingCode(const char* ptr, bool allowAmpersand, int& codeLength, char& codeChar);
+    static std::string updateFormatPrefix(const std::string& currentPrefix, char codeChar);
+    std::vector<std::string> wrapText(const std::string& str, float w);
 
 public:
     int fontTexture;
@@ -65,6 +69,7 @@ private:
     Options* options;
 
     std::map<uint32_t, GlyphInfo> glyphMap;
+    std::vector<uint32_t> glyphsByAdvance[32];
     GlyphInfo missingGlyph;
     bool hasMissingGlyph;
 };
