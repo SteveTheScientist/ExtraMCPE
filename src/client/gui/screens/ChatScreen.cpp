@@ -4,6 +4,7 @@
 #include "../../player/LocalPlayer.h"
 #include "../../../platform/input/Keyboard.h"
 #include "../../../platform/input/Mouse.h"
+#include "../../../platform/time.h"
 #include "../../../util/Mth.h"
 #include "../../../world/level/Level.h"
 #include "../../../network/RakNetInstance.h"
@@ -21,7 +22,14 @@ ChatScreen::ChatScreen()
 	  m_isDragging(false),
 	  m_dragStartY(0),
 	  m_startTouchY(0),
-	  m_dragAccumulatorY(0.0f)
+	  m_dragAccumulatorY(0.0f),
+	  m_isPressingInput(false),
+	  m_pressStartTime(0),
+	  m_showPopup(false),
+	  m_popupX(0),
+	  m_popupY(0),
+	  m_popupW(180),
+	  m_popupH(20)
 {
 }
 
@@ -35,6 +43,8 @@ void ChatScreen::init() {
 	m_scrollY = 0.0f;
 	m_isDragging = false;
 	m_dragAccumulatorY = 0.0f;
+	m_isPressingInput = false;
+	m_showPopup = false;
 }
 
 void ChatScreen::tick() {
@@ -44,6 +54,31 @@ void ChatScreen::tick() {
 	int ym = Mouse::getY();
 	int xm = Mouse::getX();
 	toGUICoordinate(xm, ym);
+
+	int barX = 2;
+	int barW = width - 4;
+	int barY = height - 16;
+
+	if (m_isPressingInput) {
+		if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+			long elapsed = getTimeMs() - m_pressStartTime;
+			if (elapsed >= 500) {
+				m_isPressingInput = false;
+				m_showPopup = true;
+
+				m_popupW = 180;
+				m_popupH = 20;
+				m_popupX = barX + (barW - m_popupW) / 2;
+				if (m_popupX < 2) m_popupX = 2;
+				if (m_popupX + m_popupW > width - 2) m_popupX = width - m_popupW - 2;
+
+				m_popupY = barY - m_popupH - 4;
+				if (m_popupY < 2) m_popupY = barY + 18;
+			}
+		} else {
+			m_isPressingInput = false;
+		}
+	}
 
 	int totalLines = (int)minecraft->gui.getGuiMessages().size();
 
@@ -97,7 +132,6 @@ bool ChatScreen::handleBackEvent(bool isDown) {
 	return true;
 }
 
-// Helper function to wrap typed input string into lines matching max width
 static void wrapInputText(Font* font, const std::string& input, float maxW, std::vector<std::string>& outLines) {
 	outLines.clear();
 	if (input.empty()) {
@@ -197,7 +231,6 @@ void ChatScreen::render(int xm, int ym, float a) {
 
 	fill(barX, barY, barX + barW, barY + barH, 0x80000000); // 50% opacity black
 
-	// Scroll lines so the cursor line stays visible at the bottom
 	int startLineIdx = std::max(0, lineCount - 4);
 
 	glEnable(GL_SCISSOR_TEST);
@@ -220,6 +253,32 @@ void ChatScreen::render(int xm, int ym, float a) {
 	}
 
 	glDisable(GL_SCISSOR_TEST);
+
+	if (m_showPopup) {
+		fill(m_popupX - 1, m_popupY - 1, m_popupX + m_popupW + 1, m_popupY + m_popupH + 1, 0xff555555);
+		fill(m_popupX, m_popupY, m_popupX + m_popupW, m_popupY + m_popupH, 0xeb101010);
+
+		int btnW = m_popupW / 4;
+		static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
+
+		for (int i = 0; i < 4; i++) {
+			int bx0 = m_popupX + i * btnW;
+			int bx1 = bx0 + btnW;
+
+			bool isHover = (xm >= bx0 && xm < bx1 && ym >= m_popupY && ym < m_popupY + m_popupH);
+			if (isHover) {
+				fill(bx0, m_popupY, bx1, m_popupY + m_popupH, 0x50ffffff);
+			}
+
+			if (i > 0) {
+				fill(bx0, m_popupY + 2, bx0 + 1, m_popupY + m_popupH - 2, 0xff555555);
+			}
+
+			int labelX = bx0 + (btnW - font->width(btnLabels[i])) / 2;
+			int labelY = m_popupY + (m_popupH - Font::DefaultLineHeight) / 2;
+			font->drawShadow(btnLabels[i], (float)labelX, (float)labelY, isHover ? 0xffffff55 : 0xffffffff);
+		}
+	}
 
 	Screen::render(xm, ym, a);
 }
@@ -259,6 +318,35 @@ void ChatScreen::execute() {
 }
 
 void ChatScreen::keyPressed(int key) {
+	bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
+
+	if (ctrlDown) {
+		if (key == Keyboard::KEY_C || key == 'c' || key == 'C') {
+			if (!m_input.empty()) {
+				minecraft->platform()->setClipboardText(m_input);
+			}
+			return;
+		}
+		if (key == Keyboard::KEY_X || key == 'x' || key == 'X') {
+			if (!m_input.empty()) {
+				minecraft->platform()->setClipboardText(m_input);
+				m_input.clear();
+			}
+			return;
+		}
+		if (key == Keyboard::KEY_V || key == 'v' || key == 'V') {
+			std::string clip = minecraft->platform()->getClipboardText();
+			if (!clip.empty()) {
+				std::string cleaned = Util::cleanPastedText(clip, 100 - m_input.length());
+				m_input += cleaned;
+			}
+			return;
+		}
+		if (key == Keyboard::KEY_A || key == 'a' || key == 'A') {
+			return;
+		}
+	}
+
 	if (key == Keyboard::KEY_ESCAPE) {
 		minecraft->setScreen(NULL);
 		return;
@@ -278,8 +366,10 @@ void ChatScreen::keyPressed(int key) {
 }
 
 void ChatScreen::keyboardNewChar(char c) {
+	bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
+	if (ctrlDown || (unsigned char)c < 32 || c == 127) return;
+
 	if (c >= 32 && c < 127) {
-		// Limit input to 100 characters like Java Edition
 		if (m_input.length() < 100) {
 			m_input += c;
 		}
@@ -288,6 +378,44 @@ void ChatScreen::keyboardNewChar(char c) {
 
 void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 	if (buttonNum == MouseAction::ACTION_LEFT) {
+		if (m_showPopup) {
+			if (x >= m_popupX && x <= m_popupX + m_popupW && y >= m_popupY && y <= m_popupY + m_popupH) {
+				int btnIndex = (x - m_popupX) / (m_popupW / 4);
+				if (btnIndex < 0) btnIndex = 0;
+				if (btnIndex > 3) btnIndex = 3;
+
+				if (btnIndex == 0) { // Select All
+				} else if (btnIndex == 1) { // Copy
+					if (!m_input.empty()) {
+						minecraft->platform()->setClipboardText(m_input);
+					}
+				} else if (btnIndex == 2) { // Cut
+					if (!m_input.empty()) {
+						minecraft->platform()->setClipboardText(m_input);
+						m_input.clear();
+					}
+				} else if (btnIndex == 3) { // Paste
+					std::string clip = minecraft->platform()->getClipboardText();
+					if (!clip.empty()) {
+						std::string cleaned = Util::cleanPastedText(clip, 100 - m_input.length());
+						m_input += cleaned;
+					}
+				}
+				m_showPopup = false;
+				return;
+			} else {
+				m_showPopup = false;
+			}
+		}
+
+		int barX = 2;
+		int barW = width - 4;
+		int barY = height - 16;
+		if (x >= barX && x <= barX + barW && y >= barY - 4 && y <= height) {
+			m_isPressingInput = true;
+			m_pressStartTime = getTimeMs();
+		}
+
 		float configuredWidth = minecraft->options.getProgressValue(OPTIONS_CHAT_WIDTH);
 		configuredWidth = Mth::clamp(configuredWidth, 40.0f, 320.0f);
 		float boxWidth = std::min(configuredWidth, (float)width - 4.0f);
@@ -334,6 +462,7 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 
 void ChatScreen::mouseReleased(int x, int y, int buttonNum) {
 	m_isDragging = false;
+	m_isPressingInput = false;
 	m_dragAccumulatorY = 0.0f;
 	Screen::mouseReleased(x, y, buttonNum);
 }

@@ -19,6 +19,9 @@ std::string stringTrim(const std::string& S, const std::string& chars, bool left
 
 void removeAll(std::string& s, const char** rep, int repCount);
 
+/// @return A cleaned pasted string: newlines converted to spaces, unprintable chars removed, cut to maxChars
+std::string cleanPastedText(const std::string& input, size_t maxChars = 256);
+
 /// @return The "Java" implementation for string hash codes
 int hashCode(const std::string& s);
 

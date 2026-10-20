@@ -3,6 +3,8 @@
 #include "../../Minecraft.h"
 #include "../../player/LocalPlayer.h"
 #include "../../../platform/input/Keyboard.h"
+#include "../../../platform/input/Mouse.h"
+#include "../../../platform/time.h"
 #include "../../../world/level/Level.h"
 #include "../../../network/RakNetInstance.h"
 #include "../../../network/ServerSideNetworkHandler.h"
@@ -16,17 +18,54 @@
 
 ConsoleScreen::ConsoleScreen()
 :   _input(""),
-    _cursorBlink(0)
+    _cursorBlink(0),
+    _isPressingInput(false),
+    _pressStartTime(0),
+    _showPopup(false),
+    _popupX(0),
+    _popupY(0),
+    _popupW(180),
+    _popupH(20)
 {
 }
 
 void ConsoleScreen::init()
 {
+    _input = "";
+    _isPressingInput = false;
+    _showPopup = false;
 }
 
 void ConsoleScreen::tick()
 {
     _cursorBlink++;
+
+    int boxX0 = 2;
+    int boxX1 = width - 2;
+    int boxW  = boxX1 - boxX0;
+    int boxH  = 12;
+    int boxY  = height - 2 - boxH;
+
+    if (_isPressingInput) {
+        if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+            long elapsed = getTimeMs() - _pressStartTime;
+            if (elapsed >= 500) {
+                _isPressingInput = false;
+                _showPopup = true;
+
+                _popupW = 180;
+                _popupH = 20;
+                _popupX = boxX0 + (boxW - _popupW) / 2;
+                if (_popupX < 2) _popupX = 2;
+                if (_popupX + _popupW > width - 2) _popupX = width - _popupW - 2;
+
+                _popupY = boxY - _popupH - 4;
+                if (_popupY < 2) _popupY = boxY + 18;
+            }
+        } else {
+            _isPressingInput = false;
+        }
+    }
 }
 
 bool ConsoleScreen::handleBackEvent(bool /*isDown*/)
@@ -37,6 +76,35 @@ bool ConsoleScreen::handleBackEvent(bool /*isDown*/)
 
 void ConsoleScreen::keyPressed(int eventKey)
 {
+    bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
+
+    if (ctrlDown) {
+        if (eventKey == Keyboard::KEY_C || eventKey == 'c' || eventKey == 'C') {
+            if (!_input.empty()) {
+                minecraft->platform()->setClipboardText(_input);
+            }
+            return;
+        }
+        if (eventKey == Keyboard::KEY_X || eventKey == 'x' || eventKey == 'X') {
+            if (!_input.empty()) {
+                minecraft->platform()->setClipboardText(_input);
+                _input.clear();
+            }
+            return;
+        }
+        if (eventKey == Keyboard::KEY_V || eventKey == 'v' || eventKey == 'V') {
+            std::string clip = minecraft->platform()->getClipboardText();
+            if (!clip.empty()) {
+                std::string cleaned = Util::cleanPastedText(clip, 100 - _input.length());
+                _input += cleaned;
+            }
+            return;
+        }
+        if (eventKey == Keyboard::KEY_A || eventKey == 'a' || eventKey == 'A') {
+            return;
+        }
+    }
+
     if (eventKey == Keyboard::KEY_ESCAPE) {
         minecraft->setScreen(NULL);
     } else if (eventKey == Keyboard::KEY_RETURN) {
@@ -49,12 +117,63 @@ void ConsoleScreen::keyPressed(int eventKey)
 
 void ConsoleScreen::charPressed(char inputChar)
 {
+    bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
+    if (ctrlDown || (unsigned char)inputChar < 32 || inputChar == 127) return;
+
     if (inputChar >= 32 && inputChar < 127) {
-        // Limit input to 100 characters like Java Edition
         if (_input.length() < 100) {
             _input += inputChar;
         }
     }
+}
+
+void ConsoleScreen::mouseClicked(int x, int y, int buttonNum) {
+    if (buttonNum == MouseAction::ACTION_LEFT) {
+        if (_showPopup) {
+            if (x >= _popupX && x <= _popupX + _popupW && y >= _popupY && y <= _popupY + _popupH) {
+                int btnIndex = (x - _popupX) / (_popupW / 4);
+                if (btnIndex < 0) btnIndex = 0;
+                if (btnIndex > 3) btnIndex = 3;
+
+                if (btnIndex == 0) { // Select All
+                } else if (btnIndex == 1) { // Copy
+                    if (!_input.empty()) {
+                        minecraft->platform()->setClipboardText(_input);
+                    }
+                } else if (btnIndex == 2) { // Cut
+                    if (!_input.empty()) {
+                        minecraft->platform()->setClipboardText(_input);
+                        _input.clear();
+                    }
+                } else if (btnIndex == 3) { // Paste
+                    std::string clip = minecraft->platform()->getClipboardText();
+                    if (!clip.empty()) {
+                        std::string cleaned = Util::cleanPastedText(clip, 100 - _input.length());
+                        _input += cleaned;
+                    }
+                }
+                _showPopup = false;
+                return;
+            } else {
+                _showPopup = false;
+            }
+        }
+
+        const int boxX0 = 2;
+        const int boxX1 = width - 2;
+        const int boxH  = 12;
+        const int boxY  = height - 2 - boxH;
+        if (x >= boxX0 && x <= boxX1 && y >= boxY - 4 && y <= height) {
+            _isPressingInput = true;
+            _pressStartTime = getTimeMs();
+        }
+    }
+    super::mouseClicked(x, y, buttonNum);
+}
+
+void ConsoleScreen::mouseReleased(int x, int y, int buttonNum) {
+    _isPressingInput = false;
+    super::mouseReleased(x, y, buttonNum);
 }
 
 void ConsoleScreen::execute()
@@ -168,10 +287,7 @@ static void wrapInputTextConsole(Font* font, const std::string& input, float max
 	}
 }
 
-// ---------------------------------------------------------------------------
-// render
-// ---------------------------------------------------------------------------
-void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
+void ConsoleScreen::render(int xm, int ym, float a)
 {
     const int boxX0 = 2;
     const int boxX1 = width - 2;
@@ -190,7 +306,6 @@ void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
     int boxH = visibleLines * 12;
     int boxY = height - 2 - boxH;
 
-    // Solid black at 50% opacity background with no border/outline
     fill(boxX0, boxY, boxX1, boxY + boxH, 0x80000000);
 
     int startLineIdx = std::max(0, lineCount - 4);
@@ -215,4 +330,30 @@ void ConsoleScreen::render(int /*xm*/, int /*ym*/, float /*a*/)
     }
 
     glDisable(GL_SCISSOR_TEST);
+
+    if (_showPopup) {
+        fill(_popupX - 1, _popupY - 1, _popupX + _popupW + 1, _popupY + _popupH + 1, 0xff555555);
+        fill(_popupX, _popupY, _popupX + _popupW, _popupY + _popupH, 0xeb101010);
+
+        int btnW = _popupW / 4;
+        static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
+
+        for (int i = 0; i < 4; i++) {
+            int bx0 = _popupX + i * btnW;
+            int bx1 = bx0 + btnW;
+
+            bool isHover = (xm >= bx0 && xm < bx1 && ym >= _popupY && ym < _popupY + _popupH);
+            if (isHover) {
+                fill(bx0, _popupY, bx1, _popupY + _popupH, 0x50ffffff);
+            }
+
+            if (i > 0) {
+                fill(bx0, _popupY + 2, bx0 + 1, _popupY + _popupH - 2, 0xff555555);
+            }
+
+            int labelX = bx0 + (btnW - font->width(btnLabels[i])) / 2;
+            int labelY = _popupY + (_popupH - Font::DefaultLineHeight) / 2;
+            font->drawShadow(btnLabels[i], (float)labelX, (float)labelY, isHover ? 0xffffff55 : 0xffffffff);
+        }
+    }
 }

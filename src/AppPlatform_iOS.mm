@@ -282,3 +282,16 @@ bool AppPlatform_iOS::isPowerVR() {
 	if (!s) return false;
 	return strstr(s, "SGX") != NULL;
 }
+
+std::string AppPlatform_iOS::getClipboardText() {
+	UIPasteboard* pasteboard = [UIPasteboard generalPasteboard];
+	if (pasteboard.hasStrings && pasteboard.string) {
+		return [pasteboard.string UTF8String];
+	}
+	return "";
+}
+
+void AppPlatform_iOS::setClipboardText(const std::string& text) {
+	UIPasteboard* pasteboard = [UIPasteboard generalPasteboard];
+	pasteboard.string = [NSString stringWithUTF8String:text.c_str()];
+}

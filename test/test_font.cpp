@@ -1,6 +1,7 @@
 #include "client/gui/Font.h"
 #include "client/renderer/Tesselator.h"
 #include "client/renderer/Textures.h"
+#include "util/StringUtils.h"
 #include <iostream>
 #include <cassert>
 #include <cstring>
@@ -24,7 +25,7 @@ const TextureData* Textures::getTemporaryTextureData(TextureId id) { return NULL
 TextureId Textures::loadAndBindTexture(const std::string& name) { return 0; }
 
 int main() {
-    std::cout << "Running Font Formatting Unit Tests..." << std::endl;
+    std::cout << "Running Font Formatting & Clipboard Unit Tests..." << std::endl;
 
     Font font(NULL, "gui/default.png", NULL);
 
@@ -137,6 +138,19 @@ int main() {
     }
     assert(text == testChars);
 
-    std::cout << "All Font Formatting unit tests passed successfully!" << std::endl;
+    // 6. Clean Pasted Text Unit Tests
+    std::string multilinePasted = "Line1\r\nLine2\nLine3";
+    std::string cleaned1 = Util::cleanPastedText(multilinePasted, 256);
+    assert(cleaned1 == "Line1 Line2 Line3");
+
+    std::string unprintablePasted = "Hello\x01\x02\x07World\x7F!";
+    std::string cleaned2 = Util::cleanPastedText(unprintablePasted, 256);
+    assert(cleaned2 == "HelloWorld!");
+
+    std::string truncatedPasted = "1234567890abcdef";
+    std::string cleaned3 = Util::cleanPastedText(truncatedPasted, 10);
+    assert(cleaned3 == "1234567890");
+
+    std::cout << "All Font Formatting & Clipboard unit tests passed successfully!" << std::endl;
     return 0;
 }

@@ -21,6 +21,8 @@ public:
 	virtual void lostFocus();
 	virtual void keyPressed(int eventKey);
 	virtual void charPressed(char inputChar);
+	virtual void mouseClicked(int x, int y, int buttonNum);
+	virtual void mouseReleased(int x, int y, int buttonNum);
 	void setupPositions();
 	void buttonClicked(Button* button);
 protected:
@@ -30,6 +32,11 @@ protected:
 	int line;
 private:
 	ImageButton btnClose;
+
+	bool m_isPressingSign;
+	long m_pressStartTime;
+	bool m_showPopup;
+	int m_popupX, m_popupY, m_popupW, m_popupH;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__TextEditScreen_H__*/

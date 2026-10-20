@@ -36,6 +36,11 @@ private:
 	int m_dragStartY;
 	int m_startTouchY;
 	float m_dragAccumulatorY;
+
+	bool m_isPressingInput;
+	long m_pressStartTime;
+	bool m_showPopup;
+	int m_popupX, m_popupY, m_popupW, m_popupH;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__ChatScreen_H__*/

@@ -432,6 +432,7 @@ add_executable(test_font
     src/client/gui/Font.cpp
     src/client/Option.cpp
     src/util/Mth.cpp
+    src/util/StringUtils.cpp
     glad/src/glad.c
 )
 target_include_directories(test_font PUBLIC

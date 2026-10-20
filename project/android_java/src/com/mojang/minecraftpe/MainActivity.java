@@ -362,6 +362,27 @@ public class MainActivity extends Activity {
         }
     }
 
+    public String getClipboardText() {
+        try {
+            android.content.ClipboardManager cb = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cb != null && cb.hasPrimaryClip() && cb.getPrimaryClip().getItemCount() > 0) {
+                CharSequence cs = cb.getPrimaryClip().getItemAt(0).getText();
+                return cs != null ? cs.toString() : "";
+            }
+        } catch (Exception e) {}
+        return "";
+    }
+
+    public void setClipboardText(String text) {
+        try {
+            android.content.ClipboardManager cb = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cb != null) {
+                android.content.ClipData clip = android.content.ClipData.newPlainText("text", text);
+                cb.setPrimaryClip(clip);
+            }
+        } catch (Exception e) {}
+    }
+
     public int[] getImageData(String filename) {
     	AssetManager assets = getAssets();
 

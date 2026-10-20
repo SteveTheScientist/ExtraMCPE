@@ -22,12 +22,19 @@ public:
     virtual void keyPressed(int eventKey);
     virtual void charPressed(char inputChar);
     virtual bool handleBackEvent(bool isDown);
+    virtual void mouseClicked(int x, int y, int buttonNum);
+    virtual void mouseReleased(int x, int y, int buttonNum);
 
 private:
     void execute();
 
     std::string _input;
-    int         _cursorBlink; // tick counter for cursor blink
+    int         _cursorBlink;
+
+    bool _isPressingInput;
+    long _pressStartTime;
+    bool _showPopup;
+    int _popupX, _popupY, _popupW, _popupH;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__ConsoleScreen_H__*/

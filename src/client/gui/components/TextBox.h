@@ -1,8 +1,6 @@
 #ifndef NET_MINECRAFT_CLIENT_GUI_COMPONENTS__TextBox_H__
 #define NET_MINECRAFT_CLIENT_GUI_COMPONENTS__TextBox_H__
 
-//package net.minecraft.client.gui;
-
 #include <string>
 #include "GuiElement.h"
 #include "../../Options.h"
@@ -29,7 +27,7 @@ public:
 	virtual void keyPressed(Minecraft* minecraft, int key);
 	virtual void charPressed(Minecraft* minecraft, char c);
 	virtual void tick(Minecraft* minecraft);
-	
+
 public:
 	std::string hint;
 	std::string text;
@@ -39,6 +37,16 @@ public:
 
 	bool focused;
 	bool blink;
+
+	bool isPressing;
+	long pressStartTime;
+	int pressStartX;
+	int pressStartY;
+	bool showPopup;
+	int popupX;
+	int popupY;
+	int popupW;
+	int popupH;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_COMPONENTS__TextBox_H__*/

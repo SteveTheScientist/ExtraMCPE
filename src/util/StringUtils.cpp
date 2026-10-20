@@ -54,6 +54,41 @@ std::string stringTrim(const std::string& s, const std::string& chars, bool left
 	return s.substr(i, j - i + 1);
 }
 
+std::string cleanPastedText(const std::string& input, size_t maxChars) {
+	if (maxChars == 0 || input.empty()) {
+		return "";
+	}
+
+	std::string cleaned = "";
+	cleaned.reserve(input.size());
+
+	const char* ptr = input.c_str();
+	while (*ptr != '\0') {
+		if (*ptr == '\r' || *ptr == '\n') {
+			cleaned += ' ';
+			if (*ptr == '\r' && *(ptr + 1) == '\n') {
+				ptr++;
+			}
+			ptr++;
+			continue;
+		}
+
+		unsigned char c = (unsigned char)*ptr;
+		if (c < 32 || c == 127) {
+			ptr++;
+			continue;
+		}
+
+		cleaned += *ptr++;
+	}
+
+	if (cleaned.length() > maxChars) {
+		cleaned = cleaned.substr(0, maxChars);
+	}
+
+	return cleaned;
+}
+
 /// @return The "Java" implementation for string hash codes
 int hashCode(const std::string& s) {
 	const int len = s.length();

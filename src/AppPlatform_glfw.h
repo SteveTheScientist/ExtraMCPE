@@ -22,6 +22,7 @@
 
 #ifdef __EMSCRIPTEN__
 	#include <emscripten/html5.h>
+	#include <emscripten/emscripten.h>
 #endif
 
 static void png_funcReadFile(png_structp pngPtr, png_bytep data, png_size_t length) {
@@ -62,7 +63,6 @@ public:
 
     TextureData loadTexture(const std::string& filename_, bool textureFolder) override
 	{
-		// Support fetching PNG textures via HTTP/HTTPS (for skins, etc)
 		if (Util::startsWith(filename_, "http://") || Util::startsWith(filename_, "https://")) {
 			std::vector<unsigned char> body;
 			if (HttpClient::download(filename_, body) && !body.empty()) {
@@ -106,7 +106,7 @@ public:
 		return std::string(mbstr);
 	}
 
-	virtual int getScreenWidth() override { 
+	virtual int getScreenWidth() override {
 		#ifdef __EMSCRIPTEN__
 			int w, h;
 			emscripten_get_canvas_element_size("canvas", &w, &h);
@@ -114,10 +114,10 @@ public:
 			return w;
 		#endif
 
-		return 854; 
+		return 854;
 	};
 
-	virtual int getScreenHeight() override { 
+	virtual int getScreenHeight() override {
 		#ifdef __EMSCRIPTEN__
 			int w, h;
 			emscripten_get_canvas_element_size("canvas", &w, &h);
@@ -125,7 +125,7 @@ public:
 			return h;
 		#endif
 
-		return 480; 
+		return 480;
 	};
 
 	virtual float getPixelsPerMillimeter() override;
@@ -145,6 +145,25 @@ public:
 		system(command.c_str());
 #elif __EMSCRIPTEN__
 		emscripten_run_script(std::string("window.open('" + url + "', '_blank')").c_str());
+#endif
+	}
+
+	virtual std::string getClipboardText() override {
+		if (!window) return "";
+		const char* str = glfwGetClipboardString(window);
+		return str ? std::string(str) : "";
+	}
+
+	virtual void setClipboardText(const std::string& text) override {
+		if (window) {
+			glfwSetClipboardString(window, text.c_str());
+		}
+#if defined(__EMSCRIPTEN__)
+		EM_ASM({
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(UTF8ToString($0));
+			}
+		}, text.c_str());
 #endif
 	}
 

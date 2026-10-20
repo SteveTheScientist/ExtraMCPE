@@ -61,7 +61,7 @@ public:
         _showDialog(0),
         _methodTick(0),
         _methodFinish(0),
-        
+
         _methodUserInputInitiate(0),
         _methodUserInputStatus(0),
         _methodUserInputString(0),
@@ -95,7 +95,9 @@ public:
 		_hasSetPowerVR(false),
 		_nativeActivity(0),
 
-		_methodGetKeyFromKeyCode(0)
+		_methodGetKeyFromKeyCode(0),
+		_methodGetClipboardText(0),
+		_methodSetClipboardText(0)
     {
     }
 
@@ -103,9 +105,6 @@ public:
     int getScreenHeight() { return _screenHeight; }
     void setScreenDimensions(int w, int h) { _screenWidth = w; _screenHeight = h; }
 
-    // Note, this has to be called from the main thread (e.g. do it from JNI_onLoad)
-    // Somewhere between calling this, and calling the AppPlatform methods,
-    // this->instance will be assigned by its creator
     int init(JavaVM* vm) {
         if (_isInited)
             return -1;
@@ -118,7 +117,6 @@ public:
             return -2;
         }
 
-        // Get Class reference
         const char* interface_path = "com/mojang/minecraftpe/MainActivity";
         jclass clazz = NULL;
         if( (clazz = env->FindClass( interface_path )) == 0 ) {
@@ -126,7 +124,6 @@ public:
         }
         _activityClass = (jclass)env->NewGlobalRef(clazz);
 
-        // Save all the method IDs
         _methodSaveScreenshot = env->GetStaticMethodID( _activityClass, "saveScreenshot", "(Ljava/lang/String;II[I)V");
         _postScreenshotToFacebook = env->GetMethodID( _activityClass, "postScreenshotToFacebook", "(Ljava/lang/String;II[I)V");
         _getImageData = env->GetMethodID( _activityClass, "getImageData", "(Ljava/lang/String;)[I");
@@ -151,8 +148,12 @@ public:
 
 		_methodGetPixelsPerMillimeter = env->GetMethodID( _activityClass, "getPixelsPerMillimeter", "()F");
 		_methodGetPlatformStringVar = env->GetMethodID( _activityClass, "getPlatformStringVar", "(I)Ljava/lang/String;");
-		// custom helper to launch external URLs
 		_methodOpenURL = env->GetMethodID(_activityClass, "openURL", "(Ljava/lang/String;)V");
+		if (env->ExceptionOccurred()) env->ExceptionClear();
+		_methodGetClipboardText = env->GetMethodID(_activityClass, "getClipboardText", "()Ljava/lang/String;");
+		if (env->ExceptionOccurred()) env->ExceptionClear();
+		_methodSetClipboardText = env->GetMethodID(_activityClass, "setClipboardText", "(Ljava/lang/String;)V");
+		if (env->ExceptionOccurred()) env->ExceptionClear();
 
 		_classWindow = (jclass)env->NewGlobalRef(env->FindClass("android/view/Window"));
 		_classContext = (jclass)env->NewGlobalRef(env->FindClass("android/content/Context"));
@@ -166,16 +167,12 @@ public:
 		_methodShowSoftInput = env->GetMethodID(_classInputManager, "showSoftInput", "(Landroid/view/View;I)Z");
 		_methodGetWindowToken = env->GetMethodID(_classView, "getWindowToken", "()Landroid/os/IBinder;");
 		_methodHideSoftInput = env->GetMethodID(_classInputManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z");
-		
+
 		_methodGetKeyFromKeyCode = env->GetMethodID( _activityClass, "getKeyFromKeyCode", "(III)I");
 
         if (env->ExceptionOccurred()) {
-            env->ExceptionDescribe();
+            env->ExceptionClear();
         }
-
- //       LOGI("Class: %d\n. Methods: %d,%d\n", _activityClass,
-   //         _methodSaveScreenshot,
-     //       _postScreenshotToFacebook);
 
         _vm = vm;
         _isInited = true;
@@ -183,11 +180,7 @@ public:
         return JNI_VERSION_1_4;
     }
 
-    // Stuff that should only be written once, e.g. device specs
-    // @note: This is called after instance is set, BUT this will
-    //        be rewritten later on anyway
     int initConsts() {
-
         LOGI("initConsts: start\n");
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
@@ -275,7 +268,6 @@ public:
                 length = 1023;
             static char buf[1024];
 
-            // Only supporting 7 bit chars, right now
             const char* str = env->GetStringUTFChars(s, 0);
             strncpy(buf, str, 1023);
             buf[1023] = 0;
@@ -298,25 +290,18 @@ public:
         if (!pixels)
             return;
 
-        // Create the OpenGL "screenshot"
         glReadPixels(0, 0, glWidth, glHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         convertOpenGlToAndroidPixels(glWidth, glHeight, pixels);
 
-        // Tell Android to save the screenshot
         jintArray jPixels = env->NewIntArray(numPixels);
         if (jPixels != NULL)
         {
             jobject gpixRef = env->NewGlobalRef(jPixels);
             env->SetIntArrayRegion(jPixels, 0, numPixels, (int*)pixels);
-//                env->CallVoidMethod(    instance,
-//                                        _postScreenshotToFacebook,
-//                                        env->NewStringUTF(filename.c_str()),
-//                                        glWidth, glHeight, jPixels);
             env->CallStaticVoidMethod(  _activityClass,
                                         _methodSaveScreenshot,
                                         env->NewStringUTF(filename.c_str()),
                                         glWidth, glHeight, jPixels);
-            // Teardown
             env->DeleteGlobalRef(gpixRef);
             delete[] pixels;
         }
@@ -327,7 +312,6 @@ public:
     }
 
     void convertOpenGlToAndroidPixels(int w, int h, unsigned int* pixels) {
-        // Making the conversion in-place
         for (int y = 0; y < h/2; ++y)
         for (int x = 0; x < w;  ++x) {
             const int i0 = y * w + x;
@@ -337,7 +321,6 @@ public:
             pixels[i0] = rgbToBgr(p1);
             pixels[i1] = rgbToBgr(p0);
         }
-        // Handle the middle row, if any
         if (h & 1) {
             const int start = w * h/2;
             const int stop = start + w;
@@ -351,14 +334,10 @@ public:
     virtual void playSound(const std::string& filename, float volume, float pitch) {
         if (!_isInited || !_methodPlaySound) return;
 
-        //static Stopwatch w;
-        //w.start();
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
 
         env->CallVoidMethod(instance, _methodPlaySound, env->NewStringUTF(filename.c_str()), volume, pitch);
-        //w.stop();
-        //w.printEvery(1, "playSound-java");
     }
 
     virtual void uploadPlatformDependentData(int id, void* data) {
@@ -390,7 +369,6 @@ public:
         jsize len = env->GetArrayLength(arr);
         int numPixels = len-2;
 
-        // pixels = [width, height, p_0, p_1, ..., p_numPixels-1]
         int* pixels = new int[numPixels];
         jint* body = env->GetIntArrayElements(arr, 0);
 
@@ -398,16 +376,11 @@ public:
         int h = body[1];
         memcpy(pixels, &body[2], numPixels * sizeof(int));
 
-        // Convert pixels
         for (int i = 0; i < numPixels; ++i)
             pixels[i] = rgbToBgr(pixels[i]);
 
-        //LOGI("Read-Image-Data: Decided file size to be: %d x %d (len %d)\n", w, h, len);
-
         env->ReleaseIntArrayElements(arr, body, 0);
-  //      LOGI("loadtexture: 9\n");
 
-        // Set the result
         TextureData out;
         out.w = w;
         out.h = h;
@@ -469,7 +442,7 @@ public:
 		env->ReleaseStringUTFChars(stringVar, str);
 		return out;
 	}
-	// Opens a webpage using an Android intent.  Called from native code.
+
 	virtual void openURL(const std::string& url) {
 		if (!_isInited || !_methodOpenURL) return;
 		JVMAttacher ta(_vm);
@@ -478,6 +451,28 @@ public:
 		env->CallVoidMethod(instance, _methodOpenURL, jurl);
 		env->DeleteLocalRef(jurl);
 	}
+
+	virtual std::string getClipboardText() override {
+		if (!_isInited || !_methodGetClipboardText) return "";
+		JVMAttacher ta(_vm);
+		JNIEnv* env = ta.getEnv();
+		jstring jstr = (jstring)env->CallObjectMethod(instance, _methodGetClipboardText);
+		if (!jstr) return "";
+		const char* str = env->GetStringUTFChars(jstr, NULL);
+		std::string result = str ? str : "";
+		if (str) env->ReleaseStringUTFChars(jstr, str);
+		return result;
+	}
+
+	virtual void setClipboardText(const std::string& text) override {
+		if (!_isInited || !_methodSetClipboardText) return;
+		JVMAttacher ta(_vm);
+		JNIEnv* env = ta.getEnv();
+		jstring jstr = env->NewStringUTF(text.c_str());
+		env->CallVoidMethod(instance, _methodSetClipboardText, jstr);
+		env->DeleteLocalRef(jstr);
+	}
+
     virtual void finish() {
         if (!_isInited) return;
         if (!_methodFinish) return;
@@ -561,9 +556,9 @@ public:
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
 
- 		jobject INPUT_METHOD_SERVICE =
- 			env->GetStaticObjectField(_classContext,
- 			_fieldINPUT_METHOD_SERVICE);
+		jobject INPUT_METHOD_SERVICE =
+			env->GetStaticObjectField(_classContext,
+			_fieldINPUT_METHOD_SERVICE);
 
 		jobject lInputMethodManager = env->CallObjectMethod(
 			instance, _methodGetSystemService,
@@ -576,12 +571,10 @@ public:
 			_methodGetDecorView);
 
 		if (bShow) {
-			// Runs lInputMethodManager.showSoftInput(...).
 			jboolean lResult = env->CallBooleanMethod(
 				lInputMethodManager, _methodShowSoftInput,
 				lDecorView, lFlags);
 		} else {
-			// Runs lWindow.getViewToken()
 			jobject lBinder = env->CallObjectMethod(lDecorView,
 				_methodGetWindowToken);
 			jboolean lRes = env->CallBooleanMethod(
@@ -628,7 +621,7 @@ private:
 	jmethodID _methodIsNetworkEnabled;
 
 	jmethodID _methodGetPlatformStringVar;
-	jmethodID _methodOpenURL; // new JNI method for launching browser
+	jmethodID _methodOpenURL;
 
 	jclass _classWindow;
 	jclass _classContext;
@@ -643,6 +636,8 @@ private:
 	jmethodID _methodHideSoftInput;
 
 	jmethodID _methodGetKeyFromKeyCode;
+	jmethodID _methodGetClipboardText;
+	jmethodID _methodSetClipboardText;
 
     int _screenWidth;
     int _screenHeight;
