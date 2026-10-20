@@ -1,3 +1,4 @@
+#include "../../../platform/log.h"
 #include "TextBox.h"
 #include "../Gui.h"
 #include "../Screen.h"
@@ -51,12 +52,14 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
 }
 
 void TextBox::charPressed(Minecraft* minecraft, char c)  {
+    LOGI("TextBox::charPressed c=%d ('%c')\n", (int)(unsigned char)c, c);
     if (focused && c >= 32 && c < 127 && (int)text.size() < 256) {
         text.push_back(c);
     }
 }
 
 void TextBox::keyPressed(Minecraft* minecraft, int key) {
+    LOGI("TextBox::keyPressed key=%d\n", key);
     if (focused) {
         if ((key == Keyboard::KEY_BACKSPACE || key == 127) && !text.empty()) {
             text.pop_back();

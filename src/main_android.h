@@ -326,38 +326,26 @@ handle_xperia_input( struct android_app* app, AInputEvent* event )
 }
 static int convertAndroidKeyCodeToWindowsKeyCode(int keyCode) {
 	switch(keyCode) {
-        /*
-	case 29: return Keyboard::KEY_A;
-		case 30: return Keyboard::KEY_B;
-		case 31: return Keyboard::KEY_C;
-		case 32: return Keyboard::KEY_D;
-		case 33: return Keyboard::KEY_E;
-		case 34: return Keyboard::KEY_F;
-		case 35: return Keyboard::KEY_G;
-		case 36: return Keyboard::KEY_H;
-		case 37: return Keyboard::KEY_I;
-		case 38: return Keyboard::KEY_J;
-		case 39: return Keyboard::KEY_K;
-		case 40: return Keyboard::KEY_L;
-		case 41: return Keyboard::KEY_M;
-		case 42: return Keyboard::KEY_N;
-		case 43: return Keyboard::KEY_O;
-		case 44: return Keyboard::KEY_P;
-		case 45: return Keyboard::KEY_Q;
-		case 46: return Keyboard::KEY_R;
-		case 47: return Keyboard::KEY_S;
-		case 48: return Keyboard::KEY_T;
-		case 49: return Keyboard::KEY_U;
-		case 50: return Keyboard::KEY_V;
-		case 51: return Keyboard::KEY_W;
-		case 52: return Keyboard::KEY_X;
-		case 53: return Keyboard::KEY_Y;
-		case 54: return Keyboard::KEY_Z;
-		*/
 		case 67: return Keyboard::KEY_BACKSPACE;
 		case 66: return Keyboard::KEY_RETURN;
-//		case 62: return Keyboard::KEY_SPACE;
-		default: return 0;
+		case 61: return Keyboard::KEY_TAB;
+		case 111: return Keyboard::KEY_ESCAPE;
+		case 62: return Keyboard::KEY_SPACE;
+		case 7: return '0';
+		case 8: return '1';
+		case 9: return '2';
+		case 10: return '3';
+		case 11: return '4';
+		case 12: return '5';
+		case 13: return '6';
+		case 14: return '7';
+		case 15: return '8';
+		case 16: return '9';
+		default:
+			if (keyCode >= 29 && keyCode <= 54) {
+				return Keyboard::KEY_A + (keyCode - 29);
+			}
+			return 0;
 	}
 }
 static
@@ -386,8 +374,9 @@ handle_keyboard_input( struct android_app* app, AInputEvent* event )
 		   if (!pressedBack) {
 
                int key = convertAndroidKeyCodeToWindowsKeyCode(keyCode);
-               if (key == 0) key = keyCode;
-			   Keyboard::feed(key, isDown);
+               if (key != 0) {
+			       Keyboard::feed(key, isDown);
+               }
 			   if(isDown) {
 				   int uniChar = ((struct ENGINE*)app->userData)->appContext.platform->getKeyFromKeyCode(keyCode, metaState, deviceId);
 				   char charI = (char)uniChar;
@@ -451,16 +440,16 @@ handle_touch_input( struct android_app* app, AInputEvent* event )
             Multitouch::feed(1, 0, x, y, pointerId);
             break;
         case AMOTION_EVENT_ACTION_MOVE:
-    		int pcount = AMotionEvent_getPointerCount(event);
-    		for (int i = 0; i < pcount; ++i) {
-    			int pp = AMotionEvent_getPointerId(event, i); // @attn wtf?
-    			float xx = AMotionEvent_getX(event, i);
-    			float yy = AMotionEvent_getY(event, i);
-        		//	System.err.println("   " + p + " @ " + x + ", " + y);
+		int pcount = AMotionEvent_getPointerCount(event);
+		for (int i = 0; i < pcount; ++i) {
+			int pp = AMotionEvent_getPointerId(event, i); // @attn wtf?
+			float xx = AMotionEvent_getX(event, i);
+			float yy = AMotionEvent_getY(event, i);
+			//	System.err.println("   " + p + " @ " + x + ", " + y);
                 //LOGI("> %.2f, %.2f\n", xx, yy);
                 mouseMove(xx, yy);
                 Multitouch::feed(0, 0, xx, yy, pp);
-    		}
+		}
             break;
     }
     return 0;
@@ -500,7 +489,7 @@ engine_handle_cmd( struct android_app* app, int32_t cmd )
         {
             //LOGI("save-state\n");
             // The system has asked us to save our current state.  Do so if needed
-            
+
             // query first
             void* savedState = 0;
             int savedStateSize = 0;

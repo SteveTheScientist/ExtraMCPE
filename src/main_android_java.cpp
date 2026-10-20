@@ -217,9 +217,27 @@ static int androidKeyToInternal(int androidKey) {
         case AKEYCODE_ENTER:
         case AKEYCODE_NUMPAD_ENTER:
             return Keyboard::KEY_RETURN;
-        // letters are delivered via nativeTextChar so no need to map here
+        case AKEYCODE_TAB: return Keyboard::KEY_TAB;
+        case AKEYCODE_ESCAPE: return Keyboard::KEY_ESCAPE;
+        case AKEYCODE_SPACE: return Keyboard::KEY_SPACE;
+        case AKEYCODE_SHIFT_LEFT:
+        case AKEYCODE_SHIFT_RIGHT:
+            return Keyboard::KEY_LSHIFT;
+        case AKEYCODE_0: return '0';
+        case AKEYCODE_1: return '1';
+        case AKEYCODE_2: return '2';
+        case AKEYCODE_3: return '3';
+        case AKEYCODE_4: return '4';
+        case AKEYCODE_5: return '5';
+        case AKEYCODE_6: return '6';
+        case AKEYCODE_7: return '7';
+        case AKEYCODE_8: return '8';
+        case AKEYCODE_9: return '9';
         default:
-            return androidKey; // fall back to raw code
+            if (androidKey >= AKEYCODE_A && androidKey <= AKEYCODE_Z) {
+                return Keyboard::KEY_A + (androidKey - AKEYCODE_A);
+            }
+            return 0; // Return 0 for unmapped keycodes to prevent raw Android keycode collisions with Keyboard constants like KEY_RETURN (13)
     }
 }
 
@@ -229,8 +247,8 @@ Java_com_mojang_minecraftpe_MainActivity_nativeOnKeyDown(JNIEnv* env, jclass cls
 
     // @rewrite
 
-    if (keyCode != AKEYCODE_1) {
-        int mapped = androidKeyToInternal(keyCode);
+    int mapped = androidKeyToInternal(keyCode);
+    if (mapped != 0) {
         Keyboard::feed(mapped, true);
     }
 }
@@ -250,7 +268,9 @@ JNIEXPORT void JNICALL
 Java_com_mojang_minecraftpe_MainActivity_nativeOnKeyUp(JNIEnv* env, jclass cls, jint keyCode) {
     LOGI("@nativeOnKeyUp: %d\n", (int)keyCode);
     int mapped = androidKeyToInternal(keyCode);
-    Keyboard::feed(mapped, false);
+    if (mapped != 0) {
+        Keyboard::feed(mapped, false);
+    }
 }
 
 JNIEXPORT jboolean JNICALL

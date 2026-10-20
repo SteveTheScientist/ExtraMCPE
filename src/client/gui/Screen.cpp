@@ -1,3 +1,4 @@
+#include "../../platform/log.h"
 #include "Screen.h"
 #include "components/Button.h"
 #include "components/TextBox.h"
@@ -195,6 +196,7 @@ bool Screen::hasFocusedTextBox() const {
 
 void Screen::keyPressed( int eventKey )
 {
+	LOGI("Screen::keyPressed eventKey=%d\n", eventKey);
 	if (hasFocusedTextBox()) {
 		if (eventKey == Keyboard::KEY_ESCAPE) {
 			minecraft->setScreen(NULL);
@@ -255,6 +257,7 @@ void Screen::keyPressed( int eventKey )
 }
 
 void Screen::charPressed(char inputChar) {
+	LOGI("Screen::charPressed inputChar=%d ('%c')\n", (int)(unsigned char)inputChar, inputChar);
 	for (auto& textbox : textBoxes) {
 		textbox->charPressed(minecraft, inputChar);
 	}

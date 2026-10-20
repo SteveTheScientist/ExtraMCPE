@@ -1,3 +1,13 @@
+
+#include "client/gui/Gui.h"
+float Gui::GuiScale = 2.0f;
+float Gui::getColoredWidth(Font* font, const std::string& text, bool isPlayerText) {
+    return (float)font->width(text, isPlayerText);
+}
+void Gui::drawColoredString(Font* font, const std::string& text, float x, float y, int alpha, bool isPlayerText) {
+    font->drawShadow(text, x, y, 0xffffff + (alpha << 24), isPlayerText);
+}
+#include "client/gui/components/TextBox.h"
 #include "client/gui/Font.h"
 #include "client/Options.h"
 #include "client/renderer/Tesselator.h"
@@ -88,6 +98,16 @@ int main() {
 
     options.set(OPTIONS_TEXT_FORMATTING, false);
     assert(options.getBooleanValue(OPTIONS_TEXT_FORMATTING) == false);
+
+    // 5. Test TextBox charPressed for digits 0-9 and symbols (^ ! @ # $ % & * ( ) - _ = +)
+    TextBox tb(1, "Test");
+    tb.focused = true;
+    std::string testChars = "0123456789^!@#$%&*()- _=+";
+    for (char c : testChars) {
+        tb.charPressed(nullptr, c);
+    }
+    assert(tb.text == "0123456789^!@#$%&*()- _=+");
+    assert(tb.focused == true);
 
     std::cout << "All Font unit tests passed successfully!" << std::endl;
     return 0;

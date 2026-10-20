@@ -430,6 +430,9 @@ target_include_directories(test_fog PUBLIC
 add_executable(test_font
     test/test_font.cpp
     src/client/gui/Font.cpp
+    src/client/gui/components/TextBox.cpp
+    src/client/gui/components/GuiElement.cpp
+    src/client/gui/GuiComponent.cpp
     src/client/Options.cpp
     src/client/Option.cpp
     src/client/OptionsFile.cpp
