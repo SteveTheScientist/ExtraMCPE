@@ -28,6 +28,18 @@ public:
 	virtual void charPressed(Minecraft* minecraft, char c);
 	virtual void tick(Minecraft* minecraft);
 
+	// Selection and cursor helpers
+	bool hasSelection() const { return cursorPos != selectAnchor; }
+	int getSelectionStart() const { return cursorPos < selectAnchor ? cursorPos : selectAnchor; }
+	int getSelectionEnd() const { return cursorPos > selectAnchor ? cursorPos : selectAnchor; }
+	std::string getSelectedText() const;
+	bool deleteSelection();
+	void selectAll();
+	void selectWordAt(int idx);
+
+	static int getCharIndexAtX(Font* font, const std::string& str, int clickX, float textX);
+	static void getWordBounds(const std::string& str, int idx, int& outStart, int& outEnd);
+
 public:
 	std::string hint;
 	std::string text;
@@ -38,10 +50,22 @@ public:
 	bool focused;
 	bool blink;
 
+	int cursorPos;
+	int selectAnchor;
+
 	bool isPressing;
+	bool isDraggingMouse;
+	bool isDraggingHandleStart;
+	bool isDraggingHandleEnd;
+
 	long pressStartTime;
 	int pressStartX;
 	int pressStartY;
+
+	long lastClickTime;
+	int lastClickX;
+	int lastClickY;
+
 	bool showPopup;
 	int popupX;
 	int popupY;

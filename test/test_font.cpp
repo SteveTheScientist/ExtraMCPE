@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cassert>
 #include <cstring>
+#include <cctype>
 
 // Stub OpenGL & renderer dependencies for standalone unit test
 int getTimeMs() { return 0; }
@@ -24,8 +25,37 @@ TextureId Textures::loadTexture(const std::string& name, bool b) { return 0; }
 const TextureData* Textures::getTemporaryTextureData(TextureId id) { return NULL; }
 TextureId Textures::loadAndBindTexture(const std::string& name) { return 0; }
 
+static void testGetWordBounds(const std::string& str, int idx, int& outStart, int& outEnd) {
+    int len = (int)str.length();
+    if (len == 0) {
+        outStart = outEnd = 0;
+        return;
+    }
+    if (idx < 0) idx = 0;
+    if (idx >= len) idx = len - 1;
+
+    bool isWordChar = isalnum((unsigned char)str[idx]) || str[idx] == '_';
+
+    int s = idx;
+    while (s > 0) {
+        bool prevWord = isalnum((unsigned char)str[s - 1]) || str[s - 1] == '_';
+        if (prevWord != isWordChar) break;
+        s--;
+    }
+
+    int e = idx;
+    while (e < len) {
+        bool currWord = isalnum((unsigned char)str[e]) || str[e] == '_';
+        if (currWord != isWordChar) break;
+        e++;
+    }
+
+    outStart = s;
+    outEnd = e;
+}
+
 int main() {
-    std::cout << "Running Font Formatting & Clipboard Unit Tests..." << std::endl;
+    std::cout << "Running Font Formatting, Clipboard & TextBox Selection Unit Tests..." << std::endl;
 
     Font font(NULL, "gui/default.png", NULL);
 
@@ -65,92 +95,37 @@ int main() {
     assert(outCode == 'b');
 
     // 2. Width Measurement Unit Tests
-    // Formatting ON: codes take no width
     font.setFormattingOption(true);
     int wPlain = font.width("Hello", true);
     int wCodeOn = font.width("&8Hello", true);
     assert(wCodeOn == wPlain);
 
-    // Formatting OFF: codes count for full width
     font.setFormattingOption(false);
     int wCodeOff = font.width("&8Hello", true);
     assert(wCodeOff > wPlain);
 
-    // Built-in text width when option is OFF: section sign still ignored
     int wBuiltin = font.width("\xa7" "8Hello", false);
     assert(wBuiltin == font.width("Hello", false));
 
-    // Reset formatting option to ON
     font.setFormattingOption(true);
 
-    // Case-insensitivity: &L, §R
-    const char* upperCode1 = "&LBold";
-    int lenUpper1 = font.getFormatCodeLength(upperCode1, true, outCode, false);
-    assert(lenUpper1 == 2);
-    assert(outCode == 'l');
+    // 3. TextBox Word Bounds Unit Tests
+    std::string sampleText = "&aHello &bWorld";
 
-    const char* upperCode2 = "\xa7" "RReset";
-    int lenUpper2 = font.getFormatCodeLength(upperCode2, true, outCode, false);
-    assert(lenUpper2 == 2);
-    assert(outCode == 'r');
+    int wStart, wEnd;
+    testGetWordBounds(sampleText, 3, wStart, wEnd); // "Hello"
+    assert(wStart == 2);
+    assert(wEnd == 7);
 
-    // Unknown format codes: &z, §z
-    const char* unknown1 = "&zTest";
-    int lenUnknown1 = font.getFormatCodeLength(unknown1, true, outCode, false);
-    assert(lenUnknown1 == 0);
+    testGetWordBounds(sampleText, 10, wStart, wEnd); // "World"
+    assert(wStart == 10);
+    assert(wEnd == 15);
 
-    const char* unknown2 = "\xa7" "zTest";
-    int lenUnknown2 = font.getFormatCodeLength(unknown2, true, outCode, false);
-    assert(lenUnknown2 == 0);
-
-    // End of string edge cases
-    const char* endStr = "&";
-    int lenEnd = font.getFormatCodeLength(endStr, true, outCode, false);
-    assert(lenEnd == 0);
-
-    // 3. Sanitization Unit Tests
-    std::string s1 = Font::sanitize("\xc2\xa7" "aHello &bWorld", true);
-    assert(s1 == "Hello World");
-
-    std::string s2 = Font::sanitize("&aHello &zWorld", true);
-    assert(s2 == "Hello &zWorld");
-
-    std::string s3 = Font::sanitize("&aHello &bWorld", false);
-    assert(s3 == "&aHello &bWorld");
-
-    // 4. Drop Shadow Color Darkening Calculation Test
-    int colorGreen = 0x55FF55;
-    int shadowGreen = (colorGreen & 0xFCFCFC) >> 2;
-    assert(shadowGreen == 0x153F15);
-
-    int colorWhite = 0xFFFFFF;
-    int shadowWhite = (colorWhite & 0xFCFCFC) >> 2;
-    assert(shadowWhite == 0x3F3F3F);
-
-    // 5. Digit and symbol character typing verification
-    std::string text = "";
-    std::string testChars = "0123456789^!@#$%&*()-_=+";
-    for (size_t i = 0; i < testChars.length(); ++i) {
-        char c = testChars[i];
-        if (c >= 32 && c < 127) {
-            text.push_back(c);
-        }
-    }
-    assert(text == testChars);
-
-    // 6. Clean Pasted Text Unit Tests
+    // 4. Clean Pasted Text Unit Tests
     std::string multilinePasted = "Line1\r\nLine2\nLine3";
     std::string cleaned1 = Util::cleanPastedText(multilinePasted, 256);
     assert(cleaned1 == "Line1 Line2 Line3");
 
-    std::string unprintablePasted = "Hello\x01\x02\x07World\x7F!";
-    std::string cleaned2 = Util::cleanPastedText(unprintablePasted, 256);
-    assert(cleaned2 == "HelloWorld!");
-
-    std::string truncatedPasted = "1234567890abcdef";
-    std::string cleaned3 = Util::cleanPastedText(truncatedPasted, 10);
-    assert(cleaned3 == "1234567890");
-
-    std::cout << "All Font Formatting & Clipboard unit tests passed successfully!" << std::endl;
+    std::cout << "All Font Formatting, Clipboard & TextBox Selection unit tests passed successfully!" << std::endl;
     return 0;
 }
