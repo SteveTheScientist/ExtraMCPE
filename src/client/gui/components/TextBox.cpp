@@ -6,6 +6,7 @@
 #include "../../../platform/input/Mouse.h"
 #include "../../../platform/time.h"
 #include "../../../util/StringUtils.h"
+#include "../../../util/Mth.h"
 #include <algorithm>
 #include <cmath>
 #include <cctype>
@@ -160,10 +161,25 @@ bool TextBox::loseFocus(Minecraft* minecraft) {
 void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
     if (buttonNum == MouseAction::ACTION_LEFT) {
         if (showPopup) {
-            if (x >= popupX && x <= popupX + popupW && y >= popupY && y <= popupY + popupH) {
-                int btnIndex = (x - popupX) / (popupW / 4);
-                if (btnIndex < 0) btnIndex = 0;
-                if (btnIndex > 3) btnIndex = 3;
+            Font* font = minecraft->font;
+            static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
+            int btnW[4];
+            int totalW = 0;
+            for (int i = 0; i < 4; i++) {
+                btnW[i] = font->width(btnLabels[i]) + 12;
+                totalW += btnW[i];
+            }
+
+            if (x >= popupX && x <= popupX + totalW && y >= popupY && y <= popupY + popupH) {
+                int curX = popupX;
+                int btnIndex = -1;
+                for (int i = 0; i < 4; i++) {
+                    if (x >= curX && x < curX + btnW[i]) {
+                        btnIndex = i;
+                        break;
+                    }
+                    curX += btnW[i];
+                }
 
                 if (btnIndex == 0) { // Select All
                     selectAll();
@@ -444,19 +460,27 @@ void TextBox::tick(Minecraft* minecraft) {
                     selectWordAt(touchIdx);
 
                     showPopup = true;
+                    static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
+                    int totalW = 0;
+                    for (int i = 0; i < 4; i++) {
+                        totalW += font->width(btnLabels[i]) + 12;
+                    }
+
                     int screenW = (int)(minecraft->width * Gui::InvGuiScale);
-                    popupW = 180;
+                    int screenH = (int)(minecraft->height * Gui::InvGuiScale);
+
+                    popupW = totalW;
                     popupH = 20;
 
                     popupX = x + (width - popupW) / 2;
-                    if (popupX < 2) popupX = 2;
-                    if (popupX + popupW > screenW - 2) popupX = screenW - popupW - 2;
+                    popupX = Mth::clamp(popupX, 2, screenW - popupW - 2);
 
                     if (y - popupH - 4 >= 2) {
                         popupY = y - popupH - 4;
                     } else {
                         popupY = y + height + 4;
                     }
+                    popupY = Mth::clamp(popupY, 2, screenH - popupH - 2);
                 }
             }
         } else {
@@ -554,15 +578,22 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
     glDisable(GL_SCISSOR_TEST);
 
     if (showPopup) {
+        static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
+        int btnW[4];
+        int totalW = 0;
+        for (int i = 0; i < 4; i++) {
+            btnW[i] = font->width(btnLabels[i]) + 12;
+            totalW += btnW[i];
+        }
+        popupW = totalW;
+
         fill(popupX - 1, popupY - 1, popupX + popupW + 1, popupY + popupH + 1, 0xff555555);
         fill(popupX, popupY, popupX + popupW, popupY + popupH, 0xeb101010);
 
-        int btnW = popupW / 4;
-        static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
-
+        int curX = popupX;
         for (int i = 0; i < 4; i++) {
-            int bx0 = popupX + i * btnW;
-            int bx1 = bx0 + btnW;
+            int bx0 = curX;
+            int bx1 = bx0 + btnW[i];
 
             bool isHover = (xm >= bx0 && xm < bx1 && ym >= popupY && ym < popupY + popupH);
             if (isHover) {
@@ -573,9 +604,11 @@ void TextBox::render(Minecraft* minecraft, int xm, int ym) {
                 fill(bx0, popupY + 2, bx0 + 1, popupY + popupH - 2, 0xff555555);
             }
 
-            int labelX = bx0 + (btnW - font->width(btnLabels[i])) / 2;
+            int labelX = bx0 + (btnW[i] - font->width(btnLabels[i])) / 2;
             int labelY = popupY + (popupH - Font::DefaultLineHeight) / 2;
             drawString(font, btnLabels[i], labelX, labelY, isHover ? 0xffffff55 : 0xffffffff);
+
+            curX += btnW[i];
         }
     }
 }

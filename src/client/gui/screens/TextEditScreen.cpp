@@ -16,8 +16,7 @@
 
 TextEditScreen::TextEditScreen( SignTileEntity* signEntity )
  : sign(signEntity), isShowingKeyboard(false), frame(0), line(0), btnClose(1, ""),
-   m_isPressingSign(false), m_pressStartTime(0), m_showPopup(false),
-   m_popupX(0), m_popupY(0), m_popupW(180), m_popupH(20) {
+   m_lineBoxes{TextBox(1, 0, 0, 120, 14, ""), TextBox(2, 0, 0, 120, 14, ""), TextBox(3, 0, 0, 120, 14, ""), TextBox(4, 0, 0, 120, 14, "")} {
 
 }
 
@@ -38,17 +37,35 @@ void TextEditScreen::init() {
 	btnClose.setImageDef(def, true);
 	btnClose.scaleWhenPressed = false;
 	buttons.push_back(&btnClose);
-	m_isPressingSign = false;
-	m_showPopup = false;
+
+	textBoxes.clear();
+	int startY = height / 2 + 10;
+	for (int i = 0; i < 4; i++) {
+		m_lineBoxes[i] = TextBox(i + 1, (width - 140) / 2, startY + i * 18, 140, 16, "");
+		m_lineBoxes[i].text = sign->messages[i];
+		textBoxes.push_back(&m_lineBoxes[i]);
+	}
+	m_lineBoxes[line].setFocus(minecraft);
 }
 
 void TextEditScreen::setupPositions() {
 	btnClose.width = btnClose.height = 19;
 	btnClose.x = width - btnClose.width;
 	btnClose.y = 0;
+
+	int startY = height / 2 + 10;
+	for (int i = 0; i < 4; i++) {
+		m_lineBoxes[i].x = (width - 140) / 2;
+		m_lineBoxes[i].y = startY + i * 18;
+		m_lineBoxes[i].width = 140;
+		m_lineBoxes[i].height = 16;
+	}
 }
 
 bool TextEditScreen::handleBackEvent( bool isDown ) {
+	for (int i = 0; i < 4; i++) {
+		sign->messages[i] = m_lineBoxes[i].text;
+	}
     sign->setChanged();
 	Packet* signUpdatePacket = sign->getUpdatePacket();
 	minecraft->raknetInstance->send(signUpdatePacket);
@@ -77,7 +94,7 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 
 	static float minUV[] = {0.03126f, 0.06249f};
     static float maxUV[] = {0.39063f, 0.4374f};
-	float scale = ((minecraft->height / 2) / 32) * 0.9f;
+	float scale = ((minecraft->height / 2) / 32) * 0.7f;
 
 	glTranslatef(minecraft->width / 2.0f, 5.0f, 0.0f);
 	glScalef2(scale,scale,1);
@@ -94,13 +111,8 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	glTranslatef(0, 2 ,0);
 	glScalef2(textScale, textScale, 1);
 	for(int i = 0; i < 4; ++i) {
-		std::string msg = sign->messages[i];
-		if (i == sign->selectedLine && msg.length() < 14) {
-			std::string s = "> " + msg + " <";
-			font->draw(s, -(float)font->width(s, true) / 2.0f, 10.0f * i, 0xFF000000, false, true);
-		} else {
-			font->draw(msg, -(float)font->width(msg, true) / 2.0f, 10.0f * i, 0xFF000000, false, true);
-		}
+		std::string msg = m_lineBoxes[i].text;
+		font->draw(msg, -(float)font->width(msg, true) / 2.0f, 10.0f * i, 0xFF000000, false, true);
 	}
 	sign->selectedLine  = -1;
 
@@ -109,32 +121,6 @@ void TextEditScreen::render( int xm, int ym, float a ) {
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
-
-	if (m_showPopup) {
-		fill(m_popupX - 1, m_popupY - 1, m_popupX + m_popupW + 1, m_popupY + m_popupH + 1, 0xff555555);
-		fill(m_popupX, m_popupY, m_popupX + m_popupW, m_popupY + m_popupH, 0xeb101010);
-
-		int btnW = m_popupW / 4;
-		static const char* btnLabels[4] = { "Select All", "Copy", "Cut", "Paste" };
-
-		for (int i = 0; i < 4; i++) {
-			int bx0 = m_popupX + i * btnW;
-			int bx1 = bx0 + btnW;
-
-			bool isHover = (xm >= bx0 && xm < bx1 && ym >= m_popupY && ym < m_popupY + m_popupH);
-			if (isHover) {
-				fill(bx0, m_popupY, bx1, m_popupY + m_popupH, 0x50ffffff);
-			}
-
-			if (i > 0) {
-				fill(bx0, m_popupY + 2, bx0 + 1, m_popupY + m_popupH - 2, 0xff555555);
-			}
-
-			int labelX = bx0 + (btnW - font->width(btnLabels[i])) / 2;
-			int labelY = m_popupY + (m_popupH - Font::DefaultLineHeight) / 2;
-			font->drawShadow(btnLabels[i], (float)labelX, (float)labelY, isHover ? 0xffffff55 : 0xffffffff);
-		}
-	}
 
 	super::render(xm, ym, a);
 }
@@ -146,125 +132,36 @@ void TextEditScreen::lostFocus() {
 void TextEditScreen::tick() {
 	frame++;
 
-	if (m_isPressingSign) {
-		if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
-			long elapsed = getTimeMs() - m_pressStartTime;
-			if (elapsed >= 500) {
-				m_isPressingSign = false;
-				m_showPopup = true;
-
-				m_popupW = 180;
-				m_popupH = 20;
-				m_popupX = (width - m_popupW) / 2;
-				if (m_popupX < 2) m_popupX = 2;
-				if (m_popupX + m_popupW > width - 2) m_popupX = width - m_popupW - 2;
-
-				m_popupY = 10; // Position above sign
-			}
-		} else {
-			m_isPressingSign = false;
+	for (int i = 0; i < 4; i++) {
+		if (m_lineBoxes[i].focused && line != i) {
+			line = i;
 		}
+		sign->messages[i] = m_lineBoxes[i].text;
 	}
+
+	super::tick();
 }
 
 void TextEditScreen::keyPressed( int eventKey ) {
-	bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
-
-	if (ctrlDown) {
-		std::string& curMsg = sign->messages[line];
-		if (eventKey == Keyboard::KEY_C || eventKey == 'c' || eventKey == 'C') {
-			if (!curMsg.empty()) {
-				minecraft->platform()->setClipboardText(curMsg);
-			}
-			return;
-		}
-		if (eventKey == Keyboard::KEY_X || eventKey == 'x' || eventKey == 'X') {
-			if (!curMsg.empty()) {
-				minecraft->platform()->setClipboardText(curMsg);
-				curMsg.clear();
-			}
-			return;
-		}
-		if (eventKey == Keyboard::KEY_V || eventKey == 'v' || eventKey == 'V') {
-			std::string clip = minecraft->platform()->getClipboardText();
-			if (!clip.empty()) {
-				std::string cleaned = Util::cleanPastedText(clip, 15 - curMsg.length());
-				curMsg += cleaned;
-			}
-			return;
-		}
-		if (eventKey == Keyboard::KEY_A || eventKey == 'a' || eventKey == 'A') {
-			return;
-		}
-	}
-
-	if(eventKey == Keyboard::KEY_BACKSPACE) {
-		if(sign->messages[line].length() > 0) {
-			sign->messages[line].erase(sign->messages[line].size() - 1, 1);
-		} else {
-            line--;
-            if(line < 0) {
-                line = 3;
-            }
-        }
-	} else if(eventKey == Keyboard::KEY_RETURN)  {
+	if(eventKey == Keyboard::KEY_RETURN)  {
+		m_lineBoxes[line].loseFocus(minecraft);
 		line = (line + 1) % 4;
-	} else {
-		super::keyPressed(eventKey);
+		m_lineBoxes[line].setFocus(minecraft);
+		return;
 	}
+
+	super::keyPressed(eventKey);
 }
 
 void TextEditScreen::charPressed( char inputChar ) {
-	bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
-	if (ctrlDown || (unsigned char)inputChar < 32 || inputChar == 127) return;
-
-	std::string fullstring = sign->messages[line] + inputChar;
-	if(fullstring.length() < 16) {
-		sign->messages[line] = fullstring;
-	}
+	super::charPressed(inputChar);
 }
 
 void TextEditScreen::mouseClicked(int x, int y, int buttonNum) {
-	if (buttonNum == MouseAction::ACTION_LEFT) {
-		if (m_showPopup) {
-			if (x >= m_popupX && x <= m_popupX + m_popupW && y >= m_popupY && y <= m_popupY + m_popupH) {
-				int btnIndex = (x - m_popupX) / (m_popupW / 4);
-				if (btnIndex < 0) btnIndex = 0;
-				if (btnIndex > 3) btnIndex = 3;
-
-				std::string& curMsg = sign->messages[line];
-				if (btnIndex == 0) { // Select All
-				} else if (btnIndex == 1) { // Copy
-					if (!curMsg.empty()) {
-						minecraft->platform()->setClipboardText(curMsg);
-					}
-				} else if (btnIndex == 2) { // Cut
-					if (!curMsg.empty()) {
-						minecraft->platform()->setClipboardText(curMsg);
-						curMsg.clear();
-					}
-				} else if (btnIndex == 3) { // Paste
-					std::string clip = minecraft->platform()->getClipboardText();
-					if (!clip.empty()) {
-						std::string cleaned = Util::cleanPastedText(clip, 15 - curMsg.length());
-						curMsg += cleaned;
-					}
-				}
-				m_showPopup = false;
-				return;
-			} else {
-				m_showPopup = false;
-			}
-		}
-
-		m_isPressingSign = true;
-		m_pressStartTime = getTimeMs();
-	}
 	super::mouseClicked(x, y, buttonNum);
 }
 
 void TextEditScreen::mouseReleased(int x, int y, int buttonNum) {
-	m_isPressingSign = false;
 	super::mouseReleased(x, y, buttonNum);
 }
 

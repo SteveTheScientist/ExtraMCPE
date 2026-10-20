@@ -2,6 +2,7 @@
 #define NET_MINECRAFT_CLIENT_GUI_SCREENS__ChatScreen_H__
 
 #include "../Screen.h"
+#include "../components/TextBox.h"
 #include <string>
 
 class ChatScreen: public Screen
@@ -16,8 +17,7 @@ public:
 	virtual void render(int xm, int ym, float a);
 	virtual void buttonClicked(Button* button) {}
 	virtual void keyPressed(int key);
-	virtual void keyboardNewChar(char c);
-	virtual void charPressed(char c) { keyboardNewChar(c); }
+	virtual void charPressed(char c);
 	virtual void mouseClicked(int x, int y, int buttonNum);
 	virtual void mouseReleased(int x, int y, int buttonNum);
 	virtual void mouseWheel(int dx, int dy, int xm, int ym);
@@ -27,20 +27,13 @@ public:
 private:
 	void execute();
 
-	std::string m_input;
-	int m_cursorPos;
-	int m_blinkTimer;
+	TextBox m_inputBox;
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDragging;
 	int m_dragStartY;
 	int m_startTouchY;
 	float m_dragAccumulatorY;
-
-	bool m_isPressingInput;
-	long m_pressStartTime;
-	bool m_showPopup;
-	int m_popupX, m_popupY, m_popupW, m_popupH;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__ChatScreen_H__*/

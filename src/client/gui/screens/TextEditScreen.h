@@ -1,13 +1,14 @@
 #ifndef NET_MINECRAFT_CLIENT_GUI_SCREENS__TextEditScreen_H__
 #define NET_MINECRAFT_CLIENT_GUI_SCREENS__TextEditScreen_H__
 
-//package net.minecraft.client.gui;
-
 #include "../Screen.h"
-#include <string>
 #include "../components/ImageButton.h"
+#include "../components/TextBox.h"
+#include <string>
+
 class SignTileEntity;
 class Button;
+
 class TextEditScreen: public Screen
 {
     typedef Screen super;
@@ -32,11 +33,7 @@ protected:
 	int line;
 private:
 	ImageButton btnClose;
-
-	bool m_isPressingSign;
-	long m_pressStartTime;
-	bool m_showPopup;
-	int m_popupX, m_popupY, m_popupW, m_popupH;
+	TextBox m_lineBoxes[4];
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__TextEditScreen_H__*/

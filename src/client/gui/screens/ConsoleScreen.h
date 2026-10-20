@@ -2,6 +2,7 @@
 #define NET_MINECRAFT_CLIENT_GUI_SCREENS__ConsoleScreen_H__
 
 #include "../Screen.h"
+#include "../components/TextBox.h"
 #include <string>
 
 class ConsoleScreen: public Screen
@@ -9,32 +10,22 @@ class ConsoleScreen: public Screen
     typedef Screen super;
 public:
     ConsoleScreen();
-    virtual ~ConsoleScreen() {}
 
-    void init();
-    void render(int xm, int ym, float a);
-    void tick();
-
-    virtual bool renderGameBehind() { return true; }
-    virtual bool isInGameScreen()   { return true; }
-    virtual bool isPauseScreen()    { return false; }
-
+    virtual void init();
+    virtual void tick();
+    virtual bool handleBackEvent(bool isDown);
+    virtual void render(int xm, int ym, float a);
     virtual void keyPressed(int eventKey);
     virtual void charPressed(char inputChar);
-    virtual bool handleBackEvent(bool isDown);
     virtual void mouseClicked(int x, int y, int buttonNum);
     virtual void mouseReleased(int x, int y, int buttonNum);
+
+    virtual bool renderGameBehind() const { return true; }
 
 private:
     void execute();
 
-    std::string _input;
-    int         _cursorBlink;
-
-    bool _isPressingInput;
-    long _pressStartTime;
-    bool _showPopup;
-    int _popupX, _popupY, _popupW, _popupH;
+    TextBox _inputBox;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__ConsoleScreen_H__*/
