@@ -33,6 +33,7 @@ void SkinScreen::init() {
     int idSeq = 400;
 
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SKIN_MODEL, "Skin Model"));
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_SKIN_OVERLAY, "Skin Overlay"));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);
@@ -185,7 +186,15 @@ void SkinScreen::buttonClicked(Button* button) {
     OptionControl* ctrl = dynamic_cast<OptionControl*>(button);
     if (ctrl) {
         if (ctrl->controlType == CONTROL_TOGGLE) {
-            ctrl->toggleValue(minecraft);
+            if (ctrl->optionId == OPTIONS_SKIN_MODEL) {
+                std::string cur = minecraft->options.getStringValue(OPTIONS_SKIN_MODEL);
+                if (cur == "Auto") minecraft->options.set(OPTIONS_SKIN_MODEL, "Classic");
+                else if (cur == "Classic") minecraft->options.set(OPTIONS_SKIN_MODEL, "Slim");
+                else minecraft->options.set(OPTIONS_SKIN_MODEL, "Auto");
+                ctrl->updateLabel(minecraft);
+            } else {
+                ctrl->toggleValue(minecraft);
+            }
             minecraft->options.save();
             setupPositions();
         }

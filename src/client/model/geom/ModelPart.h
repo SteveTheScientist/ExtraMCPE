@@ -30,6 +30,7 @@ public:
 
 	// Render normally
 	void render( float scale );
+	void renderCubeRange( float scale, size_t start, size_t count );
 	void renderRollable( float scale );
 	void draw();
 	// Bad, immediate version... //@fix @todo: remove this

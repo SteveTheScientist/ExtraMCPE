@@ -1,5 +1,6 @@
 #include "HumanoidModel.h"
 #include "../Minecraft.h"
+extern bool g_skinOverlayEnabled;
 #include "../../util/Mth.h"
 #include "../../world/entity/player/Player.h"
 #include "../../world/entity/player/Inventory.h"
@@ -120,13 +121,27 @@ void HumanoidModel::render(Entity* e, float time, float r, float bob, float yRot
 	hair.zRot = head.zRot;
 	hair.y = head.y;
 
+	bool renderOverlay = g_skinOverlayEnabled;
+
 	head.render(scale);
-	hair.render(scale);
-	body.render(scale);
-	arm0.render(scale);
-	arm1.render(scale);
-	leg0.render(scale);
-	leg1.render(scale);
+	if (renderOverlay) {
+		hair.render(scale);
+	}
+
+	if (!renderOverlay && texWidth == 64 && texHeight == 64) {
+		// When overlay is disabled, render only the base cube (index 0) for each part
+		body.renderCubeRange(scale, 0, 1);
+		arm0.renderCubeRange(scale, 0, 1);
+		arm1.renderCubeRange(scale, 0, 1);
+		leg0.renderCubeRange(scale, 0, 1);
+		leg1.renderCubeRange(scale, 0, 1);
+	} else {
+		body.render(scale);
+		arm0.render(scale);
+		arm1.render(scale);
+		leg0.render(scale);
+		leg1.render(scale);
+	}
 	bowAndArrow = false;
 }
 

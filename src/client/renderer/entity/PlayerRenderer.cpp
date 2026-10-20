@@ -15,6 +15,8 @@ static const std::string armorFilenames[10] = {
 	"armor/gold_1.png",		"armor/gold_2.png",
 };
 
+bool g_skinOverlayEnabled = true;
+
 PlayerRenderer::PlayerRenderer( HumanoidModel* humanoidModel, float shadow )
 :	super(humanoidModel, shadow),
 	playerModel64(humanoidModel),

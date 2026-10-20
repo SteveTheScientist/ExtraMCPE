@@ -5,8 +5,11 @@
 #include "../world/Difficulty.h"
 #include <cmath>
 
+extern bool g_skinOverlayEnabled;
+
 #include <memory>
 
+bool g_skinOverlayEnabled = true;
 bool Options::debugGl = false;
 
 // OPTIONS TABLE
@@ -31,6 +34,7 @@ OptionInt guiScale("guiScale", 0, 0, 3);
 
 OptionString skin("skin", "Default");
 OptionString skinModel("skinModel", "Auto");
+OptionBool skinOverlay("skinOverlay", true);
 
 #ifdef RPI
 OptionString username("username", "StevePi");
@@ -166,6 +170,7 @@ void Options::initTable() {
 
 	m_options[OPTIONS_SKIN] = &skin;
 	m_options[OPTIONS_SKIN_MODEL] = &skinModel;
+	m_options[OPTIONS_SKIN_OVERLAY] = &skinOverlay;
 	m_options[OPTIONS_USERNAME] = &username;
 
     m_options[OPTIONS_DESTROY_VIBRATION] = &destroyVibration;
@@ -324,6 +329,8 @@ void Options::load() {
 
 		(*opt)->parse(value);
 	}
+
+	g_skinOverlayEnabled = getBooleanValue(OPTIONS_SKIN_OVERLAY);
 }
 
 void Options::save() {
@@ -341,6 +348,9 @@ void Options::setOptionsFilePath(const std::string& path) {
 }
 
 void Options::notifyOptionUpdate(OptionId key, bool value) {
+	if (key == OPTIONS_SKIN_OVERLAY) {
+		g_skinOverlayEnabled = value;
+	}
 	minecraft->optionUpdated(key, value);
 }
 

@@ -263,6 +263,17 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_SKIN_MODEL) {
+        msg = "Skin Model: " + minecraft->options.getStringValue(OPTIONS_SKIN_MODEL);
+        return;
+    }
+
+    if (optionId == OPTIONS_SKIN_OVERLAY) {
+        bool state = minecraft->options.getBooleanValue(OPTIONS_SKIN_OVERLAY);
+        msg = "Skin Overlay: " + std::string(state ? "ON" : "OFF");
+        return;
+    }
+
     if (optionId == OPTIONS_TEXT_FORMATTING) {
         bool state = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
         msg = "Text Formatting: " + std::string(state ? "ON" : "OFF");
