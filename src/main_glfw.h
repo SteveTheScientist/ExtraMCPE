@@ -29,8 +29,16 @@ int transformKey(int glfwkey) {
 		case GLFW_KEY_TAB: return Keyboard::KEY_TAB;
 		case GLFW_KEY_BACKSPACE: return Keyboard::KEY_BACKSPACE;
 		case GLFW_KEY_LEFT_SHIFT: return Keyboard::KEY_LSHIFT;
+		case GLFW_KEY_RIGHT_SHIFT: return Keyboard::KEY_RSHIFT;
 		case GLFW_KEY_ENTER: return Keyboard::KEY_RETURN;
 		case GLFW_KEY_LEFT_CONTROL: return Keyboard::KEY_LEFT_CTRL;
+		case GLFW_KEY_LEFT: return Keyboard::KEY_LEFT;
+		case GLFW_KEY_RIGHT: return Keyboard::KEY_RIGHT;
+		case GLFW_KEY_UP: return Keyboard::KEY_UP;
+		case GLFW_KEY_DOWN: return Keyboard::KEY_DOWN;
+		case GLFW_KEY_HOME: return Keyboard::KEY_HOME;
+		case GLFW_KEY_END: return Keyboard::KEY_END;
+		case GLFW_KEY_DELETE: return Keyboard::KEY_DELETE;
 		default: return glfwkey;
 	}
 }

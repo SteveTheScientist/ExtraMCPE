@@ -228,7 +228,7 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
             lastClickY = y;
 
             int clickIdx = getCharIndexAtX(font, text, x, textX);
-            bool shiftDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_SHIFT) || Keyboard::isKeyDown(Keyboard::KEY_RIGHT_SHIFT);
+            bool shiftDown = Keyboard::isKeyDown(Keyboard::KEY_LSHIFT) || Keyboard::isKeyDown(Keyboard::KEY_RSHIFT);
 
             if (shiftDown) {
                 cursorPos = clickIdx;
@@ -276,7 +276,7 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
     if (!focused) return;
 
     bool ctrlDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_CTRL) || Keyboard::isKeyDown(232) || Keyboard::isKeyDown(224) || Keyboard::isKeyDown(228);
-    bool shiftDown = Keyboard::isKeyDown(Keyboard::KEY_LEFT_SHIFT) || Keyboard::isKeyDown(Keyboard::KEY_RIGHT_SHIFT);
+    bool shiftDown = Keyboard::isKeyDown(Keyboard::KEY_LSHIFT) || Keyboard::isKeyDown(Keyboard::KEY_RSHIFT);
 
     if (ctrlDown) {
         if (key == Keyboard::KEY_C || key == 'c' || key == 'C') {

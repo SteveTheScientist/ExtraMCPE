@@ -10,13 +10,13 @@ public:
 	static const int KEYUP = 0;
 	static const int KEYDOWN = 1;
 
-	KeyboardAction(unsigned char keyCode, int state) {
+	KeyboardAction(int keyCode, int state) {
 		this->key = keyCode;
 		this->state = state;
 	}
 
 	int state;
-	unsigned char key;
+	int key;
 };
 
 /* Iterators */
@@ -72,14 +72,25 @@ public:
 	static const int KEY_F11 = 122;
 	static const int KEY_F12 = 123;
 
-
 	static const int KEY_ESCAPE = 27;
 	static const int KEY_SPACE = 32;
-	static const int KEY_LSHIFT = 10;
+	static const int KEY_LSHIFT = 340;
+	static const int KEY_RSHIFT = 344;
 	static const int KEY_LEFT_CTRL = 232;
 
+	static const int KEY_HOME = 268;
+	static const int KEY_LEFT = 263;
+	static const int KEY_UP = 265;
+	static const int KEY_RIGHT = 262;
+	static const int KEY_DOWN = 264;
+	static const int KEY_END = 269;
+	static const int KEY_DELETE = 261;
+
 	static bool isKeyDown(int keyCode) {
-		return _states[keyCode] == KeyboardAction::KEYDOWN;
+		if (keyCode >= 0 && keyCode < 512) {
+			return _states[keyCode] == KeyboardAction::KEYDOWN;
+		}
+		return false;
 	}
 
 	static void reset() {
@@ -89,10 +100,12 @@ public:
 		_textIndex = -1;
     }
 
-	static void feed(unsigned char keyCode, int state) {
+	static void feed(int keyCode, int state) {
 		_inputs.push_back(KeyboardAction(keyCode, state));
 
-		_states[keyCode] = state;
+		if (keyCode >= 0 && keyCode < 512) {
+			_states[keyCode] = state;
+		}
 	}
 	static void feedText(char character) {
 		_inputText.push_back(character);
@@ -133,7 +146,7 @@ public:
 private:
     static int _index;
 	static int _textIndex;
-	static int _states[256];
+	static int _states[512];
 	static std::vector<KeyboardAction> _inputs;
 	static std::vector<char> _inputText;
 	static bool _inited;

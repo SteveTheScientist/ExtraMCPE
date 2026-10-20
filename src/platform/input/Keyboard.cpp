@@ -1,6 +1,6 @@
 #include "Keyboard.h"
 
-int Keyboard::_states[256] = {0};
+int Keyboard::_states[512] = {0};
 
 std::vector<KeyboardAction> Keyboard::_inputs;
 std::vector<char> Keyboard::_inputText;
@@ -54,6 +54,7 @@ const char* Keyboard::getKeyName(int key) {
 		case KEY_ESCAPE: return "Esc";
 		case KEY_SPACE: return "Space";
 		case KEY_LSHIFT: return "Left Shift";
+		case KEY_RSHIFT: return "Right Shift";
 		default: return "Unknown";
 	}
 }
