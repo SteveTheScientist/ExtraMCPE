@@ -10,6 +10,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cassert>
+#include <cctype>
+#include <cstdlib>
 
 Font::Font(Options* options, const std::string& name, Textures* textures)
 :   options(options),
@@ -17,6 +19,7 @@ Font::Font(Options* options, const std::string& name, Textures* textures)
     fontName(name),
     _textures(textures),
     lineHeight(DefaultLineHeight),
+    formattingOption(true),
     hasMissingGlyph(false)
 {
     init(options);
@@ -67,6 +70,47 @@ static uint32_t decodeUTF8(const char*& ptr) {
         return ((c & 0x07) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) << 6) | (c4 & 0x3F);
     }
     return c;
+}
+
+int Font::getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode)
+{
+    if (!ptr || *ptr == '\0') return 0;
+
+    int prefixLen = 0;
+    if ((unsigned char)ptr[0] == 0xC2 && (unsigned char)ptr[1] == 0xA7) {
+        prefixLen = 2;
+    } else if ((unsigned char)ptr[0] == 0xA7) {
+        prefixLen = 1;
+    } else if (allowAmpersand && ptr[0] == '&') {
+        prefixLen = 1;
+    }
+
+    if (prefixLen == 0) return 0;
+
+    char nextChar = ptr[prefixLen];
+    if (nextChar == '\0') return 0;
+
+    char c = tolower((unsigned char)nextChar);
+    bool isValid = (c >= '0' && c <= '9') ||
+                   (c >= 'a' && c <= 'f') ||
+                   (c == 'k' || c == 'l' || c == 'm' || c == 'n' || c == 'o' || c == 'r');
+
+    if (isValid) {
+        outCode = c;
+        return prefixLen + 1;
+    }
+
+    return 0;
+}
+
+const GlyphInfo* Font::getRandomGlyphWithWidth(int width) const
+{
+    std::map<int, std::vector<GlyphInfo>>::const_iterator it = glyphsByWidth.find(width);
+    if (it != glyphsByWidth.end() && !it->second.empty()) {
+        int idx = rand() % (int)it->second.size();
+        return &it->second[idx];
+    }
+    return NULL;
 }
 
 void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, int ascentVal, const std::vector<std::string>& charGrid)
@@ -152,6 +196,8 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
                     info.ascent = ascentVal;
 
                     glyphMap[codepoint] = info;
+                    glyphsByWidth[info.glyphWidth].push_back(info);
+
                     if (codepoint == '?') {
                         missingGlyph = info;
                         hasMissingGlyph = true;
@@ -166,6 +212,7 @@ void Font::addBitmapProvider(const std::string& relativeTexPath, int heightVal, 
 void Font::loadFontProviders()
 {
     glyphMap.clear();
+    glyphsByWidth.clear();
     hasMissingGlyph = false;
 
     // Check for assets/minecraft/font/default.json
@@ -179,18 +226,11 @@ void Font::loadFontProviders()
         size_t providersPos = jsonStr.find("\"providers\"");
         if (providersPos != std::string::npos) {
             // Process providers list
-            // Log/skip unsupported provider types with clear TODO comments per spec:
-            // TODO: Support "legacy_unicode" provider type from default.json
-            // TODO: Support "unihex" provider type from default.json
-            // TODO: Support "ttf" provider type from default.json
-            // TODO: Support "reference" provider type from default.json
         }
     }
 
-    // Helper to append a Unicode codepoint as UTF-8 bytes to a std::string
     auto appendUTF8 = [](std::string& str, uint32_t cp) {
         if (cp == 0) {
-            // Replace codepoint 0 (NUL) with a placeholder character (0xFFFD / 0x0001) to prevent NUL string termination
             cp = 0x0001;
         }
         if (cp < 0x80) {
@@ -210,7 +250,6 @@ void Font::loadFontProviders()
         }
     };
 
-    // Built-in default provider using ascii.png (height 8, ascent 7)
     std::vector<std::string> asciiGrid;
     for (int r = 0; r < 16; r++) {
         std::string line = "";
@@ -222,7 +261,6 @@ void Font::loadFontProviders()
     }
     addBitmapProvider("font/ascii.png", 8, 7, asciiGrid);
 
-    // Space provider (advance 4)
     if (glyphMap.find(' ') == glyphMap.end()) {
         GlyphInfo spaceInfo;
         spaceInfo.textureName = "";
@@ -239,7 +277,6 @@ void Font::loadFontProviders()
         glyphMap[' '] = spaceInfo;
     }
 
-    // Unit test assertions per Step 3 / Step 5 spec:
     assert(glyphMap[' '].advance == 4);
     for (int ch = 0x21; ch <= 0x7E; ch++) {
         if (glyphMap.find(ch) != glyphMap.end()) {
@@ -251,6 +288,9 @@ void Font::loadFontProviders()
 
 void Font::init(Options* options)
 {
+    if (options) {
+        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
+    }
     loadFontProviders();
 }
 
@@ -273,8 +313,7 @@ void Font::drawShadow(const std::string& str, float x, float y, int color)
 
 void Font::drawShadow(const char* str, float x, float y, int color)
 {
-    int shadowColor = ((color & 0xFCFCFC) >> 2) | (color & 0xFF000000);
-    renderString(str, x + 1.0f, y + 1.0f, shadowColor, false); // Pass false to prevent double-darkening
+    renderString(str, x + 1.0f, y + 1.0f, color, true);
     renderString(str, x, y, color, false);
 }
 
@@ -302,17 +341,15 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
 {
     if (!str || !*str) return;
 
-    if (darken) {
-        int oldAlpha = color & 0xFF000000;
-        color = ((color & 0xFCFCFC) >> 2) | oldAlpha;
+    if (options) {
+        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
     }
 
     Tesselator& t = Tesselator::instance;
 
-    int alpha = (0xFF000000 & color) >> 24;
-    if (!alpha) alpha = 0xFF;
+    int initialAlpha = (0xFF000000 & color) >> 24;
+    if (!initialAlpha) initialAlpha = 0xFF;
 
-    static const std::string hex("0123456789abcdef");
     static const int colorCodes[16] = {
         0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
         0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
@@ -320,12 +357,22 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
         0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
     };
 
-    int curColor = color;
+    int baseColor = color;
+    if (darken) {
+        baseColor = ((color & 0xFCFCFC) >> 2) | (color & 0xFF000000);
+    }
+
+    int curColor = baseColor;
     int curR = (curColor >> 16) & 0xFF;
     int curG = (curColor >> 8) & 0xFF;
     int curB = curColor & 0xFF;
 
-    // Pixel snapping starting coordinates
+    bool bold = false;
+    bool italic = false;
+    bool underline = false;
+    bool strikethrough = false;
+    bool obfuscated = false;
+
     float startX = (float)std::floor((double)x + 0.5);
     float startY = (float)std::floor((double)y + 0.5);
 
@@ -333,21 +380,40 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
     float yOffset = 0.0f;
 
     std::string currentTexture = "";
+    bool allowAmpersand = formattingOption;
 
     const char* ptr = str;
     while (*ptr != '\0') {
-        if (*ptr == '\xa7' && *(ptr + 1) != '\0') {
-            ptr++;
-            char codeChar = tolower((unsigned char)*ptr++);
-            int codeIdx = hex.find(codeChar);
-            if (codeIdx >= 0 && codeIdx < 16) {
-                int cCode = colorCodes[codeIdx];
+        char codeChar = 0;
+        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+        if (codeBytes > 0) {
+            ptr += codeBytes;
+            if ((codeChar >= '0' && codeChar <= '9') || (codeChar >= 'a' && codeChar <= 'f')) {
+                int codeIdx = (codeChar >= '0' && codeChar <= '9') ? (codeChar - '0') : (codeChar - 'a' + 10);
+                curColor = colorCodes[codeIdx];
                 if (darken) {
-                    cCode = (cCode & 0xFCFCFC) >> 2;
+                    curColor = (curColor & 0xFCFCFC) >> 2;
                 }
-                curR = (cCode >> 16) & 0xFF;
-                curG = (cCode >> 8) & 0xFF;
-                curB = cCode & 0xFF;
+                curR = (curColor >> 16) & 0xFF;
+                curG = (curColor >> 8) & 0xFF;
+                curB = curColor & 0xFF;
+                bold = italic = underline = strikethrough = obfuscated = false;
+            } else if (codeChar == 'k') {
+                obfuscated = true;
+            } else if (codeChar == 'l') {
+                bold = true;
+            } else if (codeChar == 'm') {
+                strikethrough = true;
+            } else if (codeChar == 'n') {
+                underline = true;
+            } else if (codeChar == 'o') {
+                italic = true;
+            } else if (codeChar == 'r') {
+                curColor = baseColor;
+                curR = (curColor >> 16) & 0xFF;
+                curG = (curColor >> 8) & 0xFF;
+                curB = curColor & 0xFF;
+                bold = italic = underline = strikethrough = obfuscated = false;
             }
             continue;
         }
@@ -361,6 +427,18 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
 
         const GlyphInfo* g = getGlyph(codepoint);
         if (!g) continue;
+
+        if (obfuscated && g->glyphWidth > 0) {
+            const GlyphInfo* randG = getRandomGlyphWithWidth(g->glyphWidth);
+            if (randG) {
+                g = randG;
+            }
+        }
+
+        int adv = g->advance;
+        if (bold) {
+            adv += 1;
+        }
 
         if (g->textureName.length() > 0 && g->glyphWidth > 0) {
             if (g->textureName != currentTexture) {
@@ -378,9 +456,8 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
                 t.begin();
             }
 
-            t.color(curR, curG, curB, alpha);
+            t.color(curR, curG, curB, initialAlpha);
 
-            // Baseline alignment: glyphTopY = textY + 7 - ascent
             float gx = (float)std::floor((double)(startX + xOffset) + 0.5);
             float gy = (float)std::floor((double)(startY + yOffset + 7 - g->ascent) + 0.5);
 
@@ -392,13 +469,42 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
             float u1 = (float)(g->cellX + g->glyphWidth) / (float)g->textureWidth;
             float v1 = (float)(g->cellY + g->cellH) / (float)g->textureHeight;
 
+            float italicOffset = italic ? 1.0f : 0.0f;
+
             t.vertexUV(gx, gy + quadH, 0.0f, u0, v1);
             t.vertexUV(gx + quadW, gy + quadH, 0.0f, u1, v1);
-            t.vertexUV(gx + quadW, gy, 0.0f, u1, v0);
-            t.vertexUV(gx, gy, 0.0f, u0, v0);
+            t.vertexUV(gx + quadW + italicOffset, gy, 0.0f, u1, v0);
+            t.vertexUV(gx + italicOffset, gy, 0.0f, u0, v0);
+
+            if (bold) {
+                t.vertexUV(gx + 1.0f, gy + quadH, 0.0f, u0, v1);
+                t.vertexUV(gx + 1.0f + quadW, gy + quadH, 0.0f, u1, v1);
+                t.vertexUV(gx + 1.0f + quadW + italicOffset, gy, 0.0f, u1, v0);
+                t.vertexUV(gx + 1.0f + italicOffset, gy, 0.0f, u0, v0);
+            }
         }
 
-        xOffset += g->advance;
+        if (strikethrough || underline) {
+            if (currentTexture.length() > 0) {
+                t.draw();
+                currentTexture = "";
+            }
+
+            float gx = (float)std::floor((double)(startX + xOffset) + 0.5);
+            float lineY = startY + yOffset + (strikethrough ? 4.0f : 8.0f);
+
+            glDisable2(GL_TEXTURE_2D);
+            t.begin();
+            t.color(curR, curG, curB, initialAlpha);
+            t.vertex(gx - 1.0f, lineY + 1.0f, 0.0f);
+            t.vertex(gx + adv, lineY + 1.0f, 0.0f);
+            t.vertex(gx + adv, lineY, 0.0f);
+            t.vertex(gx - 1.0f, lineY, 0.0f);
+            t.draw();
+            glEnable2(GL_TEXTURE_2D);
+        }
+
+        xOffset += adv;
     }
 
     if (currentTexture.length() > 0) {
@@ -408,13 +514,29 @@ void Font::renderString(const char* str, float x, float y, int color, bool darke
 
 int Font::width(const std::string& str)
 {
+    if (str.empty()) return 0;
+
+    if (options) {
+        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
+    }
+
     int maxLen = 0;
     int len = 0;
+    bool bold = false;
+
+    bool allowAmpersand = formattingOption;
 
     const char* ptr = str.c_str();
     while (*ptr != '\0') {
-        if (*ptr == '\xa7' && *(ptr + 1) != '\0') {
-            ptr += 2;
+        char codeChar = 0;
+        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+        if (codeBytes > 0) {
+            ptr += codeBytes;
+            if ((codeChar >= '0' && codeChar <= '9') || (codeChar >= 'a' && codeChar <= 'f') || codeChar == 'r') {
+                bold = false;
+            } else if (codeChar == 'l') {
+                bold = true;
+            }
             continue;
         }
 
@@ -425,7 +547,9 @@ int Font::width(const std::string& str)
         } else {
             const GlyphInfo* g = getGlyph(codepoint);
             if (g) {
-                len += g->advance;
+                int adv = g->advance;
+                if (bold) adv += 1;
+                len += adv;
             }
         }
     }
@@ -445,43 +569,133 @@ int Font::height(const std::string& str)
 
 std::string Font::sanitize(const std::string& str)
 {
-    std::string sanitized(str.length() + 1, 0);
-    int j = 0;
+    return sanitize(str, true);
+}
 
-    for (size_t i = 0; i < str.length(); i++) {
-        if (str[i] == '\xa7') {
-            i++;
-        } else {
-            sanitized[j++] = str[i];
+std::string Font::sanitize(const std::string& str, bool allowAmpersand)
+{
+    std::string sanitized = "";
+    sanitized.reserve(str.length());
+
+    const char* ptr = str.c_str();
+    while (*ptr != '\0') {
+        char codeChar = 0;
+        int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+        if (codeBytes > 0) {
+            ptr += codeBytes;
+            continue;
         }
+
+        sanitized += *ptr++;
     }
-    return sanitized.erase(j);
+    return sanitized;
 }
 
 void Font::drawWordWrap(const std::string& str, float x, float y, float w, int col)
 {
-    char* cstr = new char[str.length() + 1];
-    strncpy(cstr, str.c_str(), str.length());
-    cstr[str.length()] = 0;
+    if (str.empty()) return;
 
-    const char* lims = " \n\t\r";
-    char* ptok = strtok(cstr, lims);
-
-    std::vector<std::string> words;
-    while (ptok != NULL) {
-        words.push_back(ptok);
-        ptok = strtok(NULL, lims);
+    if (options) {
+        formattingOption = options->getBooleanValue(OPTIONS_FORMATTING_CODES);
     }
 
-    delete[] cstr;
+    bool allowAmpersand = formattingOption;
 
-    int pos = 0;
-    while (pos < (int)words.size()) {
-        std::string line = words[pos++] + " ";
-        while (pos < (int)words.size() && width(line + words[pos]) < w) {
-            line += words[pos++] + " ";
+    struct FormatState {
+        char colorCode = 0;
+        bool bold = false;
+        bool italic = false;
+        bool underline = false;
+        bool strikethrough = false;
+        bool obfuscated = false;
+
+        std::string getPrefix(bool ampersand) const {
+            std::string res = "";
+            char pfx = ampersand ? '&' : '\xa7';
+            if (colorCode != 0) {
+                res += pfx;
+                res += colorCode;
+            }
+            if (bold) { res += pfx; res += 'l'; }
+            if (italic) { res += pfx; res += 'o'; }
+            if (underline) { res += pfx; res += 'n'; }
+            if (strikethrough) { res += pfx; res += 'm'; }
+            if (obfuscated) { res += pfx; res += 'k'; }
+            return res;
         }
-        drawShadow(line, x, y, col);
+
+        void update(char codeChar) {
+            if ((codeChar >= '0' && codeChar <= '9') || (codeChar >= 'a' && codeChar <= 'f')) {
+                colorCode = codeChar;
+                bold = italic = underline = strikethrough = obfuscated = false;
+            } else if (codeChar == 'k') obfuscated = true;
+            else if (codeChar == 'l') bold = true;
+            else if (codeChar == 'm') strikethrough = true;
+            else if (codeChar == 'n') underline = true;
+            else if (codeChar == 'o') italic = true;
+            else if (codeChar == 'r') {
+                colorCode = 0;
+                bold = italic = underline = strikethrough = obfuscated = false;
+            }
+        }
+    };
+
+    FormatState activeState;
+
+    std::vector<std::string> lines;
+    std::string currentLine = "";
+
+    const char* ptr = str.c_str();
+    while (*ptr != '\0') {
+        if (*ptr == '\n') {
+            lines.push_back(currentLine);
+            currentLine = activeState.getPrefix(allowAmpersand);
+            ptr++;
+            continue;
+        }
+
+        const char* segStart = ptr;
+        std::string wordCandidate = "";
+        FormatState tempState = activeState;
+
+        while (*ptr != '\0' && *ptr != '\n' && *ptr != ' ') {
+            char codeChar = 0;
+            int codeBytes = getFormatCodeLength(ptr, allowAmpersand, codeChar);
+            if (codeBytes > 0) {
+                tempState.update(codeChar);
+                for (int b = 0; b < codeBytes; b++) {
+                    wordCandidate += *ptr++;
+                }
+                continue;
+            }
+            const char* prevPtr = ptr;
+            decodeUTF8(ptr);
+            while (prevPtr < ptr) {
+                wordCandidate += *prevPtr++;
+            }
+        }
+
+        if (*ptr == ' ') {
+            wordCandidate += ' ';
+            ptr++;
+        }
+
+        if (width(currentLine + wordCandidate) <= w || currentLine.empty() || currentLine == activeState.getPrefix(allowAmpersand)) {
+            currentLine += wordCandidate;
+            activeState = tempState;
+        } else {
+            lines.push_back(currentLine);
+            currentLine = activeState.getPrefix(allowAmpersand) + wordCandidate;
+            activeState = tempState;
+        }
+    }
+
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        drawShadow(lines[i], x, y, col);
         y += lineHeight;
     }
 }

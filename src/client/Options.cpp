@@ -107,6 +107,7 @@ OptionFloat chatUnfocusedHeight("chat_unfocused_height", 90.0f, 20.0f, 90.0f);
 OptionInt chatMessageTime("chat_message_time", 1, 0, 5);
 OptionFloat chatPosX("chat_pos_x", 2.0f, 0.0f, 500.0f);
 OptionFloat chatPosY("chat_pos_y", 40.0f, 0.0f, 500.0f);
+OptionBool formattingCodes("formatting_codes", true);
 
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
@@ -258,6 +259,7 @@ void Options::initTable() {
 	m_options[OPTIONS_CHAT_MESSAGE_TIME] = &chatMessageTime;
 	m_options[OPTIONS_CHAT_POS_X] = &chatPosX;
 	m_options[OPTIONS_CHAT_POS_Y] = &chatPosY;
+	m_options[OPTIONS_FORMATTING_CODES] = &formattingCodes;
 }
 
 void Options::set(OptionId key, bool value) {

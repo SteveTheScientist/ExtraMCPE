@@ -45,19 +45,27 @@ public:
     int height(const std::string& str);
 
     static std::string sanitize(const std::string& str);
+    static std::string sanitize(const std::string& str, bool allowAmpersand);
 
     int getGuiScale() const;
+
+    void setFormattingOption(bool enabled) { formattingOption = enabled; }
+    bool isFormattingOptionEnabled() const { return formattingOption; }
+
+    static int getFormatCodeLength(const char* ptr, bool allowAmpersand, char& outCode);
 
 public:
     int fontTexture;
     int lineHeight;
     static const int DefaultLineHeight = 9;
+    bool formattingOption;
 
 private:
     void loadFontProviders();
     void addBitmapProvider(const std::string& relativeTexPath, int heightVal, int ascentVal, const std::vector<std::string>& charGrid);
     void renderString(const char* str, float x, float y, int color, bool darken);
     const GlyphInfo* getGlyph(uint32_t codepoint) const;
+    const GlyphInfo* getRandomGlyphWithWidth(int width) const;
 
 private:
     std::string fontName;
@@ -65,6 +73,7 @@ private:
     Options* options;
 
     std::map<uint32_t, GlyphInfo> glyphMap;
+    std::map<int, std::vector<GlyphInfo>> glyphsByWidth;
     GlyphInfo missingGlyph;
     bool hasMissingGlyph;
 };

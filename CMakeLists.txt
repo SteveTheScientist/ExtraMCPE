@@ -426,3 +426,16 @@ target_include_directories(test_fog PUBLIC
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/project/lib_projects/raknet/jni/RaknetSources"
 )
+
+add_executable(test_font
+    test/test_font.cpp
+    src/client/gui/Font.cpp
+    src/client/Option.cpp
+    src/util/Mth.cpp
+    glad/src/glad.c
+)
+target_include_directories(test_font PUBLIC
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_SOURCE_DIR}/glad/include"
+    "${CMAKE_SOURCE_DIR}/project/lib_projects/raknet/jni/RaknetSources"
+)
