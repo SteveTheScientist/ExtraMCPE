@@ -28,7 +28,7 @@ public:
 	virtual void charPressed(Minecraft* minecraft, char c);
 	virtual void tick(Minecraft* minecraft);
 
-	// Selection and cursor helpers
+	// Selection, cursor and text insertion helpers
 	bool hasSelection() const { return cursorPos != selectAnchor; }
 	int getSelectionStart() const { return cursorPos < selectAnchor ? cursorPos : selectAnchor; }
 	int getSelectionEnd() const { return cursorPos > selectAnchor ? cursorPos : selectAnchor; }
@@ -36,6 +36,7 @@ public:
 	bool deleteSelection();
 	void selectAll();
 	void selectWordAt(int idx);
+	void insertText(Minecraft* minecraft, const std::string& inputStr);
 
 	static int getCharIndexAtX(Font* font, const std::string& str, int clickX, float textX);
 	static void getWordBounds(const std::string& str, int idx, int& outStart, int& outEnd);

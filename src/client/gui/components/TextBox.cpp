@@ -86,6 +86,30 @@ void TextBox::selectWordAt(int idx) {
     getWordBounds(text, idx, selectAnchor, cursorPos);
 }
 
+void TextBox::insertText(Minecraft* minecraft, const std::string& inputStr) {
+    if (!focused || inputStr.empty()) return;
+
+    int selLen = hasSelection() ? (getSelectionEnd() - getSelectionStart()) : 0;
+    int maxAllowed = 256 - (int)text.length() + selLen;
+    if (maxAllowed <= 0) return;
+
+    std::string cleaned = Util::cleanPastedText(inputStr, maxAllowed);
+    if (cleaned.empty()) return;
+
+    if (hasSelection()) {
+        deleteSelection();
+    }
+
+    if (cursorPos < 0) cursorPos = 0;
+    if (cursorPos > (int)text.length()) cursorPos = (int)text.length();
+
+    text.insert(cursorPos, cleaned);
+    cursorPos += (int)cleaned.length();
+    selectAnchor = cursorPos;
+    blink = true;
+    blinkTicks = 0;
+}
+
 int TextBox::getCharIndexAtX(Font* font, const std::string& str, int clickX, float textX) {
     int len = (int)str.length();
     if (len == 0 || clickX <= textX) return 0;
@@ -164,11 +188,7 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
                 } else if (btnIndex == 3) { // Paste
                     std::string clip = minecraft->platform()->getClipboardText();
                     if (!clip.empty()) {
-                        if (hasSelection()) deleteSelection();
-                        std::string cleaned = Util::cleanPastedText(clip, 256 - text.length());
-                        text.insert(cursorPos, cleaned);
-                        cursorPos += (int)cleaned.length();
-                        selectAnchor = cursorPos;
+                        insertText(minecraft, clip);
                     }
                 }
                 showPopup = false;
@@ -256,19 +276,7 @@ void TextBox::charPressed(Minecraft* minecraft, char c) {
     }
 
     if (focused && c >= 32 && c < 127) {
-        if (hasSelection()) {
-            deleteSelection();
-        }
-        if ((int)text.size() < 256) {
-            if (cursorPos < 0) cursorPos = 0;
-            if (cursorPos > (int)text.length()) cursorPos = (int)text.length();
-
-            text.insert(cursorPos, 1, c);
-            cursorPos++;
-            selectAnchor = cursorPos;
-            blink = true;
-            blinkTicks = 0;
-        }
+        insertText(minecraft, std::string(1, c));
     }
 }
 
@@ -304,11 +312,7 @@ void TextBox::keyPressed(Minecraft* minecraft, int key) {
         if (key == Keyboard::KEY_V || key == 'v' || key == 'V') {
             std::string clip = minecraft->platform()->getClipboardText();
             if (!clip.empty()) {
-                if (hasSelection()) deleteSelection();
-                std::string cleaned = Util::cleanPastedText(clip, 256 - text.length());
-                text.insert(cursorPos, cleaned);
-                cursorPos += (int)cleaned.length();
-                selectAnchor = cursorPos;
+                insertText(minecraft, clip);
             }
             return;
         }

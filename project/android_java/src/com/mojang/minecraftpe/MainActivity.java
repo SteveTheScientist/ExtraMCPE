@@ -259,9 +259,16 @@ public class MainActivity extends Activity {
 
     	if (event.getAction() == KeyEvent.ACTION_DOWN) {
     		nativeOnKeyDown(keyCode);
-    		int unicodeChar = event.getUnicodeChar(event.getMetaState());
-    		if (unicodeChar > 0)
-    			nativeTextChar(unicodeChar);
+            String chars = event.getCharacters();
+            if (chars != null && chars.length() > 0) {
+                for (int i = 0; i < chars.length(); i++) {
+                    nativeTextChar(chars.charAt(i));
+                }
+            } else {
+                int unicodeChar = event.getUnicodeChar(event.getMetaState());
+                if (unicodeChar > 0)
+                    nativeTextChar(unicodeChar);
+            }
     	} else if (event.getAction() == KeyEvent.ACTION_UP)
         	nativeOnKeyUp(keyCode);
     }
