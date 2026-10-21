@@ -73,9 +73,6 @@ public:
 	void swing();
 	virtual void openTextEdit( TileEntity* tileEntity );
 	virtual float getWalkingSpeedModifier();
-
-	bool setSkinFromFile(const std::string& path, std::string& outError);
-	bool setCapeFromFile(const std::string& path, std::string& outError);
 private:
 	void calculateFlight(float xa, float ya, float za);
 	bool isSolidTile(int x, int y, int z);

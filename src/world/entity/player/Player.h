@@ -162,7 +162,6 @@ public:
     char userType;
     int score;
     float oBob, bob;
-    bool slimModel;
 
     std::string name;
     int dimension;

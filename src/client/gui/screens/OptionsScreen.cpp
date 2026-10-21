@@ -263,17 +263,6 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
-    if (optionId == OPTIONS_SKIN_MODEL) {
-        msg = "Skin Model: " + minecraft->options.getStringValue(OPTIONS_SKIN_MODEL);
-        return;
-    }
-
-    if (optionId == OPTIONS_SKIN_OVERLAY) {
-        bool state = minecraft->options.getBooleanValue(OPTIONS_SKIN_OVERLAY);
-        msg = "Skin Overlay: " + std::string(state ? "ON" : "OFF");
-        return;
-    }
-
     if (optionId == OPTIONS_TEXT_FORMATTING) {
         bool state = minecraft->options.getBooleanValue(OPTIONS_TEXT_FORMATTING);
         msg = "Text Formatting: " + std::string(state ? "ON" : "OFF");
@@ -371,12 +360,7 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
 void OptionControl::toggleValue(Minecraft* minecraft) {
     if (controlType == CONTROL_ACTION || controlType == CONTROL_KEY) return;
 
-    if (optionId == OPTIONS_SKIN_MODEL) {
-        std::string cur = minecraft->options.getStringValue(OPTIONS_SKIN_MODEL);
-        if (cur == "Auto") minecraft->options.set(OPTIONS_SKIN_MODEL, "Classic");
-        else if (cur == "Classic") minecraft->options.set(OPTIONS_SKIN_MODEL, "Slim");
-        else minecraft->options.set(OPTIONS_SKIN_MODEL, "Auto");
-    } else if (optionId == OPTIONS_VIEW_DISTANCE) {
+    if (optionId == OPTIONS_VIEW_DISTANCE) {
         int cur = minecraft->options.getIntValue(OPTIONS_VIEW_DISTANCE);
         minecraft->options.set(OPTIONS_VIEW_DISTANCE, (cur + 1) % 4);
     } else if (optionId == OPTIONS_GUI_SCALE) {

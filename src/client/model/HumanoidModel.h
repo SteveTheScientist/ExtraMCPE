@@ -9,7 +9,7 @@ class ItemInstance;
 class HumanoidModel: public Model
 {
 public:
-HumanoidModel(float g = 0, float yOffset = 0, int texW = 64, int texH = 32, bool slim = false);
+HumanoidModel(float g = 0, float yOffset = 0, int texW = 64, int texH = 32);
 
 	void setupAnim(float time, float r, float bob, float yRot, float xRot, float scale);
 
@@ -23,7 +23,6 @@ HumanoidModel(float g = 0, float yOffset = 0, int texW = 64, int texH = 32, bool
 	bool holdingRightHand;
 	bool sneaking;
 	bool bowAndArrow;
-	bool slim;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_MODEL__HumanoidModel_H__*/

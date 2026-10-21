@@ -80,44 +80,6 @@ TextureId Textures::loadTexture( const std::string& resourceName, bool inTexture
 	return Textures::InvalidId;
 }
 
-TextureId Textures::reloadTexture( const std::string& resourceName, bool inTextureFolder /* = true */ )
-{
-	TextureMap::iterator it = idMap.find(resourceName);
-	if (it != idMap.end()) {
-		TextureId oldId = it->second;
-		if (oldId != Textures::InvalidId) {
-			glDeleteTextures(1, &oldId);
-			TextureImageMap::iterator imgIt = loadedImages.find(oldId);
-			if (imgIt != loadedImages.end()) {
-				if (!imgIt->second.memoryHandledExternally)
-					delete[] imgIt->second.data;
-				loadedImages.erase(imgIt);
-			}
-		}
-		idMap.erase(it);
-	}
-	return loadTexture(resourceName, inTextureFolder);
-}
-
-TextureId Textures::replaceTexture( const std::string& resourceName, const TextureData& data )
-{
-	TextureMap::iterator it = idMap.find(resourceName);
-	if (it != idMap.end()) {
-		TextureId oldId = it->second;
-		if (oldId != Textures::InvalidId) {
-			glDeleteTextures(1, &oldId);
-			TextureImageMap::iterator imgIt = loadedImages.find(oldId);
-			if (imgIt != loadedImages.end()) {
-				if (!imgIt->second.memoryHandledExternally)
-					delete[] imgIt->second.data;
-				loadedImages.erase(imgIt);
-			}
-		}
-		idMap.erase(it);
-	}
-	return assignTexture(resourceName, data);
-}
-
 TextureId Textures::assignTexture( const std::string& resourceName, const TextureData& img )
 {
 	TextureId id;
@@ -218,6 +180,39 @@ void Textures::addDynamicTexture( DynamicTexture* dynamicTexture )
 
 void Textures::reloadAll()
 {
+	//TexturePack skin = skins.selected;
+
+	//for (int id : loadedImages.keySet()) {
+	//    BufferedImage image = loadedImages.get(id);
+	//    loadTexture(image, id);
+	//}
+
+	////for (HttpTexture httpTexture : httpTextures.values()) {
+	////    httpTexture.isLoaded = false;
+	////}
+
+	//for (std::string name : idMap.keySet()) {
+	//    try {
+	//        BufferedImage image;
+	//        if (name.startsWith("##")) {
+	//            image = makeStrip(readImage(skin.getResource(name.substring(2))));
+	//        } else if (name.startsWith("%clamp%")) {
+	//            clamp = true;
+	//            image = readImage(skin.getResource(name.substring(7)));
+	//        } else if (name.startsWith("%blur%")) {
+	//            blur = true;
+	//            image = readImage(skin.getResource(name.substring(6)));
+	//        } else {
+	//            image = readImage(skin.getResource(name));
+	//        }
+	//        int id = idMap.get(name);
+	//        loadTexture(image, id);
+	//        blur = false;
+	//        clamp = false;
+	//    } catch (IOException e) {
+	//        e.printStackTrace();
+	//    }
+	//}
 }
 
 int Textures::smoothBlend( int c0, int c1 )
@@ -254,6 +249,8 @@ int Textures::crispBlend( int c0, int c1 )
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
 
+// shredder here, moved the code from minecraft.cpp bcus that isnt the right place
+// had to implement this because i couldn't find a similar function in the code to do this
 int* Textures::loadTexturePixels(TextureId texId, const std::string& resourceName){
 
 	const TextureData* texture = getTemporaryTextureData(texId); // storing raw pixels
@@ -262,12 +259,133 @@ int* Textures::loadTexturePixels(TextureId texId, const std::string& resourceNam
     int* pixels = new int[size]; // memory leaks be galore
 	unsigned char* raw = texture->data; // storing raw data into our beloved variable
 	for (int i = 0; i < (texture->w * texture->h); i++){
+		// my head hurts i hate working with this
+
+
+		// uh since each pixel stores r g b a, aka the color channels which are each one byte, we multiply them by 4 to move from one pixel to another
+
 		int r = raw[i * 4 + 0]; // gets us the first channel aka red
 		int g = raw[i * 4 + 1]; // gets us the second channel green
 		int b = raw[i * 4 + 2]; // gets us the third channel blue
 		int a = raw[i * 4 + 3]; // gets us the alpha channel
 
+		// woohoo pixels uh should have been seperated into their colors now hopefully
+
+		// r g b a
+		// ugh we now got to turn it into the AA RR GGBB format aak 0xAARRGGBB
+		// b gets 0 - 7 (8 bits), g gets 7 - 15 (8 bits), r gets 16 - 23 (8 bits), alpha gets the last ones 24 - 31 (8 bits),
 		pixels[i] = (a << 24) | (r << 16) | (g << 8) | (b); // shuld combine them into one 32 bit int unless i did something dumb
 	}
 	return pixels; // your meal has been prepared john colors
 }
+
+
+///*public*/ int loadHttpTexture(std::string url, std::string backup) {
+//    HttpTexture texture = httpTextures.get(url);
+//    if (texture != NULL) {
+//        if (texture.loadedImage != NULL && !texture.isLoaded) {
+//            if (texture.id < 0) {
+//                texture.id = getTexture(texture.loadedImage);
+//            } else {
+//                loadTexture(texture.loadedImage, texture.id);
+//            }
+//            texture.isLoaded = true;
+//        }
+//    }
+//    if (texture == NULL || texture.id < 0) {
+//        if (backup == NULL) return -1;
+//        return loadTexture(backup);
+//    }
+//    return texture.id;
+//}
+
+//HttpTexture addHttpTexture(std::string url, HttpTextureProcessor processor) {
+//    HttpTexture texture = httpTextures.get(url);
+//    if (texture == NULL) {
+//        httpTextures.put(url, /*new*/ HttpTexture(url, processor));
+//    } else {
+//        texture.count++;
+//    }
+//    return texture;
+//}
+
+//void removeHttpTexture(std::string url) {
+//    HttpTexture texture = httpTextures.get(url);
+//    if (texture != NULL) {
+//        texture.count--;
+//        if (texture.count == 0) {
+//            if (texture.id >= 0) releaseTexture(texture.id);
+//            httpTextures.remove(url);
+//        }
+//    }
+//}
+
+//void tick() {
+//	for (int i = 0; i < dynamicTextures.size(); i++) {
+//		DynamicTexture dynamicTexture = dynamicTextures.get(i);
+//		dynamicTexture.anaglyph3d = options.anaglyph3d;
+//		dynamicTexture.tick();
+//
+//		pixels.clear();
+//		pixels.put(dynamicTexture.pixels);
+//		pixels.position(0).limit(dynamicTexture.pixels.length);
+//
+//		dynamicTexture.bindTexture(this);
+//
+//		for (int xx = 0; xx < dynamicTexture.replicate; xx++)
+//			for (int yy = 0; yy < dynamicTexture.replicate; yy++) {
+//
+//				glTexSubImage2D2(GL_TEXTURE_2D, 0, dynamicTexture.tex % 16 * 16 + xx * 16, dynamicTexture.tex / 16 * 16 + yy * 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+//				if (MIPMAP) {
+//					for (int level = 1; level <= 4; level++) {
+//						int os = 16 >> (level - 1);
+//						int s = 16 >> level;
+//
+//						for (int x = 0; x < s; x++)
+//							for (int y = 0; y < s; y++) {
+//								int c0 = pixels.getInt(((x * 2 + 0) + (y * 2 + 0) * os) * 4);
+//								int c1 = pixels.getInt(((x * 2 + 1) + (y * 2 + 0) * os) * 4);
+//								int c2 = pixels.getInt(((x * 2 + 1) + (y * 2 + 1) * os) * 4);
+//								int c3 = pixels.getInt(((x * 2 + 0) + (y * 2 + 1) * os) * 4);
+//								int col = smoothBlend(smoothBlend(c0, c1), smoothBlend(c2, c3));
+//								pixels.putInt((x + y * s) * 4, col);
+//							}
+//							glTexSubImage2D2(GL_TEXTURE_2D, level, dynamicTexture.tex % 16 * s, dynamicTexture.tex / 16 * s, s, s, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+//					}
+//				}
+//			}
+//	}
+//
+//	for (int i = 0; i < dynamicTextures.size(); i++) {
+//		DynamicTexture dynamicTexture = dynamicTextures.get(i);
+//
+//		if (dynamicTexture.copyTo > 0) {
+//			pixels.clear();
+//			pixels.put(dynamicTexture.pixels);
+//			pixels.position(0).limit(dynamicTexture.pixels.length);
+//			glBindTexture2(GL_TEXTURE_2D, dynamicTexture.copyTo);
+//			glTexSubImage2D2(GL_TEXTURE_2D, 0, 0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+//			if (MIPMAP) {
+//				for (int level = 1; level <= 4; level++) {
+//					int os = 16 >> (level - 1);
+//					int s = 16 >> level;
+//
+//					for (int x = 0; x < s; x++)
+//						for (int y = 0; y < s; y++) {
+//							int c0 = pixels.getInt(((x * 2 + 0) + (y * 2 + 0) * os) * 4);
+//							int c1 = pixels.getInt(((x * 2 + 1) + (y * 2 + 0) * os) * 4);
+//							int c2 = pixels.getInt(((x * 2 + 1) + (y * 2 + 1) * os) * 4);
+//							int c3 = pixels.getInt(((x * 2 + 0) + (y * 2 + 1) * os) * 4);
+//							int col = smoothBlend(smoothBlend(c0, c1), smoothBlend(c2, c3));
+//							pixels.putInt((x + y * s) * 4, col);
+//						}
+//						glTexSubImage2D2(GL_TEXTURE_2D, level, 0, 0, s, s, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+//				}
+//			}
+//		}
+//	}
+//}
+//  void releaseTexture(int id) {
+//      loadedImages.erase(id);
+//      glDeleteTextures(1, (const GLuint*)&id);
+//  }

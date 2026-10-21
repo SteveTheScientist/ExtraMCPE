@@ -41,9 +41,6 @@ public:
 	TextureId loadTexture(const std::string& resourceName, bool inTextureFolder = true);
 	TextureId loadAndBindTexture(const std::string& resourceName);
 
-	TextureId reloadTexture(const std::string& resourceName, bool inTextureFolder = true);
-	TextureId replaceTexture(const std::string& resourceName, const TextureData& data);
-
     TextureId assignTexture(const std::string& resourceName, const TextureData& img);
 	const TextureData* getTemporaryTextureData(TextureId id);
 

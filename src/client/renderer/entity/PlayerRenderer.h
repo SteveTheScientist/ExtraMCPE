@@ -24,7 +24,6 @@ public:
 private:
 	HumanoidModel* playerModel32;
 	HumanoidModel* playerModel64;
-	HumanoidModel* playerModel64Slim;
 	HumanoidModel* armorParts1;
 	HumanoidModel* armorParts2;
 };

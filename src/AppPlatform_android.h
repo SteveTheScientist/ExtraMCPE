@@ -5,13 +5,10 @@
 #include "client/renderer/gles.h"
 #include "platform/log.h"
 #include "platform/time.h"
-#include "platform/PngLoader.h"
 #include <jni.h>
 #include <cmath>
 #include <exception>
-#include <fstream>
 #include <android/native_activity.h>
-
 class JVMAttacher {
 public:
     JVMAttacher(JavaVM* vm)
@@ -59,7 +56,6 @@ public:
         _methodSaveScreenshot(0),
         _postScreenshotToFacebook(0),
         _getImageData(0),
-        _getImageDataFromBytes(0),
 		_readAssetFile(0),
         _methodPlaySound(0),
         _showDialog(0),
@@ -99,9 +95,7 @@ public:
 		_hasSetPowerVR(false),
 		_nativeActivity(0),
 
-		_methodGetKeyFromKeyCode(0),
-		_methodOpenURL(0),
-		_methodImportSkinOrCape(0)
+		_methodGetKeyFromKeyCode(0)
     {
     }
 
@@ -109,17 +103,9 @@ public:
     int getScreenHeight() { return _screenHeight; }
     void setScreenDimensions(int w, int h) { _screenWidth = w; _screenHeight = h; }
 
-    static jmethodID getMethodSafe(JNIEnv* env, jclass clazz, const char* name, const char* sig, bool isStatic = false) {
-        if (!env || !clazz) return NULL;
-        jmethodID mid = isStatic ? env->GetStaticMethodID(clazz, name, sig) : env->GetMethodID(clazz, name, sig);
-        if (env->ExceptionOccurred()) {
-            LOGW("Failed to find JNI method: %s %s (static=%d)", name, sig, isStatic);
-            env->ExceptionClear();
-            return NULL;
-        }
-        return mid;
-    }
-
+    // Note, this has to be called from the main thread (e.g. do it from JNI_onLoad)
+    // Somewhere between calling this, and calling the AppPlatform methods,
+    // this->instance will be assigned by its creator
     int init(JavaVM* vm) {
         if (_isInited)
             return -1;
@@ -132,85 +118,64 @@ public:
             return -2;
         }
 
+        // Get Class reference
         const char* interface_path = "com/mojang/minecraftpe/MainActivity";
         jclass clazz = NULL;
         if( (clazz = env->FindClass( interface_path )) == 0 ) {
-            if (env->ExceptionOccurred()) env->ExceptionClear();
             return -3;
         }
         _activityClass = (jclass)env->NewGlobalRef(clazz);
 
-        _methodSaveScreenshot = getMethodSafe(env, _activityClass, "saveScreenshot", "(Ljava/lang/String;II[I)V", true);
-        _postScreenshotToFacebook = getMethodSafe(env, _activityClass, "postScreenshotToFacebook", "(Ljava/lang/String;II[I)V");
-        _getImageData = getMethodSafe(env, _activityClass, "getImageData", "(Ljava/lang/String;)[I");
-        _getImageDataFromBytes = getMethodSafe(env, _activityClass, "getImageDataFromBytes", "([B)[I");
-		_readAssetFile = getMethodSafe(env, _activityClass, "getFileDataBytes", "(Ljava/lang/String;)[B");
+        // Save all the method IDs
+        _methodSaveScreenshot = env->GetStaticMethodID( _activityClass, "saveScreenshot", "(Ljava/lang/String;II[I)V");
+        _postScreenshotToFacebook = env->GetMethodID( _activityClass, "postScreenshotToFacebook", "(Ljava/lang/String;II[I)V");
+        _getImageData = env->GetMethodID( _activityClass, "getImageData", "(Ljava/lang/String;)[I");
+		_readAssetFile = env->GetMethodID( _activityClass, "getFileDataBytes", "(Ljava/lang/String;)[B");
         #if defined(PRE_ANDROID23)
-            _methodPlaySound = getMethodSafe(env, _activityClass, "playSound", "(Ljava/lang/String;FF)V");
+            _methodPlaySound = env->GetMethodID( _activityClass, "playSound", "(Ljava/lang/String;FF)V");
         #endif
-        _showDialog = getMethodSafe(env, _activityClass, "displayDialog", "(I)V");
-        _methodTick = getMethodSafe(env, _activityClass, "tick", "()V");
-        _methodFinish = getMethodSafe(env, _activityClass, "quit", "()V");
+        _showDialog = env->GetMethodID( _activityClass, "displayDialog", "(I)V");
+        _methodTick = env->GetMethodID( _activityClass, "tick", "()V");
+        _methodFinish = env->GetMethodID( _activityClass, "quit", "()V");
 
-        _methodUserInputInitiate = getMethodSafe(env, _activityClass, "initiateUserInput", "(I)V");
-        _methodUserInputStatus = getMethodSafe(env, _activityClass, "getUserInputStatus", "()I");
-        _methodUserInputString = getMethodSafe(env, _activityClass, "getUserInputString", "()[Ljava/lang/String;");
+        _methodUserInputInitiate = env->GetMethodID( _activityClass, "initiateUserInput", "(I)V");
+        _methodUserInputStatus = env->GetMethodID( _activityClass, "getUserInputStatus", "()I");
+        _methodUserInputString = env->GetMethodID( _activityClass, "getUserInputString", "()[Ljava/lang/String;");
 
-        _methodGetDateString = getMethodSafe(env, _activityClass, "getDateString", "(I)Ljava/lang/String;");
+        _methodGetDateString = env->GetMethodID( _activityClass, "getDateString", "(I)Ljava/lang/String;");
 
-        _methodVibrate = getMethodSafe(env, _activityClass, "vibrate", "(I)V");
-        _methodSupportsTouchscreen = getMethodSafe(env, _activityClass, "supportsTouchscreen", "()Z");
-		_methodSetIsPowerVR  = getMethodSafe(env, _activityClass, "setIsPowerVR", "(Z)V");
-		_methodIsNetworkEnabled = getMethodSafe(env, _activityClass, "isNetworkEnabled", "(Z)Z");
+        _methodVibrate = env->GetMethodID( _activityClass, "vibrate", "(I)V");
+        _methodSupportsTouchscreen = env->GetMethodID( _activityClass, "supportsTouchscreen", "()Z");
+		_methodSetIsPowerVR  = env->GetMethodID( _activityClass, "setIsPowerVR", "(Z)V");
+		_methodIsNetworkEnabled = env->GetMethodID( _activityClass, "isNetworkEnabled", "(Z)Z");
 
-		_methodGetPixelsPerMillimeter = getMethodSafe(env, _activityClass, "getPixelsPerMillimeter", "()F");
-		_methodGetPlatformStringVar = getMethodSafe(env, _activityClass, "getPlatformStringVar", "(I)Ljava/lang/String;");
-		_methodOpenURL = getMethodSafe(env, _activityClass, "openURL", "(Ljava/lang/String;)V");
-		_methodImportSkinOrCape = getMethodSafe(env, _activityClass, "importSkinOrCape", "(I)V");
+		_methodGetPixelsPerMillimeter = env->GetMethodID( _activityClass, "getPixelsPerMillimeter", "()F");
+		_methodGetPlatformStringVar = env->GetMethodID( _activityClass, "getPlatformStringVar", "(I)Ljava/lang/String;");
+		// custom helper to launch external URLs
+		_methodOpenURL = env->GetMethodID(_activityClass, "openURL", "(Ljava/lang/String;)V");
 
-		jclass winCls = env->FindClass("android/view/Window");
-		if (winCls) {
-			_classWindow = (jclass)env->NewGlobalRef(winCls);
-			env->DeleteLocalRef(winCls);
-		}
-		jclass ctxCls = env->FindClass("android/content/Context");
-		if (ctxCls) {
-			_classContext = (jclass)env->NewGlobalRef(ctxCls);
-			env->DeleteLocalRef(ctxCls);
-		}
-		jclass viewCls = env->FindClass("android/view/View");
-		if (viewCls) {
-			_classView = (jclass)env->NewGlobalRef(viewCls);
-			env->DeleteLocalRef(viewCls);
-		}
-		jclass immCls = env->FindClass("android/view/inputmethod/InputMethodManager");
-		if (immCls) {
-			_classInputManager = (jclass)env->NewGlobalRef(immCls);
-			env->DeleteLocalRef(immCls);
-		}
+		_classWindow = (jclass)env->NewGlobalRef(env->FindClass("android/view/Window"));
+		_classContext = (jclass)env->NewGlobalRef(env->FindClass("android/content/Context"));
+		_classView = (jclass)env->NewGlobalRef(env->FindClass( "android/view/View"));
+		_classInputManager = (jclass)env->NewGlobalRef(env->FindClass("android/view/inputmethod/InputMethodManager"));
 
-		if (_classContext) {
-			_fieldINPUT_METHOD_SERVICE = env->GetStaticFieldID(_classContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;");
-			if (env->ExceptionOccurred()) env->ExceptionClear();
-		}
-		_methodGetSystemService = getMethodSafe(env, _activityClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
-		_methodGetWindow = getMethodSafe(env, _activityClass, "getWindow", "()Landroid/view/Window;");
-		if (_classWindow) {
-			_methodGetDecorView = getMethodSafe(env, _classWindow, "getDecorView", "()Landroid/view/View;");
-		}
-		if (_classInputManager) {
-			_methodShowSoftInput = getMethodSafe(env, _classInputManager, "showSoftInput", "(Landroid/view/View;I)Z");
-			_methodHideSoftInput = getMethodSafe(env, _classInputManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z");
-		}
-		if (_classView) {
-			_methodGetWindowToken = getMethodSafe(env, _classView, "getWindowToken", "()Landroid/os/IBinder;");
-		}
+		_fieldINPUT_METHOD_SERVICE = env->GetStaticFieldID(_classContext, "INPUT_METHOD_SERVICE", "Ljava/lang/String;");
+		_methodGetSystemService = env->GetMethodID(_activityClass, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
+		_methodGetWindow = env->GetMethodID( _activityClass, "getWindow", "()Landroid/view/Window;");
+		_methodGetDecorView = env->GetMethodID(_classWindow, "getDecorView", "()Landroid/view/View;");
+		_methodShowSoftInput = env->GetMethodID(_classInputManager, "showSoftInput", "(Landroid/view/View;I)Z");
+		_methodGetWindowToken = env->GetMethodID(_classView, "getWindowToken", "()Landroid/os/IBinder;");
+		_methodHideSoftInput = env->GetMethodID(_classInputManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z");
 
-		_methodGetKeyFromKeyCode = getMethodSafe(env, _activityClass, "getKeyFromKeyCode", "(III)I");
+		_methodGetKeyFromKeyCode = env->GetMethodID( _activityClass, "getKeyFromKeyCode", "(III)I");
 
         if (env->ExceptionOccurred()) {
-            env->ExceptionClear();
+            env->ExceptionDescribe();
         }
+
+ //       LOGI("Class: %d\n. Methods: %d,%d\n", _activityClass,
+   //         _methodSaveScreenshot,
+     //       _postScreenshotToFacebook);
 
         _vm = vm;
         _isInited = true;
@@ -218,111 +183,114 @@ public:
         return JNI_VERSION_1_4;
     }
 
+    // Stuff that should only be written once, e.g. device specs
+    // @note: This is called after instance is set, BUT this will
+    //        be rewritten later on anyway
     int initConsts() {
-        if (!instance) return 0;
+
+        LOGI("initConsts: start\n");
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return 0;
 
-        jmethodID fWidth = getMethodSafe(env, _activityClass, "getScreenWidth", "()I");
-        jmethodID fHeight = getMethodSafe(env, _activityClass, "getScreenHeight", "()I");
+        LOGI("initConsts: getting method IDs\n");
+        jmethodID fWidth = env->GetMethodID( _activityClass, "getScreenWidth", "()I");
+        LOGI("initConsts: got fWidth=%p\n", fWidth);
+        jmethodID fHeight = env->GetMethodID( _activityClass, "getScreenHeight", "()I");
+        LOGI("initConsts: got fHeight=%p, calling getScreenWidth\n", fHeight);
 
-        if (fWidth) _screenWidth = env->CallIntMethod(instance, fWidth);
-        if (fHeight) _screenHeight = env->CallIntMethod(instance, fHeight);
+        _screenWidth = env->CallIntMethod(instance, fWidth);
+        LOGI("initConsts: screenWidth=%d, calling getScreenHeight\n", _screenWidth);
+        _screenHeight = env->CallIntMethod(instance, fHeight);
+        LOGI("initConsts: screenHeight=%d, done\n", _screenHeight);
 
         return 1;
     }
 
     void tick() {
-        if (!_isInited || !instance || !_methodTick) return;
+        if (!_isInited) return;
+        if (!_methodTick) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
         env->CallVoidMethod(instance, _methodTick);
     }
 
     void showDialog(int dialogId) {
-        if (!_isInited || !instance || !_showDialog) return;
+        if (!_isInited) return;
+        if (!_showDialog) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
         env->CallVoidMethod(instance, _showDialog, dialogId);
     }
 
     void createUserInput() {
-        if (!_isInited || !instance || !_methodUserInputInitiate) return;
+        if (!_isInited) return;
+        if (!_methodUserInputInitiate) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
         env->CallVoidMethod(instance, _methodUserInputInitiate, 1);
     }
 
     int getUserInputStatus() {
-        if (!_isInited || !instance || !_methodUserInputStatus) return -2;
+        if (!_isInited) return -2;
+        if (!_methodUserInputStatus) return -2;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return -2;
 
         return env->CallIntMethod(instance, _methodUserInputStatus);
     }
 
     float getPixelsPerMillimeter() {
-        if (!_isInited || !instance || !_methodGetPixelsPerMillimeter) return 10.0f;
+        if (!_isInited) return 10;
+        if (!_methodGetPixelsPerMillimeter) return 10;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return 10.0f;
 
         return env->CallFloatMethod(instance, _methodGetPixelsPerMillimeter);
     }
 
     StringVector getUserInput() {
-        if (!_isInited || !instance || !_methodUserInputString) return std::vector<std::string>();
+        if (!_isInited) return std::vector<std::string>();
+        if (!_methodUserInputString) return std::vector<std::string>();
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return std::vector<std::string>();
 
         jobjectArray sa = (jobjectArray) env->CallObjectMethod(instance, _methodUserInputString);
-        if (!sa) return std::vector<std::string>();
         jsize len = env->GetArrayLength(sa);
 
         StringVector out;
         for (int i = 0; i < len; ++i) {
 
             jstring s = (jstring)env->GetObjectArrayElement(sa, i);
-            if (!s) continue;
             int length = env->GetStringLength (s);
             if (length > 1023)
                 length = 1023;
             static char buf[1024];
 
+            // Only supporting 7 bit chars, right now
             const char* str = env->GetStringUTFChars(s, 0);
-            if (str) {
-                strncpy(buf, str, 1023);
-                buf[1023] = 0;
-                env->ReleaseStringUTFChars(s, str);
-                out.push_back(std::string(buf));
-            }
-            env->DeleteLocalRef(s);
+            strncpy(buf, str, 1023);
+            buf[1023] = 0;
+
+            out.push_back(std::string(buf));
         }
-        env->DeleteLocalRef(sa);
         return out;
     }
 
     void saveScreenshot(const std::string& filename, int glWidth, int glHeight) {
-        if (!_isInited || !_methodSaveScreenshot) return;
+        if (!_isInited) return;
+        if (!_methodSaveScreenshot) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
         const int numPixels = glWidth * glHeight;
         unsigned int* pixels = new unsigned int[numPixels];
@@ -330,20 +298,25 @@ public:
         if (!pixels)
             return;
 
+        // Create the OpenGL "screenshot"
         glReadPixels(0, 0, glWidth, glHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         convertOpenGlToAndroidPixels(glWidth, glHeight, pixels);
 
+        // Tell Android to save the screenshot
         jintArray jPixels = env->NewIntArray(numPixels);
         if (jPixels != NULL)
         {
             jobject gpixRef = env->NewGlobalRef(jPixels);
             env->SetIntArrayRegion(jPixels, 0, numPixels, (int*)pixels);
-            jstring fnStr = env->NewStringUTF(filename.c_str());
+//                env->CallVoidMethod(    instance,
+//                                        _postScreenshotToFacebook,
+//                                        env->NewStringUTF(filename.c_str()),
+//                                        glWidth, glHeight, jPixels);
             env->CallStaticVoidMethod(  _activityClass,
                                         _methodSaveScreenshot,
-                                        fnStr,
+                                        env->NewStringUTF(filename.c_str()),
                                         glWidth, glHeight, jPixels);
-            if (fnStr) env->DeleteLocalRef(fnStr);
+            // Teardown
             env->DeleteGlobalRef(gpixRef);
             delete[] pixels;
         }
@@ -354,6 +327,7 @@ public:
     }
 
     void convertOpenGlToAndroidPixels(int w, int h, unsigned int* pixels) {
+        // Making the conversion in-place
         for (int y = 0; y < h/2; ++y)
         for (int x = 0; x < w;  ++x) {
             const int i0 = y * w + x;
@@ -363,6 +337,7 @@ public:
             pixels[i0] = rgbToBgr(p1);
             pixels[i1] = rgbToBgr(p0);
         }
+        // Handle the middle row, if any
         if (h & 1) {
             const int start = w * h/2;
             const int stop = start + w;
@@ -373,120 +348,66 @@ public:
         }
     }
 
-    virtual void playSound(const std::string& filename, float volume, float pitch) override {
-        if (!_isInited || !instance || !_methodPlaySound) return;
+    virtual void playSound(const std::string& filename, float volume, float pitch) {
+        if (!_isInited || !_methodPlaySound) return;
+
+        //static Stopwatch w;
+        //w.start();
+        JVMAttacher ta(_vm);
+        JNIEnv* env = ta.getEnv();
+
+        env->CallVoidMethod(instance, _methodPlaySound, env->NewStringUTF(filename.c_str()), volume, pitch);
+        //w.stop();
+        //w.printEvery(1, "playSound-java");
+    }
+
+    virtual void uploadPlatformDependentData(int id, void* data) {
+        if (!_isInited) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
-        jstring fnStr = env->NewStringUTF(filename.c_str());
-        env->CallVoidMethod(instance, _methodPlaySound, fnStr, volume, pitch);
-        if (fnStr) env->DeleteLocalRef(fnStr);
-    }
-
-    virtual void uploadPlatformDependentData(int id, void* data) override {
-        if (!_isInited || !instance) return;
-    }
-
-    TextureData loadTextureFromMemory(const unsigned char* data, size_t size) override {
-        if (!_isInited || !instance || !_getImageDataFromBytes || !data || size == 0) return TextureData();
-
-        JVMAttacher ta(_vm);
-        JNIEnv* env = ta.getEnv();
-        if (!env) return TextureData();
-
-        jbyteArray jbytes = env->NewByteArray(size);
-        if (!jbytes) return TextureData();
-
-        env->SetByteArrayRegion(jbytes, 0, size, (const jbyte*)data);
-
-        jintArray arr = (jintArray)env->CallObjectMethod(instance, _getImageDataFromBytes, jbytes);
-        env->DeleteLocalRef(jbytes);
-
-        if (!arr) return TextureData();
-
-        jsize len = env->GetArrayLength(arr);
-        if (len < 2) {
-            env->DeleteLocalRef(arr);
-            return TextureData();
+        if (id == 1) {
         }
-
-        int numPixels = len - 2;
-        int* pixels = new int[numPixels];
-        jint* body = env->GetIntArrayElements(arr, 0);
-
-        int w = body[0];
-        int h = body[1];
-        if (numPixels > 0 && body) {
-            memcpy(pixels, &body[2], numPixels * sizeof(int));
+        if (id == 2) {
         }
-
-        for (int i = 0; i < numPixels; ++i)
-            pixels[i] = rgbToBgr(pixels[i]);
-
-        env->ReleaseIntArrayElements(arr, body, 0);
-        env->DeleteLocalRef(arr);
-
-        TextureData out;
-        out.w = w;
-        out.h = h;
-        out.data = (unsigned char*)pixels;
-        out.memoryHandledExternally = false;
-        return out;
     }
 
-    TextureData loadTexture(const std::string& filename, bool textureFolder) override {
+    TextureData loadTexture(const std::string& filename, bool textureFolder) {
         if (!_isInited) return TextureData();
-
-        // First try reading directly from files directory if it exists on disk (e.g. data/images/skins/...)
-        std::string diskPath = textureFolder ? "data/images/" + filename : filename;
-        std::ifstream source(diskPath.c_str(), std::ios::binary);
-        if (source) {
-            std::vector<unsigned char> fileData((std::istreambuf_iterator<char>(source)), std::istreambuf_iterator<char>());
-            source.close();
-            if (!fileData.empty()) {
-                return loadTextureFromMemory(fileData.data(), fileData.size());
-            }
-        }
-
-        if (!instance || !_getImageData) return TextureData();
+        if (!_getImageData) return TextureData();
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return TextureData();
 
         std::string path = textureFolder ? "images/" + filename : filename;
-        jstring pathStr = env->NewStringUTF(path.c_str());
-        jintArray arr = (jintArray)env->CallObjectMethod(instance, _getImageData, pathStr);
-        if (pathStr) env->DeleteLocalRef(pathStr);
+        jintArray arr = (jintArray)env->CallObjectMethod(
+            instance, _getImageData, env->NewStringUTF(path.c_str()));
 
         if (!arr)
             return TextureData();
 
         jsize len = env->GetArrayLength(arr);
-        if (len < 2) {
-            env->DeleteLocalRef(arr);
-            return TextureData();
-        }
+        int numPixels = len-2;
 
-        int numPixels = len - 2;
-
+        // pixels = [width, height, p_0, p_1, ..., p_numPixels-1]
         int* pixels = new int[numPixels];
         jint* body = env->GetIntArrayElements(arr, 0);
 
         int w = body[0];
         int h = body[1];
-        if (numPixels > 0 && body) {
-            memcpy(pixels, &body[2], numPixels * sizeof(int));
-        }
+        memcpy(pixels, &body[2], numPixels * sizeof(int));
 
+        // Convert pixels
         for (int i = 0; i < numPixels; ++i)
             pixels[i] = rgbToBgr(pixels[i]);
 
-        env->ReleaseIntArrayElements(arr, body, 0);
-        env->DeleteLocalRef(arr);
+        //LOGI("Read-Image-Data: Decided file size to be: %d x %d (len %d)\n", w, h, len);
 
+        env->ReleaseIntArrayElements(arr, body, 0);
+  //      LOGI("loadtexture: 9\n");
+
+        // Set the result
         TextureData out;
         out.w = w;
         out.h = h;
@@ -495,16 +416,15 @@ public:
         return out;
     }
 
-	BinaryBlob readAssetFile(const std::string& filename) override {
-		if (!_isInited || !instance || !_readAssetFile) return BinaryBlob();
+	BinaryBlob readAssetFile(const std::string& filename) {
+		if (!_isInited) return BinaryBlob();
+		if (!_readAssetFile) return BinaryBlob();
 
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
-		if (!env) return BinaryBlob();
 
-		jstring fnStr = env->NewStringUTF(filename.c_str());
-		jbyteArray arr = (jbyteArray)env->CallObjectMethod(instance, _readAssetFile, fnStr);
-		if (fnStr) env->DeleteLocalRef(fnStr);
+		jbyteArray arr = (jbyteArray)env->CallObjectMethod(
+			instance, _readAssetFile, env->NewStringUTF(filename.c_str()));
 
 		if (!arr)
 			return BinaryBlob();
@@ -512,131 +432,106 @@ public:
 		jsize len = env->GetArrayLength(arr);
 		BinaryBlob blob(new unsigned char[len], len);
 		jbyte* body = env->GetByteArrayElements(arr, 0);
-		if (body) {
-			memcpy(blob.data, body, len);
-			env->ReleaseByteArrayElements(arr, body, 0);
-		}
-		env->DeleteLocalRef(arr);
+		memcpy(blob.data, body, len);
+
+		env->ReleaseByteArrayElements(arr, body, 0);
 		return blob;
 	}
 
-	std::string getDateString(int s) override {
-        if (!_isInited || !instance || !_methodGetDateString) return "";
+	std::string getDateString(int s) {
+        if (!_isInited) return "";
+        if (!_methodGetDateString) return "";
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return "";
 
         std::string out;
         jstring dateString = (jstring)env->CallObjectMethod(instance, _methodGetDateString, s);
-        if (dateString) {
-            const char* str = env->GetStringUTFChars(dateString, NULL);
-            if (str) {
-                out = str;
-                env->ReleaseStringUTFChars(dateString, str);
-            }
-            env->DeleteLocalRef(dateString);
-        }
+        const char* str = env->GetStringUTFChars(dateString, NULL);
+        if (str)
+            out = str;
+        env->ReleaseStringUTFChars(dateString, str);
         return out;
     }
 
-	std::string getPlatformStringVar(int s) override {
-		if (!_isInited || !instance || !_methodGetPlatformStringVar) return "";
+	std::string getPlatformStringVar(int s) {
+		if (!_isInited) return "";
+		if (!_methodGetPlatformStringVar) return "";
 
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
-		if (!env) return "";
 
 		std::string out;
 		jstring stringVar = (jstring)env->CallObjectMethod(instance, _methodGetPlatformStringVar, s);
-		if (stringVar) {
-			const char* str = env->GetStringUTFChars(stringVar, NULL);
-			if (str) {
-				out = str;
-				env->ReleaseStringUTFChars(stringVar, str);
-			}
-			env->DeleteLocalRef(stringVar);
-		}
+		const char* str = env->GetStringUTFChars(stringVar, NULL);
+		if (str)
+			out = str;
+		env->ReleaseStringUTFChars(stringVar, str);
 		return out;
 	}
-
-	virtual void openURL(const std::string& url) override {
-		if (!_isInited || !instance || !_methodOpenURL) return;
+	// Opens a webpage using an Android intent.  Called from native code.
+	virtual void openURL(const std::string& url) {
+		if (!_isInited || !_methodOpenURL) return;
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
-		if (!env) return;
-
 		jstring jurl = env->NewStringUTF(url.c_str());
 		env->CallVoidMethod(instance, _methodOpenURL, jurl);
-		if (jurl) env->DeleteLocalRef(jurl);
+		env->DeleteLocalRef(jurl);
 	}
-
-	virtual void importSkinOrCape(int type) override {
-		if (!_isInited || !instance || !_methodImportSkinOrCape) return;
-		JVMAttacher ta(_vm);
-		JNIEnv* env = ta.getEnv();
-		if (!env) return;
-
-		env->CallVoidMethod(instance, _methodImportSkinOrCape, type);
-	}
-
-    virtual void finish() override {
+    virtual void finish() {
         if (!_isInited) return;
+        if (!_methodFinish) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
-        if (instance && _methodFinish) {
-            env->CallVoidMethod(instance, _methodFinish);
-        }
-        if (_activityClass) env->DeleteGlobalRef( _activityClass );
-        if (_classWindow) env->DeleteGlobalRef( _classWindow );
-        if (_classContext) env->DeleteGlobalRef( _classContext );
-        if (_classView) env->DeleteGlobalRef( _classView );
-        if (_classInputManager) env->DeleteGlobalRef( _classInputManager );
+        env->CallVoidMethod(instance, _methodFinish);
+        env->DeleteGlobalRef( _activityClass );
+
+        env->DeleteGlobalRef( _classWindow );
+        env->DeleteGlobalRef( _classContext );
+        env->DeleteGlobalRef( _classView );
+        env->DeleteGlobalRef( _classInputManager );
     }
 
-    virtual bool supportsTouchscreen() override {
-        if (!_isInited || !instance || !_methodSupportsTouchscreen) return true;
+    virtual bool supportsTouchscreen() {
+        if (!_isInited) return true;
+        if (!_methodSupportsTouchscreen) return true;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return true;
 
         return env->CallBooleanMethod(instance, _methodSupportsTouchscreen);
     }
 
-	virtual void vibrate(int milliSeconds) override {
-        if (!_isInited || !instance || !_methodVibrate) return;
+	virtual void vibrate(int milliSeconds) {
+        if (!_isInited) return;
+        if (!_methodVibrate) return;
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
-        if (!env) return;
 
-        env->CallVoidMethod(instance, _methodVibrate, milliSeconds);
+        return env->CallVoidMethod(instance, _methodVibrate, milliSeconds);
     }
 
-	virtual bool isPowerVR() override {
+	virtual bool isPowerVR() {
 	    bool is = super::isPowerVR();
 
-		if (_methodSetIsPowerVR && _isInited && instance && !_hasSetPowerVR ) {
+		if (_methodSetIsPowerVR && _isInited && !_hasSetPowerVR ) {
 			JVMAttacher ta(_vm);
 			JNIEnv* env = ta.getEnv();
-			if (env) {
-				_hasSetPowerVR = true;
-				env->CallVoidMethod(instance, _methodSetIsPowerVR, is);
-			}
+			_hasSetPowerVR = true;
+			env->CallVoidMethod(instance, _methodSetIsPowerVR, is);
 		}
 		return is;
 	}
 
-	virtual bool isNetworkEnabled(bool onlyWifiAllowed) override {
-		if (!_isInited || !instance || !_methodIsNetworkEnabled) return false;
+	virtual bool isNetworkEnabled(bool onlyWifiAllowed) {
+		if (!_isInited) return false;
+		if (!_methodIsNetworkEnabled) return false;
 
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
-		if (!env) return false;
 
 		return env->CallBooleanMethod(instance, _methodIsNetworkEnabled, onlyWifiAllowed);
 	}
@@ -649,68 +544,54 @@ public:
         return t*t == n;
     }
 
-	virtual void showKeyboard() override {
+	virtual void showKeyboard() {
 		showKeyboard(true);
 		super::showKeyboard();
 	}
-	virtual void hideKeyboard() override {
+	virtual void hideKeyboard() {
 		showKeyboard(false);
 		super::hideKeyboard();
 	}
 	virtual void showKeyboard(bool bShow) {
-		if (!_isInited || !instance || !_classContext || !_classInputManager || !_classWindow || !_classView) return;
+		if (!_isInited) return;
 
+		jint lResult = 0;
 		jint lFlags = 0;
 
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
-		if (!env) return;
 
 		jobject INPUT_METHOD_SERVICE =
 			env->GetStaticObjectField(_classContext,
 			_fieldINPUT_METHOD_SERVICE);
 
-		if (!INPUT_METHOD_SERVICE) return;
-
 		jobject lInputMethodManager = env->CallObjectMethod(
 			instance, _methodGetSystemService,
 			INPUT_METHOD_SERVICE);
 
-		if (!lInputMethodManager) return;
-
 		jobject lWindow = env->CallObjectMethod(instance,
 			_methodGetWindow);
-
-		if (!lWindow) return;
 
 		jobject lDecorView = env->CallObjectMethod(lWindow,
 			_methodGetDecorView);
 
-		if (!lDecorView) return;
-
 		if (bShow) {
-			if (_methodShowSoftInput) {
-				env->CallBooleanMethod(
-					lInputMethodManager, _methodShowSoftInput,
-					lDecorView, lFlags);
-			}
+			// Runs lInputMethodManager.showSoftInput(...).
+			jboolean lResult = env->CallBooleanMethod(
+				lInputMethodManager, _methodShowSoftInput,
+				lDecorView, lFlags);
 		} else {
-			if (_methodGetWindowToken && _methodHideSoftInput) {
-				jobject lBinder = env->CallObjectMethod(lDecorView,
-					_methodGetWindowToken);
-				if (lBinder) {
-					env->CallBooleanMethod(
-						lInputMethodManager, _methodHideSoftInput,
-						lBinder, lFlags);
-				}
-			}
+			// Runs lWindow.getViewToken()
+			jobject lBinder = env->CallObjectMethod(lDecorView,
+				_methodGetWindowToken);
+			jboolean lRes = env->CallBooleanMethod(
+				lInputMethodManager, _methodHideSoftInput,
+				lBinder, lFlags);
 		}
 	}
-	virtual int getKeyFromKeyCode(int keyCode, int metaState, int deviceId) override {
-		if (!_isInited || !instance || !_methodGetKeyFromKeyCode) return 0;
+	virtual int getKeyFromKeyCode(int keyCode, int metaState, int deviceId) {
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
-		if (!env) return 0;
 
 		return (int) env->CallIntMethod(instance, _methodGetKeyFromKeyCode, keyCode, metaState, deviceId);
 	}
@@ -726,7 +607,6 @@ private:
     jmethodID _methodSaveScreenshot;
     jmethodID _postScreenshotToFacebook;
     jmethodID _getImageData;
-    jmethodID _getImageDataFromBytes;
 	jmethodID _readAssetFile;
     jmethodID _methodPlaySound;
     jmethodID _showDialog;
@@ -748,8 +628,7 @@ private:
 	jmethodID _methodIsNetworkEnabled;
 
 	jmethodID _methodGetPlatformStringVar;
-	jmethodID _methodOpenURL;
-	jmethodID _methodImportSkinOrCape;
+	jmethodID _methodOpenURL; // new JNI method for launching browser
 
 	jclass _classWindow;
 	jclass _classContext;

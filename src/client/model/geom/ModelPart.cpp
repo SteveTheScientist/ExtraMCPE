@@ -231,55 +231,6 @@ void ModelPart::mimic(const ModelPart* o) {
     zRot = o->zRot;
 }
 
-void ModelPart::renderCubeRange( float scale, size_t start, size_t count )
-{
-	if (neverRender || !visible) return;
-
-	if (xRot != 0 || yRot != 0 || zRot != 0) {
-		glPushMatrix2();
-		glTranslatef2(x * scale, y * scale, z * scale);
-		if (zRot != 0) glRotatef2(zRot * Mth::RADDEG, 0.0f, 0.0f, 1.0f);
-		if (yRot != 0) glRotatef2(yRot * Mth::RADDEG, 0.0f, 1.0f, 0.0f);
-		if (xRot != 0) glRotatef2(xRot * Mth::RADDEG, 1.0f, 0.0f, 0.0f);
-
-		Tesselator& t = Tesselator::instance;
-		t.begin();
-		for (size_t j = start; j < start + count && j < cubes.size(); ++j) {
-			Cube* c = cubes[j];
-			for (int i = 0; i < 6; i++) {
-				c->polygons[i].render(t, scale, vboId);
-			}
-		}
-		t.draw();
-
-		glPopMatrix2();
-	} else if (x != 0 || y != 0 || z != 0) {
-		glTranslatef2(x * scale, y * scale, z * scale);
-
-		Tesselator& t = Tesselator::instance;
-		t.begin();
-		for (size_t j = start; j < start + count && j < cubes.size(); ++j) {
-			Cube* c = cubes[j];
-			for (int i = 0; i < 6; i++) {
-				c->polygons[i].render(t, scale, vboId);
-			}
-		}
-		t.draw();
-
-		glTranslatef2(-x * scale, -y * scale, -z * scale);
-	} else {
-		Tesselator& t = Tesselator::instance;
-		t.begin();
-		for (size_t j = start; j < start + count && j < cubes.size(); ++j) {
-			Cube* c = cubes[j];
-			for (int i = 0; i < 6; i++) {
-				c->polygons[i].render(t, scale, vboId);
-			}
-		}
-		t.draw();
-	}
-}
-
 void ModelPart::renderHorrible( float scale )
 {
 	if (neverRender) {
