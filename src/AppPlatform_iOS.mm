@@ -276,6 +276,28 @@ void AppPlatform_iOS::hideKeyboard() {
 	super::hideKeyboard();
 }
 
+TextureData AppPlatform_iOS::loadTextureFromMemory(const unsigned char* data, size_t size) {
+    TextureData out;
+    out.memoryHandledExternally = false;
+    if (!data || size == 0) return out;
+
+    NSData* nsData = [NSData dataWithBytes:data length:size];
+    UIImage* image = [[UIImage alloc] initWithData:nsData];
+    if (image != nil) {
+        out.w = CGImageGetWidth(image.CGImage);
+        out.h = CGImageGetHeight(image.CGImage);
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        out.data = new unsigned char[4 * out.w * out.h];
+        CGContextRef imgcontext = CGBitmapContextCreate( out.data, out.w, out.h, 8, 4 * out.w, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big );
+        CGColorSpaceRelease( colorSpace );
+        CGContextClearRect( imgcontext, CGRectMake( 0, 0, out.w, out.h ) );
+        CGContextDrawImage( imgcontext, CGRectMake( 0, 0, out.w, out.h ), image.CGImage );
+        CGContextRelease(imgcontext);
+    }
+    [image release];
+    return out;
+}
+
 // TODO: iOS Skin/Cape import using UIDocumentPickerViewController
 void AppPlatform_iOS::importSkinOrCape(int type) {
     // Leave unimplemented for iOS in this task

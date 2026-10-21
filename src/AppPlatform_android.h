@@ -5,7 +5,6 @@
 #include "client/renderer/gles.h"
 #include "platform/log.h"
 #include "platform/time.h"
-#include "platform/PngLoader.h"
 #include <jni.h>
 #include <cmath>
 #include <exception>
@@ -58,6 +57,7 @@ public:
         _methodSaveScreenshot(0),
         _postScreenshotToFacebook(0),
         _getImageData(0),
+        _getImageDataFromBytes(0),
 		_readAssetFile(0),
         _methodPlaySound(0),
         _showDialog(0),
@@ -106,9 +106,6 @@ public:
     int getScreenHeight() { return _screenHeight; }
     void setScreenDimensions(int w, int h) { _screenWidth = w; _screenHeight = h; }
 
-    // Note, this has to be called from the main thread (e.g. do it from JNI_onLoad)
-    // Somewhere between calling this, and calling the AppPlatform methods,
-    // this->instance will be assigned by its creator
     int init(JavaVM* vm) {
         if (_isInited)
             return -1;
@@ -121,7 +118,6 @@ public:
             return -2;
         }
 
-        // Get Class reference
         const char* interface_path = "com/mojang/minecraftpe/MainActivity";
         jclass clazz = NULL;
         if( (clazz = env->FindClass( interface_path )) == 0 ) {
@@ -129,10 +125,10 @@ public:
         }
         _activityClass = (jclass)env->NewGlobalRef(clazz);
 
-        // Save all the method IDs
         _methodSaveScreenshot = env->GetStaticMethodID( _activityClass, "saveScreenshot", "(Ljava/lang/String;II[I)V");
         _postScreenshotToFacebook = env->GetMethodID( _activityClass, "postScreenshotToFacebook", "(Ljava/lang/String;II[I)V");
         _getImageData = env->GetMethodID( _activityClass, "getImageData", "(Ljava/lang/String;)[I");
+        _getImageDataFromBytes = env->GetMethodID( _activityClass, "getImageDataFromBytes", "([B)[I");
 		_readAssetFile = env->GetMethodID( _activityClass, "getFileDataBytes", "(Ljava/lang/String;)[B");
         #if defined(PRE_ANDROID23)
             _methodPlaySound = env->GetMethodID( _activityClass, "playSound", "(Ljava/lang/String;FF)V");
@@ -154,7 +150,6 @@ public:
 
 		_methodGetPixelsPerMillimeter = env->GetMethodID( _activityClass, "getPixelsPerMillimeter", "()F");
 		_methodGetPlatformStringVar = env->GetMethodID( _activityClass, "getPlatformStringVar", "(I)Ljava/lang/String;");
-		// custom helper to launch external URLs
 		_methodOpenURL = env->GetMethodID(_activityClass, "openURL", "(Ljava/lang/String;)V");
 		_methodImportSkinOrCape = env->GetMethodID(_activityClass, "importSkinOrCape", "(I)V");
 
@@ -349,7 +344,46 @@ public:
         }
     }
 
-    TextureData loadTexture(const std::string& filename, bool textureFolder) {
+    TextureData loadTextureFromMemory(const unsigned char* data, size_t size) override {
+        if (!_isInited || !_getImageDataFromBytes || !data || size == 0) return TextureData();
+
+        JVMAttacher ta(_vm);
+        JNIEnv* env = ta.getEnv();
+
+        jbyteArray jbytes = env->NewByteArray(size);
+        if (!jbytes) return TextureData();
+
+        env->SetByteArrayRegion(jbytes, 0, size, (const jbyte*)data);
+
+        jintArray arr = (jintArray)env->CallObjectMethod(instance, _getImageDataFromBytes, jbytes);
+        env->DeleteLocalRef(jbytes);
+
+        if (!arr) return TextureData();
+
+        jsize len = env->GetArrayLength(arr);
+        int numPixels = len - 2;
+
+        int* pixels = new int[numPixels];
+        jint* body = env->GetIntArrayElements(arr, 0);
+
+        int w = body[0];
+        int h = body[1];
+        memcpy(pixels, &body[2], numPixels * sizeof(int));
+
+        for (int i = 0; i < numPixels; ++i)
+            pixels[i] = rgbToBgr(pixels[i]);
+
+        env->ReleaseIntArrayElements(arr, body, 0);
+
+        TextureData out;
+        out.w = w;
+        out.h = h;
+        out.data = (unsigned char*)pixels;
+        out.memoryHandledExternally = false;
+        return out;
+    }
+
+    TextureData loadTexture(const std::string& filename, bool textureFolder) override {
         if (!_isInited) return TextureData();
 
         // First try reading directly from files directory if it exists on disk (e.g. data/images/skins/...)
@@ -359,7 +393,7 @@ public:
             std::vector<unsigned char> fileData((std::istreambuf_iterator<char>(source)), std::istreambuf_iterator<char>());
             source.close();
             if (!fileData.empty()) {
-                return loadPngFromMemory(fileData.data(), fileData.size());
+                return loadTextureFromMemory(fileData.data(), fileData.size());
             }
         }
 
@@ -398,7 +432,7 @@ public:
         return out;
     }
 
-	BinaryBlob readAssetFile(const std::string& filename) {
+	BinaryBlob readAssetFile(const std::string& filename) override {
 		if (!_isInited) return BinaryBlob();
 		if (!_readAssetFile) return BinaryBlob();
 
@@ -420,7 +454,7 @@ public:
 		return blob;
 	}
 
-	std::string getDateString(int s) {
+	std::string getDateString(int s) override {
         if (!_isInited) return "";
         if (!_methodGetDateString) return "";
 
@@ -436,7 +470,7 @@ public:
         return out;
     }
 
-	std::string getPlatformStringVar(int s) {
+	std::string getPlatformStringVar(int s) override {
 		if (!_isInited) return "";
 		if (!_methodGetPlatformStringVar) return "";
 
@@ -452,7 +486,7 @@ public:
 		return out;
 	}
 
-	virtual void openURL(const std::string& url) {
+	virtual void openURL(const std::string& url) override {
 		if (!_isInited || !_methodOpenURL) return;
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
@@ -461,14 +495,14 @@ public:
 		env->DeleteLocalRef(jurl);
 	}
 
-	virtual void importSkinOrCape(int type) {
+	virtual void importSkinOrCape(int type) override {
 		if (!_isInited || !_methodImportSkinOrCape) return;
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
 		env->CallVoidMethod(instance, _methodImportSkinOrCape, type);
 	}
 
-    virtual void finish() {
+    virtual void finish() override {
         if (!_isInited) return;
         if (!_methodFinish) return;
 
@@ -484,7 +518,7 @@ public:
         env->DeleteGlobalRef( _classInputManager );
     }
 
-    virtual bool supportsTouchscreen() {
+    virtual bool supportsTouchscreen() override {
         if (!_isInited) return true;
         if (!_methodSupportsTouchscreen) return true;
 
@@ -494,7 +528,7 @@ public:
         return env->CallBooleanMethod(instance, _methodSupportsTouchscreen);
     }
 
-	virtual void vibrate(int milliSeconds) {
+	virtual void vibrate(int milliSeconds) override {
         if (!_isInited) return;
         if (!_methodVibrate) return;
 
@@ -504,7 +538,7 @@ public:
         return env->CallVoidMethod(instance, _methodVibrate, milliSeconds);
     }
 
-	virtual bool isPowerVR() {
+	virtual bool isPowerVR() override {
 	    bool is = super::isPowerVR();
 
 		if (_methodSetIsPowerVR && _isInited && !_hasSetPowerVR ) {
@@ -516,7 +550,7 @@ public:
 		return is;
 	}
 
-	virtual bool isNetworkEnabled(bool onlyWifiAllowed) {
+	virtual bool isNetworkEnabled(bool onlyWifiAllowed) override {
 		if (!_isInited) return false;
 		if (!_methodIsNetworkEnabled) return false;
 
@@ -534,15 +568,15 @@ public:
         return t*t == n;
     }
 
-	virtual void showKeyboard() {
+	virtual void showKeyboard() override {
 		showKeyboard(true);
 		super::showKeyboard();
 	}
-	virtual void hideKeyboard() {
+	virtual void hideKeyboard() override {
 		showKeyboard(false);
 		super::hideKeyboard();
 	}
-	virtual void showKeyboard(bool bShow) {
+	virtual void showKeyboard(bool bShow) override {
 		if (!_isInited) return;
 
 		jint lResult = 0;
@@ -577,7 +611,7 @@ public:
 				lBinder, lFlags);
 		}
 	}
-	virtual int getKeyFromKeyCode(int keyCode, int metaState, int deviceId) {
+	virtual int getKeyFromKeyCode(int keyCode, int metaState, int deviceId) override {
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
 
@@ -595,6 +629,7 @@ private:
     jmethodID _methodSaveScreenshot;
     jmethodID _postScreenshotToFacebook;
     jmethodID _getImageData;
+    jmethodID _getImageDataFromBytes;
 	jmethodID _readAssetFile;
     jmethodID _methodPlaySound;
     jmethodID _showDialog;

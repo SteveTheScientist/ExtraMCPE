@@ -24,7 +24,6 @@
 #include "../../platform/log.h"
 #include "../../platform/HttpClient.h"
 #include "../../platform/CThread.h"
-#include "../../platform/PngLoader.h"
 #include "../../util/StringUtils.h"
 #include "client/Options.h"
 #ifndef STANDALONE_SERVER
@@ -893,7 +892,10 @@ bool LocalPlayer::setSkinFromFile(const std::string& path, std::string& outError
     std::vector<unsigned char> data((std::istreambuf_iterator<char>(src)), std::istreambuf_iterator<char>());
     src.close();
 
-    TextureData texData = loadPngFromMemory(data.data(), data.size());
+    TextureData texData;
+    if (minecraft && minecraft->platform()) {
+        texData = minecraft->platform()->loadTextureFromMemory(data.data(), data.size());
+    }
     if (!texData.data || texData.w <= 0 || texData.h <= 0) {
         outError = "Invalid PNG file";
         return false;
@@ -971,7 +973,10 @@ bool LocalPlayer::setCapeFromFile(const std::string& path, std::string& outError
     std::vector<unsigned char> data((std::istreambuf_iterator<char>(src)), std::istreambuf_iterator<char>());
     src.close();
 
-    TextureData texData = loadPngFromMemory(data.data(), data.size());
+    TextureData texData;
+    if (minecraft && minecraft->platform()) {
+        texData = minecraft->platform()->loadTextureFromMemory(data.data(), data.size());
+    }
     if (!texData.data || texData.w <= 0 || texData.h <= 0) {
         outError = "Invalid PNG file";
         return false;

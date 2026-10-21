@@ -231,6 +231,22 @@ public class MainActivity extends NativeActivity {
         }
 
         Bitmap bm = BitmapFactory.decodeStream(inputStream);
+        if (bm == null) return null;
+        int w = bm.getWidth();
+        int h = bm.getHeight();
+
+        int[] pixels = new int[w * h + 2];
+        pixels[0] = w;
+        pixels[1] = h;
+        bm.getPixels(pixels, 2, w, 0, 0, w, h);
+
+        return pixels;
+    }
+
+    public int[] getImageDataFromBytes(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return null;
+        Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        if (bm == null) return null;
         int w = bm.getWidth();
         int h = bm.getHeight();
 
