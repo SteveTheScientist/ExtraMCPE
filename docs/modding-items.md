@@ -1,47 +1,79 @@
-# Modding Guide: Adding Items & Gameplay Features
+# Beginner Guide to Modding & Adding Items
 
-## 1. Quick Checklist
-To add a new item (e.g. "Ruby"), edit these files in order:
-1. `src/world/item/Item.h` - Declare static pointer `static Item* ruby;`.
-2. `src/world/item/Item.cpp` - Define `ruby = NULL`, instantiate with ID ($> 256$), set icon (`setIcon(x, y)`), set category, and set description ID.
-3. `data/lang/en_US.lang` - Add localized display name string (`item.ruby.name=Ruby`).
-4. `src/world/entity/player/Inventory.cpp` - Add `addItem(new ItemInstance(Item::ruby));` in `setupDefault()`.
-5. `data/images/items.png` - Add $16 \times 16$ texture icon to the item atlas.
-6. `src/world/item/crafting/Recipes.cpp` / `FurnaceRecipes.cpp` - Add crafting or furnace recipes.
+This guide explains how items, tools, weapons, food, crafting recipes, and translations work in the game engine.
 
 ---
 
-## 2. Adding a Simple Item ("Ruby")
+## 1. How Items Work in the Engine
 
-### Declarations in `src/world/item/Item.h`
+In Minecraft, every item in the game is managed by an `Item` object registered in the global array `Item::items[512]`.
+
+```
++----------------------------------------------------------------------+
+|                         ITEM ARCHITECTURE                            |
+|                                                                      |
+|  Block IDs (0 to 255)                Item IDs (256 to 511)          |
+|  +-----+-------------------+         +-----+-----------------------+ |
+|  | ID  | Block             |         | ID  | Item                  | |
+|  +-----+-------------------+         +-----+-----------------------+ |
+|  | 1   | Tile::rock        |         | 256 | Item::shovel_iron     | |
+|  | 2   | Tile::grass       |         | 257 | Item::pickAxe_iron    | |
+|  | ... | ...               |         | ... | ...                   | |
+|  | 200 | Tile::rubyBlock   |         | 356 | Item::ruby (ID 256+100)| |
+|  +-----+-------------------+         +-----+-----------------------+ |
++----------------------------------------------------------------------+
+```
+
+* **ID Offset ($256 + N$):** Standard item constructors take an offset $N$. For example, `new Item(100)` creates an item with ID $256 + 100 = 356$.
+* **Stack Size:** Default maximum stack size is 64 items per slot (`maxStackSize = 64`).
+
+---
+
+## 2. Step-by-Step Guide: Adding a Simple Item ("Ruby")
+
+### Step 1: Declare Item Pointer (`src/world/item/Item.h`)
+Open `src/world/item/Item.h` and declare the static pointer inside the `Item` class:
 ```cpp
 class Item {
 public:
-    static Item* ruby;
+    static Item* ruby; // Declare pointer for Ruby
 };
 ```
 
-### Registration in `src/world/item/Item.cpp`
-Item IDs start after block IDs ($> 256$); the constructor takes an offset ID $N$, resulting in actual item ID $256 + N$.
+### Step 2: Define and Register Item (`src/world/item/Item.cpp`)
+Open `src/world/item/Item.cpp`:
+1. Define the static pointer near top of file:
 ```cpp
 Item* Item::ruby = NULL;
-
-// In Item::initItems():
-ruby = (new Item(100))                     // Actual ID = 256 + 100 = 356
-    ->setIcon(0, 4)                        // Column 0, Row 4 in items.png
-    ->setCategory(ItemCategory::Items)     // Inventory category tab
-    ->setDescriptionId("ruby")             // Unlocalized description ID
-    ->setMaxStackSize(64);                 // Stack limit
+```
+2. Allocate and register item inside `Item::initItems()`:
+```cpp
+// Offset 100 -> Actual ID = 256 + 100 = 356
+ruby = (new Item(100))
+    ->setIcon(0, 4)                       // Column 0, Row 4 in items.png
+    ->setCategory(ItemCategory::Items)    // Creative inventory tab
+    ->setDescriptionId("ruby")            // Translation ID key
+    ->setMaxStackSize(64);                // Stack size limit
 ```
 
-### Texture Calculation
-Item textures are loaded from `data/images/items.png` ($256 \times 256$ grid of $16 \times 16$ icon slots).
-* `setIcon(col, row)`: `setIcon(0, 4)` targets Column 0, Row 4 ($x=0, y=64$ px).
+### Step 3: Add Translation Name (`data/lang/en_US.lang`)
+Add display name to `data/lang/en_US.lang`:
+```ini
+item.ruby.name=Ruby
+```
+
+### Step 4: Add to Inventory (`src/world/entity/player/Inventory.cpp`)
+Add item to Creative inventory inside `Inventory::setupDefault()`:
+```cpp
+addItem(new ItemInstance(Item::ruby));
+```
 
 ---
 
-## 3. Food Items ("Ruby Apple")
-Food items inherit from `FoodItem` (`src/world/item/FoodItem.h`):
+## 3. Creating Food Items ("Ruby Apple")
+
+Food items inherit from `FoodItem` (`src/world/item/FoodItem.h`), which automatically handles eating animations, eating sounds (`random.eat`), and health restoration.
+
 ```cpp
 // Constructor: FoodItem(idOffset, healAmount, isMeat)
 rubyApple = (new FoodItem(101, 8, false))
@@ -49,68 +81,39 @@ rubyApple = (new FoodItem(101, 8, false))
     ->setCategory(ItemCategory::FoodArmor)
     ->setDescriptionId("rubyApple");
 ```
-* **Duration & Animation:** `FoodItem` overrides `getUseAnimation()` to return `UseAnim::eat` or `drink` and uses `getUseDuration()` (default 32 ticks). Eating particle effects and sounds (`random.eat`) are automatically handled in `Player::spawnEatParticles` and `LocalPlayer::tick()`.
+
+When consumed, `FoodItem` restores 8 health points ($4$ hearts) and plays eating particle effects.
 
 ---
 
-## 4. Tools, Weapons & Armor
+## 4. Creating Tools and Weapons
 
-### Material Tiers (`Item::Tier`)
-Tools use `Item::Tier` (`src/world/item/Item.h`):
-* `EMERALD`: Level 3, Uses 1561, Speed 8.0f, Damage 3
-* `IRON`: Level 2, Uses 250, Speed 6.0f, Damage 2
-* `STONE`: Level 1, Uses 131, Speed 4.0f, Damage 1
+Tools and weapons use material tier stats defined in `Item::Tier`:
 
-### Sword Example ("Ruby Sword")
 ```cpp
-rubySword = (new SwordItem(102, Item::Tier::EMERALD))
+// Built-in Tiers:
+Item::Tier::WOOD    // Mining Level 0, 59 Uses, Speed 2.0f, Damage Bonus 0
+Item::Tier::STONE   // Mining Level 1, 131 Uses, Speed 4.0f, Damage Bonus 1
+Item::Tier::IRON    // Mining Level 2, 250 Uses, Speed 6.0f, Damage Bonus 2
+Item::Tier::EMERALD // Mining Level 3, 1561 Uses, Speed 8.0f, Damage Bonus 3 (Diamond tier)
+Item::Tier::GOLD    // Mining Level 0, 32 Uses, Speed 12.0f, Damage Bonus 0
+```
+
+### Adding a Custom Sword ("Ruby Sword")
+```cpp
+rubySword = (new WeaponItem(102, Item::Tier::EMERALD))
     ->setIcon(2, 4)
-    ->setCategory(ItemCategory::ToolsWeapons)
+    ->setCategory(ItemCategory::Tools)
     ->setDescriptionId("swordRuby");
 ```
-Attack damage is computed via tier damage + weapon base damage in `SwordItem::getAttackDamage`.
 
 ---
 
-## 5. Display Names & Translations
-Display names are stored in `data/lang/en_US.lang` and retrieved via `I18n::get`:
-* **Item Format:** `item.<descriptionId>.name=Display Name`
-  ```ini
-  item.ruby.name=Ruby
-  item.rubyApple.name=Ruby Apple
-  item.swordRuby.name=Ruby Sword
-  ```
-* **Block Format:** `tile.<descriptionId>.name=Display Name`
-  ```ini
-  tile.rubyBlock.name=Block of Ruby
-  ```
-* **Mob Format:** `entity.<descriptionId>.name=Display Name`
-  ```ini
-  entity.Zombie.name=Zombie
-  ```
-
----
-
-## 6. Creative Inventory Categories
-Category tabs are filtered by `ItemCategory` in `src/world/item/ItemCategory.h`:
-* `ItemCategory::StructureBlocks` (0)
-* `ItemCategory::Decorations` (1)
-* `ItemCategory::ToolsWeapons` (2)
-* `ItemCategory::FoodArmor` (3)
-* `ItemCategory::Items` (4)
-
-Items register their category via `setCategory(ItemCategory::*)`. To show items in the Creative inventory, add them in `setupDefault()` in `src/world/entity/player/Inventory.cpp`:
-```cpp
-addItem(new ItemInstance(Item::ruby));
-addItem(new ItemInstance(Item::rubyApple));
-addItem(new ItemInstance(Item::rubySword));
-```
-
----
-
-## 7. Crafting & Smelting Recipes
+## 5. Adding Crafting & Furnace Smelting Recipes
 
 ### Shaped Crafting Recipe (`src/world/item/crafting/Recipes.cpp`)
+To craft 1 **Ruby Sword** using 2 **Rubies** ("R") and 1 **Stick** ("S"):
+
 ```cpp
 addShapedRecipe(ItemInstance(Item::rubySword, 1),
     "R",
@@ -124,6 +127,7 @@ addShapedRecipe(ItemInstance(Item::rubySword, 1),
 ```
 
 ### Shapeless Crafting Recipe
+Ingredients can be placed anywhere in crafting grid:
 ```cpp
 addShapelessRecipe(ItemInstance(Item::rubyApple, 1),
     {
@@ -134,64 +138,26 @@ addShapelessRecipe(ItemInstance(Item::rubyApple, 1),
 ```
 
 ### Furnace Smelting Recipe (`src/world/item/crafting/FurnaceRecipes.cpp`)
+Smelt **Ruby Ore** block into 1 **Ruby** item:
 ```cpp
 addFurnaceRecipe(Tile::rubyOre->id, ItemInstance(Item::ruby, 1));
 ```
 
 ---
 
-## 8. Drops & Loot
+## 6. Texture Atlas Grid System (`items.png`)
 
-### Block Drops (`src/world/level/tile/Tile.cpp`)
-Override `getResource` and `getResourceCount` on a `Tile`:
-```cpp
-int RubyOreTile::getResource(int data, Random* rand) {
-    return Item::ruby->id;
-}
-int RubyOreTile::getResourceCount(Random* rand) {
-    return 1 + rand->nextInt(2);
-}
+Item textures are loaded from `data/images/items.png` ($256 \times 256$ grid of $16 \times 16$ pixel icon slots).
+
 ```
-
-### Mob Drops (`src/world/entity/monster/Monster.cpp`)
-Override `dropDeathLoot` on a mob class:
-```cpp
-void Zombie::dropDeathLoot() {
-    int count = random.nextInt(3);
-    for (int i = 0; i < count; i++) {
-        spawnAtLocation(Item::ruby->id, 1);
-    }
-}
-```
-
----
-
-## 9. Placing Items as Blocks & Right-Click Use
-* **Tile Items:** Use `TileItem` (`src/world/item/TileItem.h`) so holding the item places a block:
-```cpp
-rubyItem = (new TileItem(103, Tile::rubyBlock->id))
-    ->setIcon(0, 4)
-    ->setDescriptionId("rubyBlock");
-```
-* **Right-Click Interaction:** Override `useOn` or `use` in a custom `Item` subclass:
-```cpp
-bool Item::useOn(ItemInstance* instance, Player* player, Level* level, int x, int y, int z, int side, float ex, float ey, float ez) {
-    return false; // Return true if right-click action succeeded
-}
-```
-
----
-
-## 10. Sounds & Translations
-* **Description ID:** Set via `setDescriptionId("ruby")` -> mapped internally to `item.ruby.name`.
-* **Sound Triggers:** Triggered via `level->playSound(player, "random.pop", 0.2f, 1.0f)`. Common sound keys: `"random.pop"`, `"random.drink"`, `"random.eat"`, `"random.break"`.
-
----
-
-## 11. Common Mistakes & Quick Testing
-* **Item ID Collision:** Using IDs $\le 256$ overwrites block IDs. Always use $N$ so actual ID is $256 + N$.
-* **Missing Build Entries:** If you create a new `.cpp` file for a custom item subclass, add it to `CMakeLists.txt`, `project/android/jni/Android.mk`, `project/android_java/jni/Android.mk`, and `project/iosproj/minecraftpe.xcodeproj/project.pbxproj`.
-* **Quick Testing:** Add item to hotbar slot 0 in `src/world/entity/player/Inventory.cpp`:
-```cpp
-Sel[0] = addItem(new ItemInstance(Item::ruby));
+          COLUMN (0 to 15)
+        0   1   2   3 ... 15
+      +---+---+---+---+---+---+
+    0 |   |   |   |   |   |   |  setIcon(column, row)
+R   1 |   |   |   |   |   |   |
+O   2 |   |   |   |   |   |   |  Example: Column 0, Row 4
+W   3 |   |   |   |   |   |   |  setIcon(0, 4)
+    4 | X |   |   |   |   |   |  Targets (x=0px, y=64px)
+   15 |   |   |   |   |   |   |
+      +---+---+---+---+---+---+
 ```

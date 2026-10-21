@@ -1,71 +1,80 @@
 # Git, Build Systems & CI/CD Guide
 
+This guide explains how to build the game across all supported platforms (Linux, Windows, macOS, Android, iOS, and Web) and troubleshoot common compilation issues.
+
+---
+
 ## 1. Multi-Platform Build Systems Overview
 
-| Platform | Build System / Project File | Source Manifest / Key File | Output Binary Target |
-| :--- | :--- | :--- | :--- |
-| **Desktop (Linux / macOS / Win32 GL)** | CMake (`CMakeLists.txt`) | `CMakeLists.txt` (`add_executable`) | `build/MinecraftPE-server` |
-| **Android (Native JNI)** | Android NDK (`ndk-build`) | `project/android/jni/Android.mk` | `libminecraftpe.so` |
-| **Android (Java App)** | Android Makefile / Gradle | `project/android_java/jni/Android.mk` | `MinecraftPE.apk` |
-| **Raspberry Pi** | GNU Make (`Makefile`) | `project/raspberry/Makefile` | `minecraftpe` |
-| **Windows Visual Studio** | MSBuild (`.vcxproj`) | `project/win32/MinecraftWin32.vcxproj` | `MinecraftWin32.exe` |
-| **Apple iOS** | Xcode (`.xcodeproj`) | `project/iosproj/minecraftpe.xcodeproj` | `MinecraftPE.app` |
+```
++--------------------------------------------------------------------------+
+|                       MULTI-PLATFORM BUILD PIPELINE                      |
+|                                                                          |
+|   Target Platform        Build System / Project File     Output Binary   |
+|  +---------------------+-------------------------------+---------------+ |
+|  | Linux / macOS       | CMake (CMakeLists.txt)        | MinecraftPE   | |
+|  | Windows             | CMake / MSBuild (.vcxproj)    | MinecraftPE   | |
+|  | Android             | Android NDK (Android.mk)      | libmcpe.so/apk| |
+|  | iOS                 | Xcode (.xcodeproj)            | minecraft.ipa | |
+|  | Web (WebAssembly)   | Emscripten + CMake (Ninja)    | MinecraftPE.js| |
++--------------------------------------------------------------------------+
+```
 
-## 2. CMake Targets & Build Instructions
+| Platform | Build System | Primary Command / File |
+| :--- | :--- | :--- |
+| **Linux / Desktop** | CMake | `cmake -B build -S .` |
+| **Android (NDK r14b)** | Android NDK (`build.sh`) | `project/android/jni/Android.mk` |
+| **iOS** | Xcode | `xcodebuild -scheme minecraftpe` |
+| **Web** | Emscripten | `emscripten` toolchain file |
 
-### Basic CMake Build Flow
+---
+
+## 2. Desktop (Linux / Windows) CMake Build Instructions
+
+### Basic Build Commands
 ```bash
-# Configure build directory
+# 1. Configure build directory (disabling Wayland/X11 headers for headless environments)
 cmake -B build -S . -DGLFW_BUILD_WAYLAND=OFF -DGLFW_BUILD_X11=OFF
 
-# Compile primary game target
+# 2. Compile server target
 cmake --build build --target MinecraftPE-server -j$(nproc)
 ```
 
-### Available CMake Unit Test Targets
-* `test_fog`
-* `test_clouds`
-* `test_font`
-
-Run test targets via:
+### Running Unit Tests
+Unit test targets are compiled using CMake and executed from `./build/`:
 ```bash
-cmake --build build --target test_font
+# Compile and run font, fog, and cloud unit tests
+cmake --build build --target test_clouds test_fog test_font
+./build/test_clouds
+./build/test_fog
 ./build/test_font
 ```
 
+---
+
 ## 3. GitHub Actions CI/CD Pipeline (`.github/workflows/build.yml`)
 
-### Active Matrix Jobs
-1. **Linux Build (`ubuntu-latest`):** Configures CMake with Headless/GLFW options and compiles `MinecraftPE-server`.
-2. **Android NDK Build (`ubuntu-latest`):** Downloads NDK r14b, runs `ndk-build` targeting `arm64-v8a` and `armeabi-v7a` (`minSdkVersion 21`, `targetSdkVersion 28`).
-3. **macOS / iOS Build (`macos-13`):** Note: Uses `macos-13` (x86_64) runner explicitly to avoid arm64 runner capacity timeouts. Runs Xcode build for iOS simulator/device targets.
-4. **Windows Build (`windows-latest`):** Builds MSBuild `.vcxproj` solution via MSBuild CLI.
+The GitHub Actions CI/CD pipeline builds artifacts for all platforms automatically on every push:
+1. **Linux Build (`ubuntu-latest`):** Builds Linux binary and server executable.
+2. **Windows Build (`ubuntu-22.04`):** Cross-compiles Windows binaries using `llvm-mingw`.
+3. **iOS Build (`macos-13`):** Uses x86_64 macOS 13 runner (`macos-13`) to avoid runner acquisition queue timeouts on arm64 runners. Builds signed/unsigned IPA packages.
+4. **Android Build (`ubuntu-latest`):** Downloads NDK r14b and builds APKs for `arm64-v8a` and `armeabi-v7a`.
+5. **Web Build (`ubuntu-latest`):** Uses Emscripten SDK to build WebAssembly `.js` and `.wasm` files.
 
-## 4. Log Reading, Crash Diagnostics & Debugging
+---
 
-### Common Build Failures & Fixes
+## 4. Troubleshooting Common Build Failures
 
-#### A. Headless Linux / Wayland Missing Headers
-* **Symptom:** `EGL/egl.h` or Wayland display server header missing errors during CMake configuration.
-* **Fix:** Pass `-DGLFW_BUILD_WAYLAND=OFF -DGLFW_BUILD_X11=OFF` flags to `cmake`.
+### Issue A: Android NDK r14b C++11 Function Errors
+* **Error Message:** `error: 'to_string' is not a member of 'std'` or `error: 'round' is not a member of 'std'`.
+* **Cause:** Android NDK r14b uses an older GCC/Clang stdlib configuration lacking C++11 `<string>`/`<cmath>` helper methods.
+* **Fix:** Replace `std::to_string(n)` with `std::ostringstream ss; ss << n; return ss.str();`. Replace `std::round(f)` with `floorf(f + 0.5f)`.
 
-#### B. Android NDK r14b C++11 Header Missing Functions
-* **Symptom:** `std::to_string`, `std::round`, `std::lround`, or `std::trunc` undeclared in Android NDK builds.
-* **Fix:** Do not call these C++11 `<cmath>`/`<string>` methods directly on Android NDK r14b. Replace `std::to_string(x)` with `std::ostringstream` and replace `std::round(f)` with `floorf(f + 0.5f)`.
-
-#### C. Linker Error: Undefined Reference When Adding New Source Files
-* **Symptom:** Unresolved external symbol during linking on Android, iOS, or Windows builds.
-* **Fix:** When creating any new `.cpp` or `.h` file in `src/`, you **must** update ALL platform manifest files:
+### Issue B: Undefined Reference / Missing Symbol Linker Errors
+* **Error Message:** `undefined reference to CommandGive::CommandGive()`.
+* **Cause:** A new `.cpp` file was created in `src/` but was not added to platform build files.
+* **Fix:** When adding any new `.cpp` file, add its path to:
   1. `CMakeLists.txt`
   2. `project/android/jni/Android.mk`
   3. `project/android_java/jni/Android.mk`
-  4. `project/raspberry/Makefile`
-  5. `project/win32/MinecraftWin32.vcxproj`
-  6. `project/win32_gl/MinecraftWin32_GL.vcxproj`
-  7. `project/iosproj/minecraftpe.xcodeproj/project.pbxproj`
-
-## 5. Pre-Commit Checklist & Pull Request Guidelines
-
-1. **Verify No Code Modification:** Confirm `git status` shows edits restricted strictly to `docs/` files.
-2. **Check Line Counts:** Ensure all documentation files in `docs/` remain under 300 lines each.
-3. **Validate Code Symbol Accuracy:** Double check all file paths, class names, and method signatures match exact codebase definitions.
+  4. `project/iosproj/minecraftpe.xcodeproj/project.pbxproj`

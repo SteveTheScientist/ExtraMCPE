@@ -1,32 +1,59 @@
 # Skin & Player Model Investigation Report
 
-## 1. Skin Texture Loading & Binding
-* **Path & File:** Default texture path `"mob/char.png"` (in `assets/images/mob/char.png`).
-* **Format & Size:** 32-bit RGBA PNG, standard 64x32 size (or 64x64 dynamic texture).
-* **Functions:** `Textures::loadTexture` (`src/client/renderer/Textures.cpp`) loads texture pixels via `AppPlatform::loadTexture`. `PlayerRenderer::bindTexture` (`src/client/renderer/entity/PlayerRenderer.cpp`) binds OpenGL texture ID before drawing `HumanoidModel`.
+This report summarizes how player skins, outer clothing layers, capes, dynamic model refreshing, and platform image decoders work in the ExtraMCPE engine.
 
-## 2. Supported Sizes & Second Layer
-* **Sizes Handled:** Base `HumanoidModel` mapping assumes classic 64x32 UV coordinates. 64x64 textures are loaded but lower 64x64 jacket/sleeve/pants overlay layers are not mapped/drawn.
-* **Hat/Helmet Layer:** Standard head overlay (hat layer, 32x16 UV region) is defined in `HumanoidModel::HumanoidModel()` (`src/client/model/HumanoidModel.cpp`) and drawn via `headoverlay.render(...)`.
+---
 
-## 3. Player & Mob Model Structure
-* **Class Names:** `HumanoidModel` (`src/client/model/HumanoidModel.h`) inherits from `Model`. Uses `Cube` (`src/client/model/Cube.h`) for box definitions.
-* **Entities Using Skin Model:** Local player (`LocalPlayer`), remote players (`Player`), Zombie (`Zombie`), Skeleton (`Skeleton`), PigZombie (`PigZombie`).
-* **Slim Model Option:** No 3-pixel wide ("Alex" slim arm) option exists in `HumanoidModel`. Arm width is hardcoded to 4x4x12 pixels.
+## 1. Skin Texture Loading & OpenGL Binding
+* **Texture File Path:** Default skin path is `"mob/char.png"` (`data/images/mob/char.png`).
+* **Format & Size:** 32-bit RGBA PNG, standard $64 \times 32$ pixel layout (or $64 \times 64$ dynamic skin texture).
+* **OpenGL Binding Pipeline:**
+  1. `Textures::loadTexture("mob/char.png")` (`src/client/renderer/Textures.cpp`) loads raw pixels via `AppPlatform::loadTexture`.
+  2. `PlayerRenderer::bindTexture` (`src/client/renderer/entity/PlayerRenderer.cpp`) binds the OpenGL texture handle `glBindTexture(GL_TEXTURE_2D, textureId)` before rendering `HumanoidModel`.
 
-## 4. Cape Code Pipeline
+---
+
+## 2. Supported Skin Layouts & Hat Layer
+* **64x32 Layout:** The base `HumanoidModel` mapping assumes classic $64 \times 32$ UV coordinates across head, torso, arms, and legs.
+* **Hat / Helmet Outer Layer:** Standard head overlay (hat layer, $32 \times 16$ UV region in the texture) is defined in `HumanoidModel::HumanoidModel()` (`src/client/model/HumanoidModel.cpp`) and drawn automatically via `headoverlay.render(...)`.
+* **64x64 Modern Skins:** $64 \times 64$ texture files load successfully, but lower jacket/sleeve/pants overlay layers are ignored unless model UVs are expanded.
+
+---
+
+## 3. Player & Mob Model Architecture
+
+```
++------------------------------------------------------------------------+
+|                      HUMANOID MODEL ARCHITECTURE                       |
+|                                                                        |
+|  HumanoidModel (Inherits from Model)                                   |
+|  +------------------------------------------------------------------+  |
+|  | Parts: head, headoverlay, body, rightArm, leftArm, rightLeg, leftLeg|  |
+|  | Render: Renders each ModelPart box mesh in 3D world space        |  |
+|  +------------------------------------------------------------------+  |
+|                                                                        |
+|  Entities Using HumanoidModel:                                         |
+|  - LocalPlayer & Player (Player characters)                            |
+|  - Zombie & Skeleton (Hostile mobs)                                    |
+|  - PigZombie (Nether mobs)                                             |
++------------------------------------------------------------------------+
+```
+
+---
+
+## 4. Cape Rendering Pipeline
 * **Code Location:** `PlayerRenderer::renderCape` (`src/client/renderer/entity/PlayerRenderer.cpp`).
-* **Texture & Model:** Uses `player->cape` texture path. Draws a 16x10 single-box cape plane attached to `torso` model origin, animating sway based on movement velocity vector (`player->getInterpolatedPosition()`).
+* **Texture & Model:** Uses `player->cape` texture path. Draws a $16 \times 10$ single-box cape plane attached to the `torso` origin, animating sway based on player velocity vectors (`player->getInterpolatedPosition()`).
 
-## 5. Platform PNG Loading
-* **Platforms:** Desktop (GLFW / Win32 / macOS), Android (`AppPlatform_android.h`), iOS (`AppPlatform_iOS.mm`).
-* **Loader Mechanism:** Android uses JNI `MainActivity.getImageData` / `getImageDataFromBytes` via Android `BitmapFactory`. iOS uses `UIImage`/`CGImage`. Desktop uses `stb_image` or PNG decoders. Works with user-added files at runtime if path exists under application writable directory.
+---
 
-## 6. Options & Skin Customization Screen
-* **Screen Base:** Sub-menu screens derive from `Screen` (`src/client/gui/Screen.h`), e.g., `OptionsScreen` (`src/client/gui/OptionsScreen.cpp`).
-* **Persistence:** Saved in `options.txt` via `Options::save()` and loaded in `Options::load()` (`src/option/Options.cpp`).
+## 5. Platform PNG Decoders
+* **Android (`AppPlatform_android.h`):** Uses JNI to call Java `MainActivity.getImageData` / `getImageDataFromBytes` via Android `BitmapFactory`.
+* **iOS (`AppPlatform_iOS.mm`):** Uses native Apple `UIImage` / `CGImage` CoreGraphics framework.
+* **Desktop (GLFW / Win32):** Uses `libpng` or `stb_image` C decoders.
 
-## 7. Custom Skin Loading Obstacles
-* **Hardcoded UVs:** `HumanoidModel` hardcodes classic 64x32 texture coordinates across `head`, `body`, `arm0`, `arm1`, `leg0`, `leg1`.
-* **No Slim Arm Support:** Dynamic model mesh switching is not supported without extending `HumanoidModel`.
-* **Texture Caching:** `Textures` caches loaded OpenGL texture IDs by path string; dynamically updated user skins require explicit dynamic texture cache invalidation (`Textures::reload()`).
+---
+
+## 6. Model Refreshing & Caching Constraints
+* **Hardcoded UVs:** `HumanoidModel` hardcodes classic $64 \times 32$ texture coordinates across body parts.
+* **Texture Cache Invalidation:** `Textures` caches OpenGL texture IDs by path string. Dynamically updating user skins at runtime requires calling `Textures::reload()` or binding a new dynamic texture ID.

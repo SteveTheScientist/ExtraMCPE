@@ -1,20 +1,61 @@
-# Java Edition Resource Pack Font System
+# Bitmap Font Rendering & Text Controls
 
-This codebase loads and renders Minecraft: Java Edition resource pack bitmap fonts directly from `assets/minecraft/textures/font/` and `assets/minecraft/font/default.json`.
+This document describes how bitmap fonts, section sign color codes, text width calculations, and text input box controls (`TextBox`) work in the game engine.
 
-## How to Add Another Java Font Pack
+---
 
-1. Place the font texture images (`ascii.png`, `accented.png`, `nonlatin_european.png`, etc.) inside `assets/minecraft/textures/font/`.
-2. If the resource pack provides a custom `default.json`, place it at `assets/minecraft/font/default.json`.
-3. Ensure textures are decoded as RGBA8888 with alpha transparency preserved.
+## 1. Bitmap Font System & Text Formatting
 
-## Font Provider Specifications
-- **Bitmap Provider**: Maps a grid of characters in an image file to unicode codepoints based on `chars` strings, `height`, `ascent`, and pixel alpha scanning.
-- **Space Provider**: Maps space characters to exact pixel advance widths (e.g. advance 4 for `' '`).
+Fonts are loaded from $256 \times 256$ pixel PNG font sheets (such as `assets/minecraft/textures/font/ascii.png`).
 
-## Root Cause of Previous Font Rendering Artifacts
+```
++-------------------------------------------------------------------------+
+|                        FONT RENDER PIPELINE                             |
+|                                                                         |
+|   1. TEXT STRING            2. COLOR CODES            3. GLYPH RENDER   |
+|  +--------------------+    +--------------------+    +----------------+ |
+|  | "§cHello §bWorld"  | -> | §c = Red Color     | -> | Draws textured | |
+|  |                    |    | §b = Aqua Color    |    | character quad | |
+|  +--------------------+    +--------------------+    +----------------+ |
++-------------------------------------------------------------------------+
+```
 
-1. **Fractional UV Coordinates & Non-Integer Coordinates**: The old system used arbitrary UV coordinate adjustments (`7.99f / 128.0f` and fractional half-texel offsets) which caused pixel stretching on quad boundaries.
-2. **Metadata Pixel Bleeding**: The legacy texture included row 7 metadata marks at the bottom of 8x8 glyph cells. When quad height matched cell height, the bottom line was rendered on screen (causing `.` to render like an underscore at the baseline).
-3. **Texture Filtering & Mipmapping**: Linear texture filtering and mipmaps caused adjacent empty or neighboring glyph pixels to bleed into character edges during scaling.
-4. **Fractional GUI Scaling**: Non-integer scaling factors caused fractional screen pixel vertex positioning, resulting in stretched or doubled letter tops. The new system enforces `GL_NEAREST` filtering, `GL_CLAMP_TO_EDGE` wrap mode, integer pixel snapping (`floor`), and exact UV texture coordinates.
+### Color Codes (`§` Section Sign Codes)
+In Minecraft text strings, color formatting uses the section sign character `§` followed by a color code digit:
+
+| Code | Color Name | RGB Hex Value |
+| :---: | :--- | :--- |
+| `§0` | Black | `#000000` |
+| `§1` | Dark Blue | `#0000AA` |
+| `§2` | Dark Green | `#00AA00` |
+| `§4` | Red | `#FF5555` |
+| `§a` | Green | `#55FF55` |
+| `§b` | Aqua | `#55FFFF` |
+| `§c` | Light Red | `#FF5555` |
+| `§e` | Yellow | `#FFFF55` |
+| `§f` | White | `#FFFFFF` |
+| `§r` | Reset Color | Resets to default text color |
+
+---
+
+## 2. Text Input Component (`TextBox`)
+
+`TextBox` (`src/client/gui/components/TextBox.cpp`) is the unified component for all text entry fields in the game (Chat, Server Console, World Name, Sign Edit).
+
+### Key Features
+* **Focus & Cursor Navigation:** Clicking inside a `TextBox` sets focus and draws a blinking cursor (`|`).
+* **Text Selection & Highlight:** Dragging mouse or holding Shift + Arrow keys selects text regions.
+* **Clipboard Integration:** Supports Ctrl+C (Copy), Ctrl+V (Paste), and Ctrl+X (Cut) across Windows, Mac, Linux, Android, and iOS.
+* **Format Filtering:** Strips formatting codes from user input when `isPlayerText` is true.
+
+---
+
+## 3. Unit Testing & Font Verification (`test_font`)
+
+The `test_font` target tests string width calculations, character advance metrics, and `TextBox` character insertion:
+
+```bash
+# Compile and run font unit tests
+cmake --build build --target test_font
+./build/test_font
+```

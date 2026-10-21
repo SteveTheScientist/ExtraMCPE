@@ -1,66 +1,153 @@
 # Mobs & World Systems Guide
 
-## 1. Adding a New Custom Mob (e.g. "Ruby Golem")
+This guide explains how monsters, animals, world generation, biomes, weather, day/night cycles, and sky rendering work in the game engine.
 
-### Checklist & Step-by-Step Instructions
-1. **Entity Class (`src/entity/RubyGolem.h`, `src/entity/RubyGolem.cpp`):**
-   * Inherit from `Mob` (`src/entity/Mob.h`) or `Monster` (`src/entity/Monster.h`).
-   * Implement `aiStep()`, `getMobType()`, `getMaxHealth()`, and `getDropItem()`.
-2. **Model Class (`src/client/model/RubyGolemModel.h`):**
-   * Inherit from `Model` (`src/client/model/Model.h`).
-   * Define body parts using `Cube` (`src/client/model/Cube.h`) and set UV offsets in `render(Entity*, float, float, float, float, float, float)`.
-3. **Renderer Class (`src/client/renderer/entity/RubyGolemRenderer.h`):**
-   * Inherit from `MobRenderer` (`src/client/renderer/entity/MobRenderer.h`).
-   * Pass `RubyGolemModel` instance and texture path string (e.g. `"mob/ruby_golem.png"`) to constructor.
-4. **Register Mob ID (`src/entity/EntityIds.h` / `src/entity/Entity.h`):**
-   * Add `RubyGolem = <unique_id>` to entity ID enum.
-5. **Register Model & Renderer (`src/client/renderer/entity/EntityRenderDispatcher.cpp`):**
-   * Register renderer instance in `EntityRenderDispatcher` map.
-6. **Register Factory Spawner (`src/entity/EntityFactory.cpp`):**
-   * Map ID to constructor in `EntityFactory::CreateEntity`.
-7. **Add Biome Spawn Rules (`src/level/biome/Biome.h`):**
-   * Add `SpawnListEntry(RubyGolem::class, weight, min, max)` to `biome->getMobs(MobCategory::monster)`.
+---
 
-### Code Example: `RubyGolem` Entity Class
+## 1. How Mobs Work in the Engine
+
+Every mob in the game (such as Zombies, Skeletons, Pigs, or Cows) is a 3D `Entity` that combines three main components:
+
+```
++-------------------------------------------------------------------------+
+|                           MOB ARCHITECTURE                              |
+|                                                                         |
+|  1. LOGIC & AI CLASS            2. 3D MODEL              3. RENDERER    |
+|  (e.g., RubyGolem.cpp)        (RubyGolemModel.cpp)   (RubyGolemRenderer)|
+|  +----------------------+    +--------------------+  +------------------+
+|  | Health & Attack      |    | 3D Box Parts       |  | Binds PNG Texture|
+|  | Pathfinding AI       | -> | Rotates Arms/Legs  |->| Renders Model in |
+|  | Item Drops & Loot    |    | Defines UV Mapping |  | 3D World Scene   |
+|  +----------------------+    +--------------------+  +------------------+
++-------------------------------------------------------------------------+
+```
+
+---
+
+## 2. Step-by-Step Guide: Adding a Custom Mob ("Ruby Golem")
+
+### Step 1: Create Mob Entity Class (`src/world/entity/monster/RubyGolem.h` & `.cpp`)
+Create a custom entity class inheriting from `Monster` (hostile) or `Mob` (passive):
+
+**Header (`src/world/entity/monster/RubyGolem.h`):**
 ```cpp
-#include "entity/Monster.h"
+#pragma once
+#include "Monster.h"
 
 class RubyGolem : public Monster {
 public:
-    RubyGolem(Level* level) : Monster(level) {
-        this->texture = "mob/ruby_golem.png";
-        this->setSize(1.4f, 2.9f);
-    }
+    RubyGolem(Level* level);
+
+    virtual void aiStep() override;
     virtual int getMaxHealth() override { return 100; }
-    virtual int getDropItem() override { return 500; } // Ruby Item ID
+    virtual int getBaseAttackDamage() { return 8; }
+    virtual void dropDeathLoot() override;
 };
 ```
 
-## 2. Biomes & World Generation Pipeline
+**Source (`src/world/entity/monster/RubyGolem.cpp`):**
+```cpp
+#include "RubyGolem.h"
+#include "world/item/Item.h"
 
-### World Generation Architecture
-1. **`Level` (`src/level/Level.h`):** Main container managing chunk storage, entity updates, and tick loops.
-2. **`ChunkSource` / `RandomLevelSource` (`src/level/chunk/RandomLevelSource.h`):** Generates terrain depth, surface blocks, and noise maps using `PerlinNoise`.
-3. **`Biome` (`src/level/biome/Biome.h`):** Controls surface blocks (`topBlock`, `fillerBlock`), foliage colors, temperature, downfall, and mob spawn lists.
-4. **`BiomeSource` (`src/level/biome/BiomeSource.h`):** Provides biome maps across block coordinates using noise layers.
-5. **`Feature` (`src/level/feature/Feature.h`):** Generates world structures into chunks during decoration phase (`TreeFeature`, `OreFeature`, `FlowerFeature`).
+RubyGolem::RubyGolem(Level* level) : Monster(level) {
+    this->textureName = "mob/ruby_golem.png";
+    this->setSize(1.4f, 2.9f); // Width, Height in blocks
+    this->health = getMaxHealth();
+}
 
-### Adding a Custom Biome
-1. Define new instance in `Biome.cpp` (e.g. `Biome* Biome::rubyPlains = (new Biome(15))->setTemperatureAndDownfall(0.8f, 0.4f);`).
-2. Override `topBlock` (`Tile::rubyBlock->id`) and `fillerBlock` (`Tile::dirt->id`).
-3. Add custom features in `Biome::decorate(Level* level, Random* rand, int x, int z)`.
+void RubyGolem::aiStep() {
+    Monster::aiStep(); // Handles pathfinding and target searching
+}
 
-## 3. Day/Night Cycle, Weather, Sky, Fog & Clouds
+void RubyGolem::dropDeathLoot() {
+    // Drop 1 to 3 Rubies upon death
+    int count = random.nextInt(3) + 1;
+    for (int i = 0; i < count; i++) {
+        spawnAtLocation(Item::ruby->id, 1);
+    }
+}
+```
 
-### Day/Night Time Loop
-* **`Level::tick()` (`src/level/Level.cpp`):** Increments `time` counter each tick (20 ticks/sec, full cycle = 24000 ticks).
-* **`Level::getTimeOfDay(float partialTicks)`:** Returns scalar `0.0f` to `1.0f` used for sky rotation angle and ambient light level calculation.
+### Step 2: Create 3D Box Model (`src/client/model/RubyGolemModel.h`)
+Models are built using textured 3D boxes called `ModelPart` (or `Cube`):
 
-### Weather System (Rain / Snow)
-* **`LevelData` (`src/level/LevelData.h`):** Stores `rainTime`, `isRaining`, `thunderTime`, and `isThundering`.
-* **`LevelRenderer::renderSnowAndRain(float partialTicks)` (`src/client/renderer/LevelRenderer.cpp`):** Iterates around player camera, checks `Biome::getDownfall()` and temperature to render rain lines or animated snow particles.
+```cpp
+#pragma once
+#include "Model.h"
+#include "ModelPart.h"
 
-### Sky, Fog & Cloud Rendering
-* **Sky Color:** `LevelRenderer::renderSky` computes celestial angle and blends biome sky color (`Biome::getSkyColorByTemp`) with sunrise/sunset gradients.
-* **Fog System:** `Dimension::getFogColor(float time, float partialTicks)` (`src/level/dimension/Dimension.cpp`) calculates RGB fog values. `LevelRenderer` applies GL fog equations (`glFogfv(GL_FOG_COLOR, ...)`).
-* **Clouds:** `LevelRenderer::renderClouds` renders 2D/3D volumetric cloud plane moving along X/Z axes based on total game ticks.
+class RubyGolemModel : public Model {
+public:
+    ModelPart head;
+    ModelPart body;
+    ModelPart rightArm;
+    ModelPart leftArm;
+
+    RubyGolemModel()
+        : head(0, 0), body(0, 40), rightArm(60, 0), leftArm(60, 0) {
+        // ModelPart(textureOffsetX, textureOffsetY)
+        head.addBox(-4.0f, -12.0f, -5.0f, 8, 10, 8); // x, y, z, width, height, depth
+        body.addBox(-9.0f, -2.0f, -6.0f, 18, 12, 11);
+    }
+
+    virtual void render(Entity* entity, float time, float r, float bob, float yRot, float xRot, float scale) override {
+        head.render(scale);
+        body.render(scale);
+        rightArm.render(scale);
+        leftArm.render(scale);
+    }
+};
+```
+
+### Step 3: Create Mob Renderer (`src/client/renderer/entity/RubyGolemRenderer.h`)
+Renderers connect the mob's C++ logic to its 3D model and PNG texture:
+
+```cpp
+#pragma once
+#include "MobRenderer.h"
+#include "client/model/RubyGolemModel.h"
+
+class RubyGolemRenderer : public MobRenderer {
+public:
+    RubyGolemRenderer() : MobRenderer(new RubyGolemModel(), 0.5f) {}
+};
+```
+
+---
+
+## 3. Biomes & World Generation Pipeline
+
+World generation is split into four distinct phases:
+
+```
++------------------------------------------------------------------------+
+|                      WORLD GENERATION PIPELINE                         |
+|                                                                        |
+|  1. NOISE & TERRAIN   2. BIOME MAPPING    3. SURFACE BLOCKS  4.FEATURES|
+|  +-----------------+  +----------------+  +--------------+   +--------+|
+|  | PerlinNoise     |->| Temperature    |->| Top: Grass   |-->| Trees  ||
+|  | Calculates 3D   |  | & Rainfall     |  | Filler: Dirt |   | Ores   ||
+|  | Height Maps     |  | Map            |  | Base: Stone  |   | Caves  ||
+|  +-----------------+  +----------------+  +--------------+   +--------+|
++------------------------------------------------------------------------+
+```
+
+1. **Terrain Shape (`RandomLevelSource.cpp`):** Uses 3D `PerlinNoise` to generate hills, mountains, and valleys.
+2. **Biome Assignment (`BiomeSource.cpp`):** Maps temperature and downfall values across world coordinates to pick biomes.
+3. **Surface Blocks (`Biome.cpp`):** Fills top layer with `topBlock` (Grass, Sand) and underlying layer with `fillerBlock` (Dirt, Sandstone).
+4. **World Features (`Feature.cpp`):** Places structures like trees (`TreeFeature`), ores (`OreFeature`), and flowers during chunk decoration.
+
+---
+
+## 4. Day/Night Cycle, Weather & Fog
+
+### Time Cycle (`Level::tick()`)
+* World time increments by 1 every tick ($20 \text{ ticks/second}$).
+* A full Minecraft day lasts 24,000 ticks ($20 \text{ minutes}$).
+* `Level::getTimeOfDay(float partialTicks)` returns a value from `0.0f` to `1.0f` representing sun angle and ambient light level.
+
+### Fog & Sky Colors
+* **Day Fog:** Bright blue fog blended with biome sky color (`Biome::getSkyColor`).
+* **Night Fog:** Dark indigo/black fog.
+* **Sunrise/Sunset:** Blends a reddish-gold gradient during twilight transitions.
