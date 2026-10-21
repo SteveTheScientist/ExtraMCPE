@@ -10,6 +10,10 @@
 #include "main.cpp"
 #endif
 
+#include "client/gui/screens/SkinScreen.h"
+#include "client/player/LocalPlayer.h"
+#include "client/Minecraft.h"
+
 #include <pthread.h>
 
 // References for JNI
@@ -112,6 +116,53 @@ JNIEXPORT jint JNICALL
 	JNIEXPORT void JNICALL
 	Java_com_mojang_minecraftpe_MainActivity_nativeStopThis(JNIEnv* env, jobject clazz) {
 			LOGI("Lost Focus!");
+	}
+
+	JNIEXPORT void JNICALL
+	Java_com_mojang_minecraftpe_MainActivity_nativeSetSkinResult(JNIEnv* env, jobject clazz, jstring pathStr, jboolean isSkin, jboolean success, jstring errStr) {
+		const char* pathChars = env->GetStringUTFChars(pathStr, NULL);
+		const char* errChars = env->GetStringUTFChars(errStr, NULL);
+		std::string path = pathChars ? pathChars : "";
+		std::string err = errChars ? errChars : "";
+		env->ReleaseStringUTFChars(pathStr, pathChars);
+		env->ReleaseStringUTFChars(errStr, errChars);
+
+		if (!success) {
+			if (SkinScreen::currentSkinScreen) {
+				SkinScreen::currentSkinScreen->setStatus("Invalid file: " + err, true);
+			}
+			return;
+		}
+
+		LocalPlayer* player = NULL;
+		if (g_app) {
+			player = ((MAIN_CLASS*)g_app)->player;
+		}
+
+		if (!player) {
+			if (SkinScreen::currentSkinScreen) {
+				SkinScreen::currentSkinScreen->setStatus("Error: player not available", true);
+			}
+			return;
+		}
+
+		std::string setErr;
+		bool res = false;
+		if (isSkin) {
+			res = player->setSkinFromFile(path, setErr);
+			if (res) {
+				if (SkinScreen::currentSkinScreen) SkinScreen::currentSkinScreen->setStatus("Skin loaded.");
+			} else {
+				if (SkinScreen::currentSkinScreen) SkinScreen::currentSkinScreen->setStatus("Invalid file: " + setErr, true);
+			}
+		} else {
+			res = player->setCapeFromFile(path, setErr);
+			if (res) {
+				if (SkinScreen::currentSkinScreen) SkinScreen::currentSkinScreen->setStatus("Cape loaded.");
+			} else {
+				if (SkinScreen::currentSkinScreen) SkinScreen::currentSkinScreen->setStatus("Invalid file: " + setErr, true);
+			}
+		}
 	}
 }
 

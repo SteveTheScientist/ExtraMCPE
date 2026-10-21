@@ -276,6 +276,11 @@ void AppPlatform_iOS::hideKeyboard() {
 	super::hideKeyboard();
 }
 
+// TODO: iOS Skin/Cape import using UIDocumentPickerViewController
+void AppPlatform_iOS::importSkinOrCape(int type) {
+    // Leave unimplemented for iOS in this task
+}
+
 // this was originally void but i changed it to bool because void cant return values
 bool AppPlatform_iOS::isPowerVR() {
 	const char* s = (const char*)glGetString(GL_RENDERER);

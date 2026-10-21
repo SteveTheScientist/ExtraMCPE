@@ -49,11 +49,14 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.view.inputmethod.*;
+import android.net.Uri;
 import com.mojang.minecraftpe.R;
 
 public class MainActivity extends NativeActivity {
 	private boolean _isTouchscreen = true;
 	private int _viewDistance = 2;
+	private static final int REQUEST_CODE_IMPORT_SKIN = 801;
+	private static final int REQUEST_CODE_IMPORT_CAPE = 802;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -270,13 +273,56 @@ public class MainActivity extends NativeActivity {
     	return;
     }
 
+    public void importSkinOrCape(int type) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/png");
+        int reqCode = (type == 0) ? REQUEST_CODE_IMPORT_SKIN : REQUEST_CODE_IMPORT_CAPE;
+        startActivityForResult(intent, reqCode);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
 
     	if (requestCode == DialogDefinitions.DIALOG_MAINMENU_OPTIONS) {
     		_userInputStatus = 1;
-    	}
+	} else if ((requestCode == REQUEST_CODE_IMPORT_SKIN || requestCode == REQUEST_CODE_IMPORT_CAPE) && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                boolean isSkin = (requestCode == REQUEST_CODE_IMPORT_SKIN);
+                try {
+                    InputStream is = getContentResolver().openInputStream(uri);
+                    if (is != null) {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        byte[] buf = new byte[1024];
+                        int len;
+                        while ((len = is.read(buf)) != -1) {
+                            baos.write(buf, 0, len);
+                            if (baos.size() > 100 * 1024) {
+                                is.close();
+                                nativeSetSkinResult("", isSkin, false, "File must be under 100 KB");
+                                return;
+                            }
+                        }
+                        is.close();
+                        byte[] fileBytes = baos.toByteArray();
+
+                        File targetDir = new File(getFilesDir(), isSkin ? "data/images/skins" : "data/images/capes");
+                        if (!targetDir.exists()) targetDir.mkdirs();
+
+                        File targetFile = new File(targetDir, "imported.png");
+                        FileOutputStream fos = new FileOutputStream(targetFile);
+                        fos.write(fileBytes);
+                        fos.close();
+
+                        nativeSetSkinResult(targetFile.getAbsolutePath(), isSkin, true, "");
+                    }
+                } catch (Exception e) {
+                    nativeSetSkinResult("", isSkin, false, "Failed to read file: " + e.getMessage());
+                }
+            }
+        }
     }
 
     public void quit() {
@@ -339,7 +385,6 @@ public class MainActivity extends NativeActivity {
                     			{ public void onClick(View v) { if (mDialog != null) mDialog.cancel(); onDialogCanceled(); }});
                     }
 
-                    //mDialog.setO
                     MainActivity.this.mDialog.setView(view);
 
                     if (viewIds != null)
@@ -358,7 +403,6 @@ public class MainActivity extends NativeActivity {
     	        MainActivity.this.mDialog.show();
     	        MainActivity.this.mDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     	        MainActivity.this.mDialog.getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.MATCH_PARENT);
-    	        //MainActivity.this.getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
     	    }
     	});
     }
@@ -373,18 +417,10 @@ public class MainActivity extends NativeActivity {
 
     	int n = 0;
     	for (Map.Entry<String, ?> e : m.entrySet()) {
-    		// @todo: Would be nice if the disabled settings could be stripped out here
 
     		String key   = e.getKey();
     		String value = e.getValue().toString(); 
 
-    		//
-    		// Feel free to modify key or value!
-    		//
-    		// This can be used to correct differences between the different
-    		// platforms, such as Android not supporting floating point
-    		// ranges for Sliders/SeekBars: {0..100} - TRANSFORM -> {0..1}
-    		//
     		if (key.equals(MainMenuOptionsActivity.Controls_UseTouchscreen))
     			_isTouchscreen = !isXperiaPlay() || (Boolean) e.getValue(); 
 
@@ -403,12 +439,8 @@ public class MainActivity extends NativeActivity {
 
     		tmpOut[n++] = key;
     		tmpOut[n++] = value;
-
-    		//System.out.println("Key: " + e.getKey());
-    		//System.out.println("Val: " + e.getValue().toString() + " (" + e.getValue().getClass().getName() + ")\n");
     	}
 
-    	// Copy over the enabled preferences
     	String[] out = new String[n];
     	for (int i = 0; i < n; ++i)
     		out[i] = tmpOut[i];
@@ -425,13 +457,6 @@ public class MainActivity extends NativeActivity {
 
     public boolean isNetworkEnabled(boolean onlyWifiAllowed) {
     	return true;
-    	/*
-	    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-	    NetworkInfo info = onlyWifiAllowed? cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
-	    								:	cm.getActiveNetworkInfo();
-	  //(info.getState() == NetworkInfo.State.CONNECTED || info.getState() == NetworkInfo.State.CONNECTING));
-	    return (info != null && info.isConnectedOrConnecting());
-    	 */
     }
     
     private Bundle data;
@@ -447,7 +472,6 @@ public class MainActivity extends NativeActivity {
     
     private AlertDialog mDialog;
     private final DateFormat DateFormat = new SimpleDateFormat();
-//    public EditText mTextInputWidget;
     
     public void vibrate(int milliSeconds) {
     	Vibrator v = (Vibrator)this.getSystemService(VIBRATOR_SERVICE);
@@ -472,7 +496,6 @@ public class MainActivity extends NativeActivity {
         if (focused != null) {
             boolean result = inputManager.showSoftInput(focused, InputMethodManager.SHOW_IMPLICIT);
         } else {
-            // fallback: try to show using decor view token
             View decor = getWindow().getDecorView();
             if (decor != null) {
                 inputManager.showSoftInput(decor, InputMethodManager.SHOW_IMPLICIT);
@@ -481,12 +504,10 @@ public class MainActivity extends NativeActivity {
     }
 
     protected void onPause() {
-    	//System.out.println("onPause");
     	super.onPause();
     }
 
     protected void onStop() {
-    	//System.out.println("onStop");
     	nativeStopThis();
     	super.onStop();
     }
@@ -505,13 +526,13 @@ public class MainActivity extends NativeActivity {
     native void nativeRegisterThis(); 
     native void nativeUnregisterThis();
     native void nativeStopThis();
+    native void nativeSetSkinResult(String path, boolean isSkin, boolean success, String error);
     
     static {
         System.loadLibrary("minecraftpe");
     }
 }
 
-// see client/gui/screens/DialogDefinitions.h
 class DialogDefinitions {
 	static final int DIALOG_CREATE_NEW_WORLD = 1;
 	static final int DIALOG_NEW_CHAT_MESSAGE = 2;

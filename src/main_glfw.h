@@ -4,6 +4,7 @@
 #include "App.h"
 #include "client/renderer/entity/PlayerRenderer.h"
 #include "client/renderer/gles.h"
+#include "client/gui/screens/SkinScreen.h"
 #include "GLFW/glfw3.h"
 
 #include <cstdio>
@@ -110,6 +111,14 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	if (g_app) g_app->setSize(width, height);
 }
 
+void drop_callback(GLFWwindow* window, int count, const char** paths) {
+	if (count > 0 && paths && paths[0]) {
+		if (SkinScreen::currentSkinScreen) {
+			SkinScreen::currentSkinScreen->handleDroppedFile(paths[0]);
+		}
+	}
+}
+
 void error_callback(int error, const char* desc) {
 	printf("Error: %s\n", desc);
 }
@@ -201,6 +210,7 @@ int main(void) {
 	glfwSetMouseButtonCallback(platform->window, mouse_button_callback);
 	glfwSetScrollCallback(platform->window, scroll_callback);
 	glfwSetWindowSizeCallback(platform->window, window_size_callback);
+	glfwSetDropCallback(platform->window, drop_callback);
 
 	glfwMakeContextCurrent(platform->window);
 	#ifndef __EMSCRIPTEN__

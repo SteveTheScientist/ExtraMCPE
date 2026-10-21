@@ -8,42 +8,6 @@
 
 typedef std::vector<std::string> StringVector;
 
-/*
-typedef struct UserInput
-{
-    static const int STATUS_INVALID = -1;
-    static const int STATUS_NOTINITED = -2;
-    static const int STATUS_OK = 1;
-    static const int STATUS_CANCEL = 0;
-
-    UserInput(int id)
-    :   _id(id),
-        status(STATUS_NOTINITED)
-    {}
-    UserInput(int id, int status)
-    :   _id(id),
-        status(status)
-    {}
-    int getId() { return _id; }
-
-    int status;
-private:
-    int _id;
-} UserInput;
-
-
-class UserInputStatus {
-	int _status;
-public:
-	UserInputStatus(int status)
-	:	_status(status)
-	{}
-	bool isAnswered() { return _status >= 0; }
-	bool isOk() { return _status == UserInput::STATUS_OK; }
-	bool isCancel() { return _status == UserInput::STATUS_CANCEL; }
-};
-*/
-
 class BinaryBlob {
 public:
 	BinaryBlob()
@@ -74,19 +38,19 @@ public:
 	virtual TextureData loadTextureFromMemory(const unsigned char* data, size_t size) { return TextureData(); }
 
     virtual void playSound(const std::string& fn, float volume, float pitch) {}
-	
+
 	virtual void hideCursor(bool hide) {}
 
 	virtual void showDialog(int dialogId) {}
     virtual void createUserInput() {}
-	
+
 	bool is_big_endian(void)  {
 		union {
 			unsigned int i;
 			char c[4];
 		} bint = {0x01020304};
 		return bint.c[0] == 1;
-	} 
+	}
 
 	void createUserInput(int dialogId)
 	{
@@ -97,7 +61,6 @@ public:
 	virtual StringVector getUserInput() { return StringVector(); }
 
 	virtual std::string getDateString(int s) { return ""; }
-	//virtual void createUserInputScreen(const char* types) {}
 
 	virtual void uploadPlatformDependentData(int id, void* data) {}
 	virtual BinaryBlob readAssetFile(const std::string& filename) { return BinaryBlob(); }
@@ -118,11 +81,12 @@ public:
 #endif
 
 	virtual void openURL(const std::string& url) {}
+	virtual void importSkinOrCape(int type) {}
 
 	virtual void finish() {}
-	
+
 	virtual bool supportsTouchscreen() { return false; }
-	
+
 	virtual void vibrate(int milliSeconds) {}
 
 	virtual std::string getPlatformStringVar(int stringId) {
