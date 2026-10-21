@@ -78,7 +78,7 @@ jobs:
   build-ios:
   # credit to pengubow from deepfriedwaffles repo
     name: Build iOS
-    runs-on: macos-latest
+    runs-on: macos-13
     
     steps:
       - name: Checkout

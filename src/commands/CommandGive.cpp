@@ -54,22 +54,24 @@ std::string cleanDescriptionId(const std::string& descId) {
 }
 
 std::string getDisplayName(int itemId, int auxVal) {
+    ItemInstance inst(itemId, 1, auxVal);
+    std::string name = inst.getName();
+    if (!name.empty() && name[name.length() - 1] != '<') {
+        return name;
+    }
+
     if (itemId >= 0 && itemId < 256) {
         Tile* tile = Tile::tiles[itemId];
         if (tile) {
-            ItemInstance inst(tile, 1, auxVal);
-            std::string name = tile->getName();
-            if (!name.empty()) return name;
-            return tile->getDescriptionId();
+            std::string descId = tile->getDescriptionId();
+            if (!descId.empty()) return descId;
         }
     }
     if (itemId >= 0 && itemId < Item::MAX_ITEMS) {
         Item* item = Item::items[itemId];
         if (item) {
-            ItemInstance inst(item, 1, auxVal);
-            std::string name = item->getName();
-            if (!name.empty()) return name;
-            return item->getDescriptionId();
+            std::string descId = item->getDescriptionId();
+            if (!descId.empty()) return descId;
         }
     }
     std::ostringstream ss;
@@ -96,7 +98,6 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
         if (id >= 0 && id < 256 && Tile::tiles[id] != NULL) {
             outItem.id = id;
             outItem.displayName = getDisplayName(id, 0);
-            Tile* t = Tile::tiles[id];
             outItem.maxStackSize = 64;
             return true;
         } else if (id >= 0 && id < Item::MAX_ITEMS && Item::items[id] != NULL) {
@@ -297,10 +298,10 @@ std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vecto
         int currentStackCount = std::min(remaining, maxStack);
 
         ItemInstance* itemInst = new ItemInstance(resItem.id, currentStackCount, auxValue);
-        bool added = targetPlayer->inventory->add(itemInst);
+        targetPlayer->inventory->add(itemInst);
 
-        if (!added || itemInst->count > 0) {
-            // Drop unadded or leftover items
+        if (itemInst->count > 0) {
+            // Drop leftover items (targetPlayer->drop takes ownership and deletes itemInst)
             targetPlayer->drop(itemInst, false);
         } else {
             delete itemInst;
