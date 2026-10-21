@@ -118,6 +118,13 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/locale/I18n.cpp \
 ../../../src/nbt/Tag.cpp \
 ../../../src/network/command/CommandServer.cpp \
+../../../src/commands/Command.cpp \
+../../../src/commands/CommandHelp.cpp \
+../../../src/commands/CommandKick.cpp \
+../../../src/commands/CommandBan.cpp \
+../../../src/commands/CommandManager.cpp \
+../../../src/commands/CommandOp.cpp \
+../../../src/commands/CommandGive.cpp \
 ../../../src/network/ClientSideNetworkHandler.cpp \
 ../../../src/network/NetEventCallback.cpp \
 ../../../src/network/Packet.cpp \

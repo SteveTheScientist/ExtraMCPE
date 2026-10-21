@@ -1208,6 +1208,8 @@
 		F9E5A786300E7B0B00164066 /* CommandOp.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A782300E7B0B00164066 /* CommandOp.hpp */; };
 		F9E5A789300E7B3400164066 /* Command.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A787300E7B3400164066 /* Command.cpp */; };
 		F9E5A78A300E7B3400164066 /* Command.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A788300E7B3400164066 /* Command.hpp */; };
+		F9E5A790300E7B3400164066 /* CommandGive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A78E300E7B3400164066 /* CommandGive.cpp */; };
+		F9E5A791300E7B3400164066 /* CommandGive.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A78F300E7B3400164066 /* CommandGive.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -2523,6 +2525,8 @@
 		F9E5A782300E7B0B00164066 /* CommandOp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandOp.hpp; path = ../../src/commands/CommandOp.hpp; sourceTree = "<group>"; };
 		F9E5A787300E7B3400164066 /* Command.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Command.cpp; path = ../../src/commands/Command.cpp; sourceTree = "<group>"; };
 		F9E5A788300E7B3400164066 /* Command.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Command.hpp; path = ../../src/commands/Command.hpp; sourceTree = "<group>"; };
+		F9E5A78E300E7B3400164066 /* CommandGive.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandGive.cpp; path = ../../src/commands/CommandGive.cpp; sourceTree = "<group>"; };
+		F9E5A78F300E7B3400164066 /* CommandGive.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandGive.hpp; path = ../../src/commands/CommandGive.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4376,6 +4380,8 @@
 			isa = PBXGroup;
 			children = (
 				F9E5A788300E7B3400164066 /* Command.hpp */,
+				F9E5A78E300E7B3400164066 /* CommandGive.cpp */,
+				F9E5A78F300E7B3400164066 /* CommandGive.hpp */,
 				F9E5A787300E7B3400164066 /* Command.cpp */,
 				F9E5A77F300E7B0A00164066 /* CommandKick.hpp */,
 				F9E5A781300E7B0B00164066 /* CommandKick.cpp */,
@@ -5539,6 +5545,8 @@
 			files = (
 				F9E5A789300E7B3400164066 /* Command.cpp in Sources */,
 				F9E5A78A300E7B3400164066 /* Command.hpp in Sources */,
+				F9E5A790300E7B3400164066 /* CommandGive.cpp in Sources */,
+				F9E5A791300E7B3400164066 /* CommandGive.hpp in Sources */,
 				F9E5A783300E7B0B00164066 /* CommandKick.hpp in Sources */,
 				F9E5A784300E7B0B00164066 /* CommandOp.cpp in Sources */,
 				F9E5A785300E7B0B00164066 /* CommandKick.cpp in Sources */,

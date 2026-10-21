@@ -154,6 +154,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandBan.cpp \
 ../../../src/commands/CommandManager.cpp \
 ../../../src/commands/CommandOp.cpp \
+../../../src/commands/CommandGive.cpp \
 ../../../src/server/ServerLevel.cpp \
 ../../../src/server/ServerPlayer.cpp \
 ../../../src/util/DataIO.cpp \
