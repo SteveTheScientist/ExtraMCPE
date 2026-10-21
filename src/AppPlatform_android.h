@@ -576,7 +576,7 @@ public:
 		showKeyboard(false);
 		super::hideKeyboard();
 	}
-	virtual void showKeyboard(bool bShow) override {
+	virtual void showKeyboard(bool bShow) {
 		if (!_isInited) return;
 
 		jint lResult = 0;
