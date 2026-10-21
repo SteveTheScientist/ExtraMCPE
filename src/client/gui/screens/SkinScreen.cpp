@@ -8,6 +8,8 @@
 #include "platform/input/Mouse.h"
 #include "../../player/LocalPlayer.h"
 #include "../../../AppPlatform.h"
+#include "../../renderer/entity/EntityRenderDispatcher.h"
+#include "../../renderer/entity/PlayerRenderer.h"
 #include <algorithm>
 
 SkinScreen* SkinScreen::currentSkinScreen = NULL;
@@ -392,8 +394,10 @@ void SkinScreen::buttonClicked(Button* button) {
 
     if (button == btnImportSkin) {
 #if defined(__ANDROID__) || defined(ANDROID)
-        if (minecraft->platform()) {
+        if (minecraft && minecraft->platform()) {
             minecraft->platform()->importSkinOrCape(0);
+        } else {
+            setStatus("Import failed: Platform not initialized", true);
         }
 #else
         m_showPathInput = true;
@@ -405,8 +409,10 @@ void SkinScreen::buttonClicked(Button* button) {
 
     if (button == btnImportCape) {
 #if defined(__ANDROID__) || defined(ANDROID)
-        if (minecraft->platform()) {
+        if (minecraft && minecraft->platform()) {
             minecraft->platform()->importSkinOrCape(1);
+        } else {
+            setStatus("Import failed: Platform not initialized", true);
         }
 #else
         m_showPathInput = true;
@@ -419,16 +425,16 @@ void SkinScreen::buttonClicked(Button* button) {
     OptionControl* ctrl = dynamic_cast<OptionControl*>(button);
     if (ctrl) {
         if (ctrl->controlType == CONTROL_TOGGLE) {
-            if (ctrl->optionId == OPTIONS_SKIN_MODEL) {
-                std::string cur = minecraft->options.getStringValue(OPTIONS_SKIN_MODEL);
-                if (cur == "Auto") minecraft->options.set(OPTIONS_SKIN_MODEL, "Classic");
-                else if (cur == "Classic") minecraft->options.set(OPTIONS_SKIN_MODEL, "Slim");
-                else minecraft->options.set(OPTIONS_SKIN_MODEL, "Auto");
-                ctrl->updateLabel(minecraft);
-            } else {
-                ctrl->toggleValue(minecraft);
-            }
+            ctrl->toggleValue(minecraft);
             minecraft->options.save();
+
+            if (minecraft && minecraft->player && entityRenderDispatcher) {
+                PlayerRenderer* rend = (PlayerRenderer*)entityRenderDispatcher->getRenderer(minecraft->player);
+                if (rend) {
+                    rend->setModernSkin(minecraft->player);
+                }
+            }
+
             setupPositions();
         }
     }

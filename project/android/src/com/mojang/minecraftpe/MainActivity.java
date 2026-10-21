@@ -298,12 +298,21 @@ public class MainActivity extends NativeActivity {
         }
     }
 
-    public void importSkinOrCape(int type) {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("image/png");
-        int reqCode = (type == 0) ? REQUEST_CODE_IMPORT_SKIN : REQUEST_CODE_IMPORT_CAPE;
-        startActivityForResult(intent, reqCode);
+    public void importSkinOrCape(final int type) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("image/png");
+                    int reqCode = (type == 0) ? REQUEST_CODE_IMPORT_SKIN : REQUEST_CODE_IMPORT_CAPE;
+                    startActivityForResult(intent, reqCode);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    nativeSetSkinResult("", type == 0, false, "Failed to open file picker: " + e.getMessage());
+                }
+            }
+        });
     }
 
     @Override
