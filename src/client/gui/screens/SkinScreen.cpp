@@ -428,8 +428,8 @@ void SkinScreen::buttonClicked(Button* button) {
             ctrl->toggleValue(minecraft);
             minecraft->options.save();
 
-            if (minecraft && minecraft->player && entityRenderDispatcher) {
-                PlayerRenderer* rend = (PlayerRenderer*)entityRenderDispatcher->getRenderer(minecraft->player);
+            if (minecraft && minecraft->player && EntityRenderDispatcher::getInstance()) {
+                PlayerRenderer* rend = (PlayerRenderer*)EntityRenderDispatcher::getInstance()->getRenderer(minecraft->player);
                 if (rend) {
                     rend->setModernSkin(minecraft->player);
                 }
