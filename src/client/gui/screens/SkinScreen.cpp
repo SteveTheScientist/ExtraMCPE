@@ -203,7 +203,7 @@ void SkinScreen::tick() {
     }
 
     if (m_showPathInput && txtPathInput) {
-        txtPathInput->tick();
+        txtPathInput->tick(minecraft);
     }
 
     int xm = Mouse::getX();
@@ -359,7 +359,7 @@ void SkinScreen::buttonClicked(Button* button) {
         if (button == btnConfirmImport) {
             m_showPathInput = false;
             if (txtPathInput && minecraft && minecraft->player) {
-                std::string path = txtPathInput->getText();
+                std::string path = txtPathInput->text;
                 std::string err;
                 if (m_importingIsSkin) {
                     if (minecraft->player->setSkinFromFile(path, err)) {
@@ -392,26 +392,26 @@ void SkinScreen::buttonClicked(Button* button) {
 
     if (button == btnImportSkin) {
 #if defined(__ANDROID__) || defined(ANDROID)
-        if (minecraft->platform) {
-            minecraft->platform->importSkinOrCape(0);
+        if (minecraft->platform()) {
+            minecraft->platform()->importSkinOrCape(0);
         }
 #else
         m_showPathInput = true;
         m_importingIsSkin = true;
-        if (txtPathInput) txtPathInput->setText("");
+        if (txtPathInput) txtPathInput->text = "";
 #endif
         return;
     }
 
     if (button == btnImportCape) {
 #if defined(__ANDROID__) || defined(ANDROID)
-        if (minecraft->platform) {
-            minecraft->platform->importSkinOrCape(1);
+        if (minecraft->platform()) {
+            minecraft->platform()->importSkinOrCape(1);
         }
 #else
         m_showPathInput = true;
         m_importingIsSkin = false;
-        if (txtPathInput) txtPathInput->setText("");
+        if (txtPathInput) txtPathInput->text = "";
 #endif
         return;
     }
@@ -452,7 +452,7 @@ void SkinScreen::mouseClicked(int x, int y, int buttonNum) {
     }
 
     if (m_showPathInput) {
-        if (txtPathInput) txtPathInput->mouseClicked(x, y, buttonNum);
+        if (txtPathInput) txtPathInput->mouseClicked(minecraft, x, y, buttonNum);
         if (btnConfirmImport && btnConfirmImport->clicked(minecraft, x, y)) {
             buttonClicked(btnConfirmImport);
             return;
@@ -515,7 +515,7 @@ void SkinScreen::keyPressed(int eventKey) {
             m_showPathInput = false;
             return;
         }
-        if (txtPathInput) txtPathInput->keyPressed(eventKey);
+        if (txtPathInput) txtPathInput->keyPressed(minecraft, eventKey);
         return;
     }
 

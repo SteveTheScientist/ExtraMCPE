@@ -20,6 +20,7 @@
 #include "../../network/packet/PlayerActionPacket.h"
 #include <vector>
 #include <cctype>
+#include <fstream>
 #include "../../platform/log.h"
 #include "../../platform/HttpClient.h"
 #include "../../platform/CThread.h"
