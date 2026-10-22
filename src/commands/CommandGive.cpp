@@ -296,7 +296,7 @@ CommandGive::CommandGive() : Command("give") {
 
 std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {
-        return "\xc2\xa7" "cYou do not have permission to use this command";
+        return SECTION "cYou do not have permission to use this command";
     }
 
     if (args.size() < 2) {
@@ -355,7 +355,7 @@ std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vecto
 
     if (amount > maxAmount) {
         std::ostringstream ssErr;
-        ssErr << "\xc2\xa7" "cCan't give more than " << maxAmount << " of " << resItem.displayName;
+        ssErr << SECTION "cCan't give more than " << maxAmount << " of " << resItem.displayName;
         return ssErr.str();
     }
 

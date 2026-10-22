@@ -95,7 +95,7 @@ std::string CommandManager::execute(Minecraft& mc, Player& player, const std::st
     });
 
     if (it == m_commands.end()) {
-        return "\xc2\xa7" "cUnknown command. Try /help for a list of commands.";
+        return SECTION "cUnknown command. Try /help for a list of commands.";
     }
 
     bool allowCmds = true;
@@ -104,7 +104,7 @@ std::string CommandManager::execute(Minecraft& mc, Player& player, const std::st
     }
 
     if (!allowCmds && (*it)->isOperatorCommand()) {
-        return "\xc2\xa7" "cCommands are not enabled in this world";
+        return SECTION "cCommands are not enabled in this world";
     }
 
     std::vector<std::string> args;

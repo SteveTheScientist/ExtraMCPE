@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 
+#ifndef SECTION
+#define SECTION "\xc2\xa7"
+#endif
+
 class Minecraft;
 class Player;
 

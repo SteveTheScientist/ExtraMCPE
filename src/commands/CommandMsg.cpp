@@ -59,8 +59,8 @@ std::string CommandMsg::execute(Minecraft& mc, Player& player, const std::vector
     }
 
     // Format in gray italic: \xc2\xa7o (italic) \xc2\xa77 (gray) ... \xc2\xa7r (reset)
-    std::string senderMsg = "\xc2\xa7o\xc2\xa7" "7You whisper to " + targetPlayer->name + ": " + text + "\xc2\xa7r";
-    std::string targetMsg = "\xc2\xa7o\xc2\xa7" "7" + player.name + " whispers to you: " + text + "\xc2\xa7r";
+    std::string senderMsg = SECTION "o" SECTION "7You whisper to " + targetPlayer->name + ": " + text + SECTION "r";
+    std::string targetMsg = SECTION "o" SECTION "7" + player.name + " whispers to you: " + text + SECTION "r";
 
     if (targetPlayer == &player) {
         return senderMsg;

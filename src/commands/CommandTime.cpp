@@ -23,7 +23,7 @@ CommandTime::CommandTime() : Command("time") {
 
 std::string CommandTime::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {
-        return "\xc2\xa7" "cYou do not have permission to use this command";
+        return SECTION "cYou do not have permission to use this command";
     }
 
     if (args.size() < 2) {

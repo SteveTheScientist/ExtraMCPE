@@ -16,6 +16,8 @@
 
 namespace {
 
+#define SECTION "\xc2\xa7"
+
 std::string toLower(const std::string& str) {
     std::string lower = str;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
@@ -171,7 +173,7 @@ static std::string getHighlightedCommandInput(Minecraft* minecraft, const std::s
 
     bool cmdColorsOn = minecraft->options.getBooleanValue(OPTIONS_COMMAND_COLORS);
     if (!cmdColorsOn) {
-        return "\xc2\xa7f" + rawInput;
+        return std::string(SECTION "f") + rawInput;
     }
 
     bool allowCmds = true;
@@ -227,10 +229,10 @@ static std::string getHighlightedCommandInput(Minecraft* minecraft, const std::s
     }
 
     if (!isCmdValid) {
-        return "\xc2\xa7c" + rawInput;
+        return std::string(SECTION "c") + rawInput;
     }
 
-    std::string result = "\xc2\xa7f/" + cmdToken;
+    std::string result = std::string(SECTION "f/") + cmdToken;
 
     if (!hasSpaceAfterCmd) {
         return result;
@@ -269,11 +271,11 @@ static std::string getHighlightedCommandInput(Minecraft* minecraft, const std::s
     }
 
     const char* ARG_COLORS[] = {
-        "\xc2\xa7" "b", // 1. Light Blue / Aqua (§b)
-        "\xc2\xa7" "e", // 2. Yellow (§e)
-        "\xc2\xa7" "a", // 3. Green (§a)
-        "\xc2\xa7" "d", // 4. Light Purple (§d)
-        "\xc2\xa7" "6"  // 5. Gold (§6)
+        SECTION "b", // 1. Light Blue / Aqua (§b)
+        SECTION "e", // 2. Yellow (§e)
+        SECTION "a", // 3. Green (§a)
+        SECTION "d", // 4. Light Purple (§d)
+        SECTION "6"  // 5. Gold (§6)
     };
 
     bool inError = false;
@@ -282,15 +284,15 @@ static std::string getHighlightedCommandInput(Minecraft* minecraft, const std::s
         const auto& pt = argTokens[i];
         if (pt.text.empty()) {
             if (inError) {
-                result += "\xc2\xa7c" + pt.leadingSpaces;
+                result += std::string(SECTION "c") + pt.leadingSpaces;
             } else {
-                result += "\xc2\xa7f" + pt.leadingSpaces;
+                result += std::string(SECTION "f") + pt.leadingSpaces;
             }
             continue;
         }
 
         if (inError) {
-            result += "\xc2\xa7c" + pt.leadingSpaces + pt.text;
+            result += std::string(SECTION "c") + pt.leadingSpaces + pt.text;
             continue;
         }
 
@@ -298,10 +300,10 @@ static std::string getHighlightedCommandInput(Minecraft* minecraft, const std::s
 
         if (!valid) {
             inError = true;
-            result += "\xc2\xa7c" + pt.leadingSpaces + pt.text;
+            result += std::string(SECTION "c") + pt.leadingSpaces + pt.text;
         } else {
             const char* color = ARG_COLORS[i % 5];
-            result += color + pt.leadingSpaces + pt.text;
+            result += std::string(color) + pt.leadingSpaces + pt.text;
         }
     }
 
