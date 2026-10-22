@@ -11,14 +11,7 @@
 #include <sstream>
 #include <map>
 #include <cstdlib>
-
-namespace {
-
-struct ResolvedItem {
-    int id;
-    std::string displayName;
-    int maxStackSize;
-};
+#include <cctype>
 
 std::string toLower(const std::string& str) {
     std::string lower = str;
@@ -67,15 +60,66 @@ std::string cleanDescriptionId(const std::string& descId) {
     return result;
 }
 
-std::string getDisplayName(int itemId, int auxVal, const std::string& fallbackName) {
+std::string formatRegisteredName(const std::string& name) {
+    if (name.empty()) return "";
+    std::string clean = name;
+    if (clean.rfind("minecraft:", 0) == 0) {
+        clean = clean.substr(10);
+    }
+    clean = cleanDescriptionId(clean);
+
+    std::string result = "";
+    bool capitalize = true;
+    for (size_t i = 0; i < clean.length(); ++i) {
+        char c = clean[i];
+        if (c == '_' || c == '-') {
+            result += ' ';
+            capitalize = true;
+        } else if (capitalize) {
+            result += (char)std::toupper((unsigned char)c);
+            capitalize = false;
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
+
+std::string getDisplayName(int itemId, int auxVal, const std::string& matchedKey, const std::string& typedName) {
     ItemInstance inst(itemId, 1, auxVal);
-    std::string name = inst.getName();
-    if (!name.empty() && name[name.length() - 1] != '<') {
-        return name;
+    std::string localizedName = inst.getName();
+
+    if (!localizedName.empty() && localizedName[localizedName.length() - 1] != '<') {
+        if (localizedName.rfind("tile.", 0) != 0 && localizedName.rfind("item.", 0) != 0) {
+            return localizedName;
+        }
     }
 
-    if (!fallbackName.empty()) {
-        return fallbackName;
+    if (!matchedKey.empty()) {
+        std::string formatted = formatRegisteredName(matchedKey);
+        if (!formatted.empty()) return formatted;
+    }
+
+    if (!typedName.empty()) {
+        std::string formatted = formatRegisteredName(typedName);
+        if (!formatted.empty()) return formatted;
+    }
+
+    if (itemId >= 0 && itemId < 256) {
+        Tile* tile = Tile::tiles[itemId];
+        if (tile) {
+            std::string raw = getRawDescId(tile->getDescriptionId());
+            std::string formatted = formatRegisteredName(raw);
+            if (!formatted.empty()) return formatted;
+        }
+    }
+    if (itemId >= 0 && itemId < Item::MAX_ITEMS) {
+        Item* item = Item::items[itemId];
+        if (item) {
+            std::string raw = getRawDescId(item->getDescriptionId());
+            std::string formatted = formatRegisteredName(raw);
+            if (!formatted.empty()) return formatted;
+        }
     }
 
     std::ostringstream ss;
@@ -101,12 +145,14 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
         int id = std::atoi(itemStr.c_str());
         if (id >= 0 && id < 256 && Tile::tiles[id] != NULL) {
             outItem.id = id;
-            outItem.displayName = getDisplayName(id, 0, rawItemStr);
+            outItem.matchedKey = cleanDescriptionId(Tile::tiles[id]->getDescriptionId());
+            outItem.displayName = getDisplayName(id, 0, outItem.matchedKey, rawItemStr);
             outItem.maxStackSize = 64;
             return true;
         } else if (id >= 0 && id < Item::MAX_ITEMS && Item::items[id] != NULL) {
             outItem.id = id;
-            outItem.displayName = getDisplayName(id, 0, rawItemStr);
+            outItem.matchedKey = cleanDescriptionId(Item::items[id]->getDescriptionId());
+            outItem.displayName = getDisplayName(id, 0, outItem.matchedKey, rawItemStr);
             outItem.maxStackSize = Item::items[id]->getMaxStackSize();
             return true;
         }
@@ -115,7 +161,6 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
 
     std::map<std::string, int> nameToId;
 
-    // Build map from registered Tiles and Items using both snake_case and raw internal description IDs
     for (int i = 0; i < 256; ++i) {
         if (Tile::tiles[i] != NULL) {
             std::string descId = Tile::tiles[i]->getDescriptionId();
@@ -153,7 +198,7 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
     if (Tile::cloth) nameToId["white_wool"] = Tile::cloth->id;
     if (Tile::goldBlock) nameToId["gold_block"] = Tile::goldBlock->id;
     if (Tile::ironBlock) nameToId["iron_block"] = Tile::ironBlock->id;
-    if (Tile::emeraldBlock) nameToId["diamond_block"] = Tile::emeraldBlock->id; // In MCPE 0.6.1 emerald item/block is diamond
+    if (Tile::emeraldBlock) nameToId["diamond_block"] = Tile::emeraldBlock->id;
     if (Tile::emeraldBlock) nameToId["emerald_block"] = Tile::emeraldBlock->id;
     if (Tile::lapisBlock) nameToId["lapis_block"] = Tile::lapisBlock->id;
     if (Tile::sandStone) nameToId["sandstone"] = Tile::sandStone->id;
@@ -182,7 +227,7 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
     if (Item::coal) nameToId["coal"] = Item::coal->id;
     if (Item::ironIngot) nameToId["iron_ingot"] = Item::ironIngot->id;
     if (Item::goldIngot) nameToId["gold_ingot"] = Item::goldIngot->id;
-    if (Item::emerald) nameToId["diamond"] = Item::emerald->id; // Emerald tier/item is diamond in this version
+    if (Item::emerald) nameToId["diamond"] = Item::emerald->id;
     if (Item::emerald) nameToId["emerald"] = Item::emerald->id;
     if (Item::sword_wood) nameToId["wooden_sword"] = Item::sword_wood->id;
     if (Item::shovel_wood) nameToId["wooden_shovel"] = Item::shovel_wood->id;
@@ -227,7 +272,8 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
     if (it != nameToId.end()) {
         int id = it->second;
         outItem.id = id;
-        outItem.displayName = getDisplayName(id, 0, rawItemStr);
+        outItem.matchedKey = it->first;
+        outItem.displayName = getDisplayName(id, 0, it->first, rawItemStr);
         if (id >= 0 && id < 256) {
             outItem.maxStackSize = 64;
         } else if (id >= 0 && id < Item::MAX_ITEMS && Item::items[id] != NULL) {
@@ -240,8 +286,6 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
 
     return false;
 }
-
-} // namespace
 
 CommandGive::CommandGive() : Command("give") {}
 
@@ -299,7 +343,7 @@ std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vecto
     }
 
     // Refresh display name with auxValue
-    resItem.displayName = getDisplayName(resItem.id, auxValue, itemArg);
+    resItem.displayName = getDisplayName(resItem.id, auxValue, resItem.matchedKey, itemArg);
 
     int maxStack = resItem.maxStackSize > 0 ? resItem.maxStackSize : 64;
     int maxAmount = maxStack * 100;
