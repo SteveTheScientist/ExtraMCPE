@@ -1218,6 +1218,16 @@
 		F9E5A79C300E7B3400164066 /* CommandSeed.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79D300E7B3400164066 /* CommandSeed.hpp */; };
 		F9E5A79E300E7B3400164066 /* CommandList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79F300E7B3400164066 /* CommandList.cpp */; };
 		F9E5A7A0300E7B3400164066 /* CommandList.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A1300E7B3400164066 /* CommandList.hpp */; };
+		F9E5A7A2300E7B3400164066 /* CommandTeleport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A3300E7B3400164066 /* CommandTeleport.cpp */; };
+		F9E5A7A4300E7B3400164066 /* CommandTeleport.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A5300E7B3400164066 /* CommandTeleport.hpp */; };
+		F9E5A7A6300E7B3400164066 /* CommandKill.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A7300E7B3400164066 /* CommandKill.cpp */; };
+		F9E5A7A8300E7B3400164066 /* CommandKill.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A9300E7B3400164066 /* CommandKill.hpp */; };
+		F9E5A7AA300E7B3400164066 /* CommandClear.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7AB300E7B3400164066 /* CommandClear.cpp */; };
+		F9E5A7AC300E7B3400164066 /* CommandClear.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7AD300E7B3400164066 /* CommandClear.hpp */; };
+		F9E5A7AE300E7B3400164066 /* CommandSpawnPoint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7AF300E7B3400164066 /* CommandSpawnPoint.cpp */; };
+		F9E5A7B0300E7B3400164066 /* CommandSpawnPoint.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7B1300E7B3400164066 /* CommandSpawnPoint.hpp */; };
+		F9E5A7B2300E7B3400164066 /* CommandSetWorldSpawn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7B3300E7B3400164066 /* CommandSetWorldSpawn.cpp */; };
+		F9E5A7B4300E7B3400164066 /* CommandSetWorldSpawn.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7B5300E7B3400164066 /* CommandSetWorldSpawn.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -2543,6 +2553,16 @@
 		F9E5A79D300E7B3400164066 /* CommandSeed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandSeed.hpp; path = ../../src/commands/CommandSeed.hpp; sourceTree = "<group>"; };
 		F9E5A79F300E7B3400164066 /* CommandList.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandList.cpp; path = ../../src/commands/CommandList.cpp; sourceTree = "<group>"; };
 		F9E5A7A1300E7B3400164066 /* CommandList.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandList.hpp; path = ../../src/commands/CommandList.hpp; sourceTree = "<group>"; };
+		F9E5A7A3300E7B3400164066 /* CommandTeleport.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandTeleport.cpp; path = ../../src/commands/CommandTeleport.cpp; sourceTree = "<group>"; };
+		F9E5A7A5300E7B3400164066 /* CommandTeleport.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandTeleport.hpp; path = ../../src/commands/CommandTeleport.hpp; sourceTree = "<group>"; };
+		F9E5A7A7300E7B3400164066 /* CommandKill.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandKill.cpp; path = ../../src/commands/CommandKill.cpp; sourceTree = "<group>"; };
+		F9E5A7A9300E7B3400164066 /* CommandKill.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandKill.hpp; path = ../../src/commands/CommandKill.hpp; sourceTree = "<group>"; };
+		F9E5A7AB300E7B3400164066 /* CommandClear.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandClear.cpp; path = ../../src/commands/CommandClear.cpp; sourceTree = "<group>"; };
+		F9E5A7AD300E7B3400164066 /* CommandClear.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandClear.hpp; path = ../../src/commands/CommandClear.hpp; sourceTree = "<group>"; };
+		F9E5A7AF300E7B3400164066 /* CommandSpawnPoint.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSpawnPoint.cpp; path = ../../src/commands/CommandSpawnPoint.cpp; sourceTree = "<group>"; };
+		F9E5A7B1300E7B3400164066 /* CommandSpawnPoint.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandSpawnPoint.hpp; path = ../../src/commands/CommandSpawnPoint.hpp; sourceTree = "<group>"; };
+		F9E5A7B3300E7B3400164066 /* CommandSetWorldSpawn.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSetWorldSpawn.cpp; path = ../../src/commands/CommandSetWorldSpawn.cpp; sourceTree = "<group>"; };
+		F9E5A7B5300E7B3400164066 /* CommandSetWorldSpawn.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandSetWorldSpawn.hpp; path = ../../src/commands/CommandSetWorldSpawn.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4406,6 +4426,16 @@
 				F9E5A79D300E7B3400164066 /* CommandSeed.hpp */,
 				F9E5A79F300E7B3400164066 /* CommandList.cpp */,
 				F9E5A7A1300E7B3400164066 /* CommandList.hpp */,
+				F9E5A7A3300E7B3400164066 /* CommandTeleport.cpp */,
+				F9E5A7A5300E7B3400164066 /* CommandTeleport.hpp */,
+				F9E5A7A7300E7B3400164066 /* CommandKill.cpp */,
+				F9E5A7A9300E7B3400164066 /* CommandKill.hpp */,
+				F9E5A7AB300E7B3400164066 /* CommandClear.cpp */,
+				F9E5A7AD300E7B3400164066 /* CommandClear.hpp */,
+				F9E5A7AF300E7B3400164066 /* CommandSpawnPoint.cpp */,
+				F9E5A7B1300E7B3400164066 /* CommandSpawnPoint.hpp */,
+				F9E5A7B3300E7B3400164066 /* CommandSetWorldSpawn.cpp */,
+				F9E5A7B5300E7B3400164066 /* CommandSetWorldSpawn.hpp */,
 				F9E5A787300E7B3400164066 /* Command.cpp */,
 				F9E5A77F300E7B0A00164066 /* CommandKick.hpp */,
 				F9E5A781300E7B0B00164066 /* CommandKick.cpp */,
@@ -5579,6 +5609,16 @@
 				F9E5A79C300E7B3400164066 /* CommandSeed.hpp in Sources */,
 				F9E5A79E300E7B3400164066 /* CommandList.cpp in Sources */,
 				F9E5A7A0300E7B3400164066 /* CommandList.hpp in Sources */,
+				F9E5A7A2300E7B3400164066 /* CommandTeleport.cpp in Sources */,
+				F9E5A7A4300E7B3400164066 /* CommandTeleport.hpp in Sources */,
+				F9E5A7A6300E7B3400164066 /* CommandKill.cpp in Sources */,
+				F9E5A7A8300E7B3400164066 /* CommandKill.hpp in Sources */,
+				F9E5A7AA300E7B3400164066 /* CommandClear.cpp in Sources */,
+				F9E5A7AC300E7B3400164066 /* CommandClear.hpp in Sources */,
+				F9E5A7AE300E7B3400164066 /* CommandSpawnPoint.cpp in Sources */,
+				F9E5A7B0300E7B3400164066 /* CommandSpawnPoint.hpp in Sources */,
+				F9E5A7B2300E7B3400164066 /* CommandSetWorldSpawn.cpp in Sources */,
+				F9E5A7B4300E7B3400164066 /* CommandSetWorldSpawn.hpp in Sources */,
 				F9E5A783300E7B0B00164066 /* CommandKick.hpp in Sources */,
 				F9E5A784300E7B0B00164066 /* CommandOp.cpp in Sources */,
 				F9E5A785300E7B0B00164066 /* CommandKick.cpp in Sources */,

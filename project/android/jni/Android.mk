@@ -159,6 +159,11 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandTime.cpp \
 ../../../src/commands/CommandSeed.cpp \
 ../../../src/commands/CommandList.cpp \
+../../../src/commands/CommandTeleport.cpp \
+../../../src/commands/CommandKill.cpp \
+../../../src/commands/CommandClear.cpp \
+../../../src/commands/CommandSpawnPoint.cpp \
+../../../src/commands/CommandSetWorldSpawn.cpp \
 ../../../src/server/ServerLevel.cpp \
 ../../../src/server/ServerPlayer.cpp \
 ../../../src/util/DataIO.cpp \
