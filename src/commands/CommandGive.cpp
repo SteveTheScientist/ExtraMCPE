@@ -26,6 +26,20 @@ std::string toLower(const std::string& str) {
     return lower;
 }
 
+std::string getRawDescId(const std::string& descId) {
+    std::string cleaned = descId;
+    if (cleaned.rfind("tile.", 0) == 0) {
+        cleaned = cleaned.substr(5);
+    } else if (cleaned.rfind("item.", 0) == 0) {
+        cleaned = cleaned.substr(5);
+    }
+    size_t dotPos = cleaned.find(".name");
+    if (dotPos != std::string::npos) {
+        cleaned = cleaned.substr(0, dotPos);
+    }
+    return toLower(cleaned);
+}
+
 std::string cleanDescriptionId(const std::string& descId) {
     std::string cleaned = descId;
     if (cleaned.rfind("tile.", 0) == 0) {
@@ -53,27 +67,17 @@ std::string cleanDescriptionId(const std::string& descId) {
     return result;
 }
 
-std::string getDisplayName(int itemId, int auxVal) {
+std::string getDisplayName(int itemId, int auxVal, const std::string& fallbackName) {
     ItemInstance inst(itemId, 1, auxVal);
     std::string name = inst.getName();
     if (!name.empty() && name[name.length() - 1] != '<') {
         return name;
     }
 
-    if (itemId >= 0 && itemId < 256) {
-        Tile* tile = Tile::tiles[itemId];
-        if (tile) {
-            std::string descId = tile->getDescriptionId();
-            if (!descId.empty()) return descId;
-        }
+    if (!fallbackName.empty()) {
+        return fallbackName;
     }
-    if (itemId >= 0 && itemId < Item::MAX_ITEMS) {
-        Item* item = Item::items[itemId];
-        if (item) {
-            std::string descId = item->getDescriptionId();
-            if (!descId.empty()) return descId;
-        }
-    }
+
     std::ostringstream ss;
     ss << "Item " << itemId;
     return ss.str();
@@ -97,12 +101,12 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
         int id = std::atoi(itemStr.c_str());
         if (id >= 0 && id < 256 && Tile::tiles[id] != NULL) {
             outItem.id = id;
-            outItem.displayName = getDisplayName(id, 0);
+            outItem.displayName = getDisplayName(id, 0, rawItemStr);
             outItem.maxStackSize = 64;
             return true;
         } else if (id >= 0 && id < Item::MAX_ITEMS && Item::items[id] != NULL) {
             outItem.id = id;
-            outItem.displayName = getDisplayName(id, 0);
+            outItem.displayName = getDisplayName(id, 0, rawItemStr);
             outItem.maxStackSize = Item::items[id]->getMaxStackSize();
             return true;
         }
@@ -111,24 +115,24 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
 
     std::map<std::string, int> nameToId;
 
-    // Build map from registered Tiles and Items
+    // Build map from registered Tiles and Items using both snake_case and raw internal description IDs
     for (int i = 0; i < 256; ++i) {
         if (Tile::tiles[i] != NULL) {
             std::string descId = Tile::tiles[i]->getDescriptionId();
-            std::string key = cleanDescriptionId(descId);
-            if (!key.empty()) {
-                nameToId[key] = i;
-            }
+            std::string keySnake = cleanDescriptionId(descId);
+            std::string keyRaw = getRawDescId(descId);
+            if (!keySnake.empty()) nameToId[keySnake] = i;
+            if (!keyRaw.empty()) nameToId[keyRaw] = i;
         }
     }
 
     for (int i = 256; i < Item::MAX_ITEMS; ++i) {
         if (Item::items[i] != NULL) {
             std::string descId = Item::items[i]->getDescriptionId();
-            std::string key = cleanDescriptionId(descId);
-            if (!key.empty()) {
-                nameToId[key] = i;
-            }
+            std::string keySnake = cleanDescriptionId(descId);
+            std::string keyRaw = getRawDescId(descId);
+            if (!keySnake.empty()) nameToId[keySnake] = i;
+            if (!keyRaw.empty()) nameToId[keyRaw] = i;
         }
     }
 
@@ -166,6 +170,12 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
     if (Tile::ladder) nameToId["ladder"] = Tile::ladder->id;
     if (Tile::snow) nameToId["snow_block"] = Tile::snow->id;
     if (Tile::ice) nameToId["ice"] = Tile::ice->id;
+
+    if (Tile::netherReactor) {
+        nameToId["nether_reactor_core"] = Tile::netherReactor->id;
+        nameToId["nether_reactor"] = Tile::netherReactor->id;
+        nameToId["netherreactor"] = Tile::netherReactor->id;
+    }
 
     if (Item::apple) nameToId["apple"] = Item::apple->id;
     if (Item::stick) nameToId["stick"] = Item::stick->id;
@@ -217,7 +227,7 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
     if (it != nameToId.end()) {
         int id = it->second;
         outItem.id = id;
-        outItem.displayName = getDisplayName(id, 0);
+        outItem.displayName = getDisplayName(id, 0, rawItemStr);
         if (id >= 0 && id < 256) {
             outItem.maxStackSize = 64;
         } else if (id >= 0 && id < Item::MAX_ITEMS && Item::items[id] != NULL) {
@@ -289,9 +299,17 @@ std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vecto
     }
 
     // Refresh display name with auxValue
-    resItem.displayName = getDisplayName(resItem.id, auxValue);
+    resItem.displayName = getDisplayName(resItem.id, auxValue, itemArg);
 
-    int maxStack = std::min(64, resItem.maxStackSize > 0 ? resItem.maxStackSize : 64);
+    int maxStack = resItem.maxStackSize > 0 ? resItem.maxStackSize : 64;
+    int maxAmount = maxStack * 100;
+
+    if (amount > maxAmount) {
+        std::ostringstream ssErr;
+        ssErr << "\xc2\xa7" "cCan't give more than " << maxAmount << " of " << resItem.displayName;
+        return ssErr.str();
+    }
+
     int remaining = amount;
 
     while (remaining > 0) {
