@@ -16,7 +16,10 @@ std::string toLower(const std::string& str) {
 
 } // namespace
 
-CommandTime::CommandTime() : Command("time") {}
+CommandTime::CommandTime() : Command("time") {
+    m_syntax.push_back(CommandArgument("action", CommandArgType::Enum, false, {"set", "add"}));
+    m_syntax.push_back(CommandArgument("value", CommandArgType::Enum, false, {"day", "noon", "night", "midnight"}));
+}
 
 std::string CommandTime::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

@@ -16,7 +16,9 @@ std::string toLower(const std::string& str) {
 
 } // namespace
 
-CommandKill::CommandKill() : Command("kill") {}
+CommandKill::CommandKill() : Command("kill") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, true));
+}
 
 std::string CommandKill::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

@@ -24,7 +24,11 @@ bool parseCoord(const std::string& arg, float baseVal, int& outVal) {
 
 } // namespace
 
-CommandSetWorldSpawn::CommandSetWorldSpawn() : Command("setworldspawn") {}
+CommandSetWorldSpawn::CommandSetWorldSpawn() : Command("setworldspawn") {
+    m_syntax.push_back(CommandArgument("x", CommandArgType::Coordinate, true));
+    m_syntax.push_back(CommandArgument("y", CommandArgType::Coordinate, true));
+    m_syntax.push_back(CommandArgument("z", CommandArgType::Coordinate, true));
+}
 
 std::string CommandSetWorldSpawn::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

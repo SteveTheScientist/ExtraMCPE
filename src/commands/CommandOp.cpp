@@ -4,7 +4,9 @@
 #include <algorithm>
 #include <client/Minecraft.h>
 
-CommandOp::CommandOp() : Command("op") {}
+CommandOp::CommandOp() : Command("op") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, false));
+}
 
 std::string CommandOp::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

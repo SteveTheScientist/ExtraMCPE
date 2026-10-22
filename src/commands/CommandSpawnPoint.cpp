@@ -31,7 +31,12 @@ bool parseCoord(const std::string& arg, float baseVal, int& outVal) {
 
 } // namespace
 
-CommandSpawnPoint::CommandSpawnPoint() : Command("spawnpoint") {}
+CommandSpawnPoint::CommandSpawnPoint() : Command("spawnpoint") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, true));
+    m_syntax.push_back(CommandArgument("x", CommandArgType::Coordinate, true));
+    m_syntax.push_back(CommandArgument("y", CommandArgType::Coordinate, true));
+    m_syntax.push_back(CommandArgument("z", CommandArgType::Coordinate, true));
+}
 
 std::string CommandSpawnPoint::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

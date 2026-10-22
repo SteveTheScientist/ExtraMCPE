@@ -14,6 +14,7 @@ public:
     std::string execute(Minecraft& mc, Player& player, const std::string& input);
 
     Command* getCommand(const std::string& name);
+    const std::vector<Command*>& getAllCommands() const { return m_commands; }
 
 private:
     void registerAllCommands();

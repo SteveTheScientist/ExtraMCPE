@@ -22,7 +22,11 @@ std::string toLower(const std::string& str) {
 
 } // namespace
 
-CommandClear::CommandClear() : Command("clear") {}
+CommandClear::CommandClear() : Command("clear") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, true));
+    m_syntax.push_back(CommandArgument("item", CommandArgType::Item, true));
+    m_syntax.push_back(CommandArgument("maxCount", CommandArgType::Integer, true));
+}
 
 std::string CommandClear::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

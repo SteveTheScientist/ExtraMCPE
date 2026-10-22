@@ -7,7 +7,9 @@
 
 #include <sstream>
 
-CommandMe::CommandMe() : Command("me") {}
+CommandMe::CommandMe() : Command("me") {
+    m_syntax.push_back(CommandArgument("action", CommandArgType::Text, false));
+}
 
 std::string CommandMe::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (args.empty()) {

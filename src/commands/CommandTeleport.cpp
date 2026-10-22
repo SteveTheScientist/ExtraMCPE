@@ -50,7 +50,10 @@ bool parseCoord(const std::string& arg, float baseVal, float& outVal) {
 
 } // namespace
 
-CommandTeleport::CommandTeleport() : Command("tp") {}
+CommandTeleport::CommandTeleport() : Command("tp") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, false));
+    m_syntax.push_back(CommandArgument("target", CommandArgType::Player, true));
+}
 
 std::string CommandTeleport::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

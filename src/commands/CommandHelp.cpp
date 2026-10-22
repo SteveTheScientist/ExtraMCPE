@@ -4,7 +4,9 @@
 #include <client/Minecraft.h>
 #include <sstream>
 
-CommandHelp::CommandHelp() : Command("help") {}
+CommandHelp::CommandHelp() : Command("help") {
+    m_syntax.push_back(CommandArgument("command", CommandArgType::Text, true));
+}
 
 std::string CommandHelp::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (args.empty()) {

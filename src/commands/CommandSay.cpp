@@ -7,7 +7,9 @@
 
 #include <sstream>
 
-CommandSay::CommandSay() : Command("say") {}
+CommandSay::CommandSay() : Command("say") {
+    m_syntax.push_back(CommandArgument("text", CommandArgType::Text, false));
+}
 
 std::string CommandSay::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

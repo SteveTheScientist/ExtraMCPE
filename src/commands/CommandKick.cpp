@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <client/Minecraft.h>
 
-CommandKick::CommandKick() : Command("kick") {}
+CommandKick::CommandKick() : Command("kick") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, false));
+}
 
 std::string CommandKick::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

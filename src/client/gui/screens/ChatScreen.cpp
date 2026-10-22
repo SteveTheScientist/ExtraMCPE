@@ -8,6 +8,7 @@
 #include "../../../world/level/Level.h"
 #include "../../../network/RakNetInstance.h"
 #include "../../../network/packet/MessagePacket.h"
+#include "commands/CommandManager.hpp"
 #include "util/StringUtils.h"
 #include <algorithm>
 #include <sstream>
@@ -175,6 +176,109 @@ static void wrapInputText(Font* font, const std::string& input, float maxW, std:
 	}
 }
 
+// Helper to compute gray hint string for ChatScreen
+static std::string getCommandHintText(Minecraft* minecraft, const std::string& input) {
+	if (input.empty() || input[0] != '/') {
+		return "";
+	}
+
+	bool allowCmds = true;
+	if (minecraft->level != NULL && minecraft->level->getLevelData() != NULL) {
+		allowCmds = minecraft->level->getLevelData()->getAllowCheats();
+	}
+
+	const auto& allCmds = minecraft->commandManager().getAllCommands();
+	std::vector<Command*> availableCmds;
+	for (auto cmd : allCmds) {
+		if (cmd != NULL) {
+			if (!allowCmds && cmd->isOperatorCommand()) {
+				continue;
+			}
+			availableCmds.push_back(cmd);
+		}
+	}
+
+	std::string afterSlash = input.substr(1);
+	size_t firstSpace = afterSlash.find(' ');
+
+	if (firstSpace == std::string::npos) {
+		// Typing command name or only "/" or "/?"
+		std::string typedCmd = afterSlash;
+		if (typedCmd == "?") typedCmd = "help";
+
+		std::string hint = "";
+
+		if (typedCmd.empty()) {
+			// Show first match completion (e.g. "help")
+			if (!availableCmds.empty()) {
+				hint = availableCmds[0]->getName();
+			}
+		} else {
+			// Match prefix
+			for (auto cmd : availableCmds) {
+				const std::string& cName = cmd->getName();
+				if (cName.length() >= typedCmd.length() && cName.substr(0, typedCmd.length()) == typedCmd) {
+					hint = cName.substr(typedCmd.length());
+					break;
+				}
+			}
+		}
+		return hint;
+	}
+
+	// Command name has been typed, followed by space(s) and optional arguments
+	std::string cmdName = afterSlash.substr(0, firstSpace);
+	if (cmdName == "?") cmdName = "help";
+
+	Command* targetCmd = NULL;
+	for (auto cmd : availableCmds) {
+		if (cmd->getName() == cmdName) {
+			targetCmd = cmd;
+			break;
+		}
+	}
+
+	if (targetCmd == NULL) {
+		return "";
+	}
+
+	// Count arguments typed
+	std::string argsStr = afterSlash.substr(firstSpace + 1);
+	std::istringstream iss(argsStr);
+	std::vector<std::string> typedArgs;
+	std::string tok;
+	while (iss >> tok) {
+		typedArgs.push_back(tok);
+	}
+
+	size_t typedCount = typedArgs.size();
+	if (!argsStr.empty() && argsStr[argsStr.length() - 1] == ' ') {
+		// Currently on next argument
+	} else if (typedCount > 0) {
+		typedCount -= 1; // Currently typing this argument
+	}
+
+	const auto& syntax = targetCmd->getSyntax();
+	if (typedCount >= syntax.size()) {
+		return "";
+	}
+
+	std::ostringstream hintStream;
+	for (size_t i = typedCount; i < syntax.size(); ++i) {
+		if (i > typedCount || (!argsStr.empty() && argsStr[argsStr.length() - 1] == ' ')) {
+			hintStream << " ";
+		}
+		const auto& arg = syntax[i];
+		if (arg.optional) {
+			hintStream << "[" << arg.name << "]";
+		} else {
+			hintStream << "<" << arg.name << ">";
+		}
+	}
+
+	return hintStream.str();
+}
+
 void ChatScreen::render(int xm, int ym, float a) {
 	Font* font = minecraft->font;
 
@@ -183,6 +287,8 @@ void ChatScreen::render(int xm, int ym, float a) {
 	float maxTextW = (float)(barW - 8);
 
 	std::string displayedText = m_input;
+	std::string hintText = getCommandHintText(minecraft, m_input);
+
 	if ((m_blinkTimer / 10) % 2 == 0) {
 		displayedText += "_";
 	}
@@ -217,6 +323,12 @@ void ChatScreen::render(int xm, int ym, float a) {
 		const std::string& lineStr = inputLines[startLineIdx + i];
 		float lineY = (float)(barY + 2 + i * 12);
 		font->drawShadow(lineStr, (float)(barX + 4), lineY, 0xffffffff, true);
+
+		// Draw gray hint on the last line (where the cursor is)
+		if (startLineIdx + i == lineCount - 1 && !hintText.empty()) {
+			float lineW = (float)Gui::getColoredWidth(font, lineStr, true);
+			font->drawShadow(hintText, (float)(barX + 4) + lineW, lineY, 0x808080ff, true);
+		}
 	}
 
 	glDisable(GL_SCISSOR_TEST);

@@ -287,7 +287,12 @@ bool resolveItem(const std::string& rawItemStr, ResolvedItem& outItem) {
     return false;
 }
 
-CommandGive::CommandGive() : Command("give") {}
+CommandGive::CommandGive() : Command("give") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, false));
+    m_syntax.push_back(CommandArgument("item", CommandArgType::Item, false));
+    m_syntax.push_back(CommandArgument("amount", CommandArgType::Integer, true));
+    m_syntax.push_back(CommandArgument("data", CommandArgType::Integer, true));
+}
 
 std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

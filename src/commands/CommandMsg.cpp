@@ -18,7 +18,10 @@ std::string toLower(const std::string& str) {
 
 } // namespace
 
-CommandMsg::CommandMsg(const std::string& name) : Command(name) {}
+CommandMsg::CommandMsg(const std::string& name) : Command(name) {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, false));
+    m_syntax.push_back(CommandArgument("text", CommandArgType::Text, false));
+}
 
 std::string CommandMsg::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (args.size() < 2) {

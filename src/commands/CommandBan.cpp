@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <client/Minecraft.h>
 
-CommandBan::CommandBan() : Command("ban") {}
+CommandBan::CommandBan() : Command("ban") {
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, false));
+}
 
 std::string CommandBan::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {

@@ -18,7 +18,10 @@ std::string toLower(const std::string& str) {
 
 } // namespace
 
-CommandGameMode::CommandGameMode() : Command("gamemode") {}
+CommandGameMode::CommandGameMode() : Command("gamemode") {
+    m_syntax.push_back(CommandArgument("mode", CommandArgType::Enum, false, {"survival", "creative", "s", "c", "0", "1"}));
+    m_syntax.push_back(CommandArgument("player", CommandArgType::Player, true));
+}
 
 std::string CommandGameMode::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (!isPlayerOp(mc, player)) {
