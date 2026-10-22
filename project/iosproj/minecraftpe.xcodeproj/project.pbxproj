@@ -1210,6 +1210,14 @@
 		F9E5A78A300E7B3400164066 /* Command.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A788300E7B3400164066 /* Command.hpp */; };
 		F9E5A790300E7B3400164066 /* CommandGive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A78E300E7B3400164066 /* CommandGive.cpp */; };
 		F9E5A791300E7B3400164066 /* CommandGive.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A78F300E7B3400164066 /* CommandGive.hpp */; };
+		F9E5A792300E7B3400164066 /* CommandGameMode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A793300E7B3400164066 /* CommandGameMode.cpp */; };
+		F9E5A794300E7B3400164066 /* CommandGameMode.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A795300E7B3400164066 /* CommandGameMode.hpp */; };
+		F9E5A796300E7B3400164066 /* CommandTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A797300E7B3400164066 /* CommandTime.cpp */; };
+		F9E5A798300E7B3400164066 /* CommandTime.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A799300E7B3400164066 /* CommandTime.hpp */; };
+		F9E5A79A300E7B3400164066 /* CommandSeed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79B300E7B3400164066 /* CommandSeed.cpp */; };
+		F9E5A79C300E7B3400164066 /* CommandSeed.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79D300E7B3400164066 /* CommandSeed.hpp */; };
+		F9E5A79E300E7B3400164066 /* CommandList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79F300E7B3400164066 /* CommandList.cpp */; };
+		F9E5A7A0300E7B3400164066 /* CommandList.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A1300E7B3400164066 /* CommandList.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -2527,6 +2535,14 @@
 		F9E5A788300E7B3400164066 /* Command.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Command.hpp; path = ../../src/commands/Command.hpp; sourceTree = "<group>"; };
 		F9E5A78E300E7B3400164066 /* CommandGive.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandGive.cpp; path = ../../src/commands/CommandGive.cpp; sourceTree = "<group>"; };
 		F9E5A78F300E7B3400164066 /* CommandGive.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandGive.hpp; path = ../../src/commands/CommandGive.hpp; sourceTree = "<group>"; };
+		F9E5A793300E7B3400164066 /* CommandGameMode.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandGameMode.cpp; path = ../../src/commands/CommandGameMode.cpp; sourceTree = "<group>"; };
+		F9E5A795300E7B3400164066 /* CommandGameMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandGameMode.hpp; path = ../../src/commands/CommandGameMode.hpp; sourceTree = "<group>"; };
+		F9E5A797300E7B3400164066 /* CommandTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandTime.cpp; path = ../../src/commands/CommandTime.cpp; sourceTree = "<group>"; };
+		F9E5A799300E7B3400164066 /* CommandTime.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandTime.hpp; path = ../../src/commands/CommandTime.hpp; sourceTree = "<group>"; };
+		F9E5A79B300E7B3400164066 /* CommandSeed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSeed.cpp; path = ../../src/commands/CommandSeed.cpp; sourceTree = "<group>"; };
+		F9E5A79D300E7B3400164066 /* CommandSeed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandSeed.hpp; path = ../../src/commands/CommandSeed.hpp; sourceTree = "<group>"; };
+		F9E5A79F300E7B3400164066 /* CommandList.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandList.cpp; path = ../../src/commands/CommandList.cpp; sourceTree = "<group>"; };
+		F9E5A7A1300E7B3400164066 /* CommandList.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandList.hpp; path = ../../src/commands/CommandList.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4382,6 +4398,14 @@
 				F9E5A788300E7B3400164066 /* Command.hpp */,
 				F9E5A78E300E7B3400164066 /* CommandGive.cpp */,
 				F9E5A78F300E7B3400164066 /* CommandGive.hpp */,
+				F9E5A793300E7B3400164066 /* CommandGameMode.cpp */,
+				F9E5A795300E7B3400164066 /* CommandGameMode.hpp */,
+				F9E5A797300E7B3400164066 /* CommandTime.cpp */,
+				F9E5A799300E7B3400164066 /* CommandTime.hpp */,
+				F9E5A79B300E7B3400164066 /* CommandSeed.cpp */,
+				F9E5A79D300E7B3400164066 /* CommandSeed.hpp */,
+				F9E5A79F300E7B3400164066 /* CommandList.cpp */,
+				F9E5A7A1300E7B3400164066 /* CommandList.hpp */,
 				F9E5A787300E7B3400164066 /* Command.cpp */,
 				F9E5A77F300E7B0A00164066 /* CommandKick.hpp */,
 				F9E5A781300E7B0B00164066 /* CommandKick.cpp */,
@@ -5547,6 +5571,14 @@
 				F9E5A78A300E7B3400164066 /* Command.hpp in Sources */,
 				F9E5A790300E7B3400164066 /* CommandGive.cpp in Sources */,
 				F9E5A791300E7B3400164066 /* CommandGive.hpp in Sources */,
+				F9E5A792300E7B3400164066 /* CommandGameMode.cpp in Sources */,
+				F9E5A794300E7B3400164066 /* CommandGameMode.hpp in Sources */,
+				F9E5A796300E7B3400164066 /* CommandTime.cpp in Sources */,
+				F9E5A798300E7B3400164066 /* CommandTime.hpp in Sources */,
+				F9E5A79A300E7B3400164066 /* CommandSeed.cpp in Sources */,
+				F9E5A79C300E7B3400164066 /* CommandSeed.hpp in Sources */,
+				F9E5A79E300E7B3400164066 /* CommandList.cpp in Sources */,
+				F9E5A7A0300E7B3400164066 /* CommandList.hpp in Sources */,
 				F9E5A783300E7B0B00164066 /* CommandKick.hpp in Sources */,
 				F9E5A784300E7B0B00164066 /* CommandOp.cpp in Sources */,
 				F9E5A785300E7B0B00164066 /* CommandKick.cpp in Sources */,

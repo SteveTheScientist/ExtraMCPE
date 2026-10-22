@@ -10,6 +10,10 @@
 #include "commands/CommandBan.hpp"
 #include "commands/CommandGimmieItems.hpp"
 #include "commands/CommandGive.hpp"
+#include "commands/CommandGameMode.hpp"
+#include "commands/CommandTime.hpp"
+#include "commands/CommandSeed.hpp"
+#include "commands/CommandList.hpp"
 #include "network/packet/ChatPacket.h"
 #include "network/RakNetInstance.h"
 #include "world/level/Level.h"
@@ -24,6 +28,10 @@ void CommandManager::registerAllCommands() {
     m_commands.push_back(new CommandOp());
     m_commands.push_back(new CommandBan());
     m_commands.push_back(new CommandGive());
+    m_commands.push_back(new CommandGameMode());
+    m_commands.push_back(new CommandTime());
+    m_commands.push_back(new CommandSeed());
+    m_commands.push_back(new CommandList());
     // m_commands.push_back(new CommandGimmieItems());
 }
 
