@@ -304,8 +304,6 @@ LOCAL_STATIC_LIBRARIES := android_native_app_glue RakNet
 
 #LOCAL_CPP_FEATURES := exceptions
 
-TARGET_ARCH_ABI := armeabi-v7a
-
 include $(BUILD_SHARED_LIBRARY)
 
 # NOTE: environment var NDK_MODULE_PATH needs to point to lib_projects folder

@@ -273,10 +273,7 @@ LOCAL_LDLIBS    := -llog -lEGL -lGLESv1_CM
 
 LOCAL_STATIC_LIBRARIES := RakNet
 
-TARGET_ARCH_ABI := armeabi-v7a
-
 include $(BUILD_SHARED_LIBRARY)
 
 # NOTE: environment var NDK_MODULE_PATH needs to point to lib_projects folder
 $(call import-module, raknet/jni)
-
