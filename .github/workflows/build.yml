@@ -78,11 +78,11 @@ jobs:
   build-ios:
   # credit to pengubow from deepfriedwaffles repo
     name: Build iOS
-    runs-on: macos-13
+    runs-on: macos-latest
     
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
 
       - name: Build
         run: |
@@ -94,7 +94,7 @@ jobs:
           rm -rf Payload
 
       - name: Upload artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: minecraftpe-ios
           path: project/iosproj/minecraftpe.ipa
@@ -170,7 +170,7 @@ jobs:
 
       - name: Cache Android command-line tools
         id: cache-android-tools
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.ANDROID_SDK_ROOT }}
           key: android-cmdline-tools-${{ env.ANDROID_PLATFORM_API }}-${{ env.ANDROID_BUILD_TOOLS_VERSION }}
@@ -189,7 +189,7 @@ jobs:
 
       - name: Cache Android NDK r14b
         id: cache-android-ndk
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/android-ndk-r14b
           key: android-ndk-r14b
@@ -265,7 +265,7 @@ jobs:
         # access regardless of the host operating system
         shell: bash
         working-directory: ${{github.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/emsdk-cache/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja -DCMAKE_TOOLCHAIN_FILE="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
 
       - name: Build
         working-directory: ${{github.workspace}}/build
@@ -327,6 +327,10 @@ jobs:
           mv minecraftpe-apk-arm64-v8a/minecraftpe-v8a-debug.apk minecraftpe-${{ steps.ref.outputs.hash }}-android-arm64-v8a.apk
           mv minecraftpe-apk-armeabi-v7a/minecraftpe-v7a-debug.apk minecraftpe-${{ steps.ref.outputs.hash }}-android-armeabi-v7a.apk
 
+      - name: Rename iOS Artifact
+        run: |
+          mv minecraftpe-ios/minecraftpe.ipa minecraftpe-${{ steps.ref.outputs.hash }}-ios.ipa
+
       - name: Zip Web Artifact
         uses: vimtor/action-zip@v1.2
         with:
@@ -355,13 +359,11 @@ jobs:
           make_latest: false
           files: |
             ./data.zip
-            ./minecraftpe-server-${{ steps.ref.outputs.hash }}.zip
             ./minecraftpe-${{ steps.ref.outputs.hash }}-windows.zip
             ./minecraftpe-server-${{ steps.ref.outputs.hash }}-windows.zip
             ./minecraftpe-${{ steps.ref.outputs.hash }}-linux.zip
+            ./minecraftpe-server-${{ steps.ref.outputs.hash }}-linux.zip
             ./minecraftpe-${{ steps.ref.outputs.hash }}-android-arm64-v8a.apk
             ./minecraftpe-${{ steps.ref.outputs.hash }}-android-armeabi-v7a.apk
-            ./minecraftpe-server-${{ steps.ref.outputs.hash }}-linux.zip
-            ./minecraftpe-${{ steps.ref.outputs.hash }}-android-arm64-v8a.zip
-            ./minecraftpe-${{ steps.ref.outputs.hash }}-android-armeabi-v7a.zip
+            ./minecraftpe-${{ steps.ref.outputs.hash }}-ios.ipa
             ./minecraftpe-${{ steps.ref.outputs.hash }}-web.zip
