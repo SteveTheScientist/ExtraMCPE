@@ -69,12 +69,16 @@ std::string CommandManager::execute(Minecraft& mc, Player& player, const std::st
 
     ss >> cmd;
 
+    if (cmd.empty() || cmd == "?") {
+        cmd = "help";
+    }
+
     auto it = std::find_if(m_commands.begin(), m_commands.end(), [cmd](auto& it) -> bool {
         return it->getName() == cmd;
     });
 
     if (it == m_commands.end()) {
-        return "Command /" + cmd + " not found";
+        return "\xc2\xa7" "cUnknown command. Try /help for a list of commands.";
     }
 
     std::vector<std::string> args;
@@ -86,11 +90,14 @@ std::string CommandManager::execute(Minecraft& mc, Player& player, const std::st
 }
 
 Command* CommandManager::getCommand(const std::string& name) {
-    auto it = std::find_if(m_commands.begin(), m_commands.end(), [name](auto& it) -> bool {
-        return it->getName() == name;
+    std::string lookupName = name;
+    if (lookupName == "?") lookupName = "help";
+
+    auto it = std::find_if(m_commands.begin(), m_commands.end(), [lookupName](auto& it) -> bool {
+        return it->getName() == lookupName;
     });
 
-    if (it == m_commands.end()) {
+    if (it != m_commands.end()) {
         return *it;
     }
 
