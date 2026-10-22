@@ -1,5 +1,6 @@
 #include "WorldOptionsScreen.h"
 #include "../../Minecraft.h"
+#include "../../player/LocalPlayer.h"
 #include "../../renderer/Tesselator.h"
 #include "../../renderer/Textures.h"
 #include "../../../util/Mth.h"
