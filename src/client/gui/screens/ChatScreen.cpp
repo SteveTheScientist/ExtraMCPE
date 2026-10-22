@@ -12,6 +12,303 @@
 #include "util/StringUtils.h"
 #include <algorithm>
 #include <sstream>
+#include <cctype>
+
+namespace {
+
+std::string toLower(const std::string& str) {
+    std::string lower = str;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    return lower;
+}
+
+static bool isIntegerToken(const std::string& token) {
+    if (token.empty()) return false;
+    size_t start = 0;
+    if (token[0] == '-' || token[0] == '+') start = 1;
+    if (start >= token.length()) return false;
+    for (size_t i = start; i < token.length(); ++i) {
+        if (token[i] < '0' || token[i] > '9') return false;
+    }
+    return true;
+}
+
+static bool isNumberToken(const std::string& token) {
+    if (token.empty()) return false;
+    size_t start = 0;
+    if (token[0] == '-' || token[0] == '+') start = 1;
+    if (start >= token.length()) return false;
+    bool hasDot = false;
+    for (size_t i = start; i < token.length(); ++i) {
+        if (token[i] == '.') {
+            if (hasDot) return false;
+            hasDot = true;
+        } else if (token[i] < '0' || token[i] > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool isCoordinateToken(const std::string& token) {
+    if (token.empty()) return false;
+    if (token[0] == '~') {
+        if (token.length() == 1) return true;
+        return isNumberToken(token.substr(1));
+    }
+    return isNumberToken(token);
+}
+
+static bool isEnumToken(const std::string& token, const std::vector<std::string>& allowed, bool isLastTokenBeingTyped) {
+    if (token.empty()) return false;
+    std::string lowerToken = toLower(token);
+    for (size_t i = 0; i < allowed.size(); ++i) {
+        std::string lowerVal = toLower(allowed[i]);
+        if (isLastTokenBeingTyped) {
+            if (lowerVal.length() >= lowerToken.length() && lowerVal.substr(0, lowerToken.length()) == lowerToken) {
+                return true;
+            }
+        } else {
+            if (lowerVal == lowerToken) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+struct ParsedArgToken {
+    std::string leadingSpaces;
+    std::string text;
+    bool isLast;
+};
+
+static bool validateArgumentToken(Command* cmdObj, size_t argIdx, const std::string& token, bool isLastTokenBeingTyped, const std::vector<ParsedArgToken>& allArgTokens) {
+    if (cmdObj == NULL) return false;
+
+    const std::string& cName = cmdObj->getName();
+
+    if (cName == "tp") {
+        if (argIdx == 0) {
+            return !token.empty();
+        } else if (argIdx == 1) {
+            if (isCoordinateToken(allArgTokens[0].text)) {
+                return isCoordinateToken(token);
+            }
+            return !token.empty();
+        } else if (argIdx == 2 || argIdx == 3) {
+            return isCoordinateToken(token);
+        } else {
+            return false;
+        }
+    }
+
+    if (cName == "time") {
+        if (argIdx == 0) {
+            return isEnumToken(token, {"set", "add"}, isLastTokenBeingTyped);
+        } else if (argIdx == 1) {
+            std::string subCmd = toLower(allArgTokens[0].text);
+            if (subCmd == "set") {
+                return isEnumToken(token, {"day", "noon", "night", "midnight"}, isLastTokenBeingTyped) || isIntegerToken(token);
+            } else if (subCmd == "add") {
+                return isIntegerToken(token);
+            }
+            return false;
+        } else {
+            return false;
+        }
+    }
+
+    if (cName == "spawnpoint") {
+        if (argIdx == 0) {
+            return !token.empty();
+        } else if (argIdx == 1 || argIdx == 2 || argIdx == 3) {
+            return isCoordinateToken(token);
+        } else {
+            return false;
+        }
+    }
+
+    if (cName == "setworldspawn") {
+        if (argIdx < 3) {
+            return isCoordinateToken(token);
+        } else {
+            return false;
+        }
+    }
+
+    const auto& syntax = cmdObj->getSyntax();
+
+    if (argIdx < syntax.size()) {
+        const auto& argDef = syntax[argIdx];
+        switch (argDef.type) {
+            case CommandArgType::Integer:
+                return isIntegerToken(token);
+            case CommandArgType::Number:
+                return isNumberToken(token);
+            case CommandArgType::Coordinate:
+                return isCoordinateToken(token);
+            case CommandArgType::Enum:
+                return isEnumToken(token, argDef.allowedValues, isLastTokenBeingTyped);
+            case CommandArgType::Player:
+            case CommandArgType::Item:
+            case CommandArgType::Text:
+            default:
+                return !token.empty();
+        }
+    } else {
+        if (!syntax.empty() && syntax.back().type == CommandArgType::Text) {
+            return !token.empty();
+        }
+        return false;
+    }
+}
+
+static std::string getHighlightedCommandInput(Minecraft* minecraft, const std::string& rawInput) {
+    if (rawInput.empty() || rawInput[0] != '/') {
+        return rawInput;
+    }
+
+    bool cmdColorsOn = minecraft->options.getBooleanValue(OPTIONS_COMMAND_COLORS);
+    if (!cmdColorsOn) {
+        return "\xc2\xa7f" + rawInput;
+    }
+
+    bool allowCmds = true;
+    if (minecraft->level != NULL && minecraft->level->getLevelData() != NULL) {
+        allowCmds = minecraft->level->getLevelData()->getAllowCheats();
+    }
+
+    const auto& allCmds = minecraft->commandManager().getAllCommands();
+    std::vector<Command*> availableCmds;
+    for (auto cmd : allCmds) {
+        if (cmd != NULL) {
+            if (!allowCmds && cmd->isOperatorCommand()) {
+                continue;
+            }
+            availableCmds.push_back(cmd);
+        }
+    }
+
+    std::string afterSlash = rawInput.substr(1);
+    size_t firstSpace = afterSlash.find(' ');
+    bool hasSpaceAfterCmd = (firstSpace != std::string::npos);
+
+    std::string cmdToken = hasSpaceAfterCmd ? afterSlash.substr(0, firstSpace) : afterSlash;
+    std::string lookupCmd = toLower(cmdToken);
+    if (lookupCmd == "?") lookupCmd = "help";
+
+    Command* matchedCmd = NULL;
+    bool isCmdValid = false;
+
+    if (!hasSpaceAfterCmd) {
+        if (lookupCmd.empty()) {
+            isCmdValid = true;
+        } else {
+            for (auto cmd : availableCmds) {
+                std::string cName = toLower(cmd->getName());
+                if (cName.length() >= lookupCmd.length() && cName.substr(0, lookupCmd.length()) == lookupCmd) {
+                    isCmdValid = true;
+                    if (cName == lookupCmd) {
+                        matchedCmd = cmd;
+                    }
+                    break;
+                }
+            }
+        }
+    } else {
+        for (auto cmd : availableCmds) {
+            if (toLower(cmd->getName()) == lookupCmd) {
+                matchedCmd = cmd;
+                isCmdValid = true;
+                break;
+            }
+        }
+    }
+
+    if (!isCmdValid) {
+        return "\xc2\xa7c" + rawInput;
+    }
+
+    std::string result = "\xc2\xa7f/" + cmdToken;
+
+    if (!hasSpaceAfterCmd) {
+        return result;
+    }
+
+    std::string rest = afterSlash.substr(firstSpace);
+
+    std::vector<ParsedArgToken> argTokens;
+    size_t pos = 0;
+    while (pos < rest.length()) {
+        size_t spaceStart = pos;
+        while (pos < rest.length() && rest[pos] == ' ') {
+            pos++;
+        }
+        std::string leadingSpaces = rest.substr(spaceStart, pos - spaceStart);
+        if (pos >= rest.length()) {
+            ParsedArgToken pt;
+            pt.leadingSpaces = leadingSpaces;
+            pt.text = "";
+            pt.isLast = true;
+            argTokens.push_back(pt);
+            break;
+        }
+        size_t tokenStart = pos;
+        while (pos < rest.length() && rest[pos] != ' ') {
+            pos++;
+        }
+        std::string text = rest.substr(tokenStart, pos - tokenStart);
+        bool isLast = (pos >= rest.length());
+
+        ParsedArgToken pt;
+        pt.leadingSpaces = leadingSpaces;
+        pt.text = text;
+        pt.isLast = isLast;
+        argTokens.push_back(pt);
+    }
+
+    const char* ARG_COLORS[] = {
+        "\xc2\xa7" "b", // 1. Light Blue / Aqua (§b)
+        "\xc2\xa7" "e", // 2. Yellow (§e)
+        "\xc2\xa7" "a", // 3. Green (§a)
+        "\xc2\xa7" "d", // 4. Light Purple (§d)
+        "\xc2\xa7" "6"  // 5. Gold (§6)
+    };
+
+    bool inError = false;
+
+    for (size_t i = 0; i < argTokens.size(); ++i) {
+        const auto& pt = argTokens[i];
+        if (pt.text.empty()) {
+            if (inError) {
+                result += "\xc2\xa7c" + pt.leadingSpaces;
+            } else {
+                result += "\xc2\xa7f" + pt.leadingSpaces;
+            }
+            continue;
+        }
+
+        if (inError) {
+            result += "\xc2\xa7c" + pt.leadingSpaces + pt.text;
+            continue;
+        }
+
+        bool valid = validateArgumentToken(matchedCmd, i, pt.text, pt.isLast, argTokens);
+
+        if (!valid) {
+            inError = true;
+            result += "\xc2\xa7c" + pt.leadingSpaces + pt.text;
+        } else {
+            const char* color = ARG_COLORS[i % 5];
+            result += color + pt.leadingSpaces + pt.text;
+        }
+    }
+
+    return result;
+}
+
+} // namespace
 
 ChatScreen::ChatScreen()
 	: m_input(""),
@@ -22,7 +319,10 @@ ChatScreen::ChatScreen()
 	  m_isDragging(false),
 	  m_dragStartY(0),
 	  m_startTouchY(0),
-	  m_dragAccumulatorY(0.0f)
+	  m_dragAccumulatorY(0.0f),
+	  m_lastRawInputForHighlight("\xFF"),
+	  m_lastAllowCmdsForHighlight(true),
+	  m_lastCmdColorsForHighlight(true)
 {
 }
 
@@ -36,6 +336,7 @@ void ChatScreen::init() {
 	m_scrollY = 0.0f;
 	m_isDragging = false;
 	m_dragAccumulatorY = 0.0f;
+	m_lastRawInputForHighlight = "\xFF";
 }
 
 void ChatScreen::tick() {
@@ -286,7 +587,22 @@ void ChatScreen::render(int xm, int ym, float a) {
 	int barW = width - 4;
 	float maxTextW = (float)(barW - 8);
 
-	std::string displayedText = m_input;
+	bool allowCmds = true;
+	if (minecraft->level != NULL && minecraft->level->getLevelData() != NULL) {
+		allowCmds = minecraft->level->getLevelData()->getAllowCheats();
+	}
+	bool cmdColors = minecraft->options.getBooleanValue(OPTIONS_COMMAND_COLORS);
+
+	if (m_input != m_lastRawInputForHighlight ||
+		allowCmds != m_lastAllowCmdsForHighlight ||
+		cmdColors != m_lastCmdColorsForHighlight) {
+		m_lastRawInputForHighlight = m_input;
+		m_lastAllowCmdsForHighlight = allowCmds;
+		m_lastCmdColorsForHighlight = cmdColors;
+		m_lastHighlightedInput = getHighlightedCommandInput(minecraft, m_input);
+	}
+
+	std::string displayedText = m_lastHighlightedInput;
 	std::string hintText = getCommandHintText(minecraft, m_input);
 
 	if ((m_blinkTimer / 10) % 2 == 0) {

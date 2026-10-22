@@ -36,6 +36,11 @@ private:
 	int m_dragStartY;
 	int m_startTouchY;
 	float m_dragAccumulatorY;
+
+	std::string m_lastRawInputForHighlight;
+	bool m_lastAllowCmdsForHighlight;
+	bool m_lastCmdColorsForHighlight;
+	std::string m_lastHighlightedInput;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__ChatScreen_H__*/
