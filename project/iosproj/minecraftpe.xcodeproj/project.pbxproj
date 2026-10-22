@@ -476,8 +476,6 @@
 		D598BD95163ED14000A36438 /* pigzombie.png in Resources */ = {isa = PBXBuildFile; fileRef = D598BD93163ED14000A36438 /* pigzombie.png */; };
 		D598BD98163ED26500A36438 /* kz.png in Resources */ = {isa = PBXBuildFile; fileRef = D598BD97163ED26500A36438 /* kz.png */; };
 		D598BD99163ED26500A36438 /* kz.png in Resources */ = {isa = PBXBuildFile; fileRef = D598BD97163ED26500A36438 /* kz.png */; };
-		D598BD9D164157D500A36438 /* minecon140.png in Resources */ = {isa = PBXBuildFile; fileRef = D598BD9C164157D500A36438 /* minecon140.png */; };
-		D598BD9E164157D500A36438 /* minecon140.png in Resources */ = {isa = PBXBuildFile; fileRef = D598BD9C164157D500A36438 /* minecon140.png */; };
 		D5A55E4914500EDE00A7571B /* CreateNewWorldViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = D5A55E4814500EDE00A7571B /* CreateNewWorldViewController.mm */; };
 		D5A55E4D145036AE00A7571B /* BaseDialogController.mm in Sources */ = {isa = PBXBuildFile; fileRef = D5A55E4C145036AE00A7571B /* BaseDialogController.mm */; };
 		D5A55E4F1450761600A7571B /* bg32.png in Resources */ = {isa = PBXBuildFile; fileRef = D5A55E4E1450761600A7571B /* bg32.png */; };
@@ -929,8 +927,8 @@
 		D5B5113214CFF670005F7284 /* Mob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9114CFF66F005F7284 /* Mob.cpp */; };
 		D5B5113314CFF670005F7284 /* MobCategory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9314CFF66F005F7284 /* MobCategory.cpp */; };
 		D5B5113414CFF670005F7284 /* MobCategory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9314CFF66F005F7284 /* MobCategory.cpp */; };
-		D5B5113714CFF670005F7284 /* PathFinderMob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9E14CFF66F005F7284 /* PathFinderMob.cpp */; };
-		D5B5113814CFF670005F7284 /* PathFinderMob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9E14CFF66F005F7284 /* PathFinderMob.cpp */; };
+		D5B5113714CFF670005F7284 /* PathfinderMob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9E14CFF66F005F7284 /* PathfinderMob.cpp */; };
+		D5B5113814CFF670005F7284 /* PathfinderMob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50E9E14CFF66F005F7284 /* PathfinderMob.cpp */; };
 		D5B5113914CFF670005F7284 /* Inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50EA214CFF66F005F7284 /* Inventory.cpp */; };
 		D5B5113A14CFF670005F7284 /* Inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50EA214CFF66F005F7284 /* Inventory.cpp */; };
 		D5B5113B14CFF670005F7284 /* Player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50EA614CFF66F005F7284 /* Player.cpp */; };
@@ -1691,7 +1689,6 @@
 		D598BD90163ED0DB00A36438 /* sign.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sign.png; sourceTree = "<group>"; };
 		D598BD93163ED14000A36438 /* pigzombie.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pigzombie.png; sourceTree = "<group>"; };
 		D598BD97163ED26500A36438 /* kz.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = kz.png; path = art/kz.png; sourceTree = "<group>"; };
-		D598BD9C164157D500A36438 /* minecon140.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = minecon140.png; path = badge/minecon140.png; sourceTree = "<group>"; };
 		D5A55E4714500EDE00A7571B /* CreateNewWorldViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = CreateNewWorldViewController.h; path = minecraftpe/dialogs/CreateNewWorldViewController.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D5A55E4814500EDE00A7571B /* CreateNewWorldViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; name = CreateNewWorldViewController.mm; path = minecraftpe/dialogs/CreateNewWorldViewController.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D5A55E4A1450353800A7571B /* IDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = IDialog.h; path = minecraftpe/dialogs/IDialog.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -2167,7 +2164,7 @@
 		D5B50E9314CFF66F005F7284 /* MobCategory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MobCategory.cpp; sourceTree = "<group>"; };
 		D5B50E9414CFF66F005F7284 /* MobCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MobCategory.h; sourceTree = "<group>"; };
 		D5B50E9514CFF66F005F7284 /* MobFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MobFactory.h; sourceTree = "<group>"; };
-		D5B50E9E14CFF66F005F7284 /* PathFinderMob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PathFinderMob.cpp; sourceTree = "<group>"; };
+		D5B50E9E14CFF66F005F7284 /* PathfinderMob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PathfinderMob.cpp; sourceTree = "<group>"; };
 		D5B50E9F14CFF66F005F7284 /* PathfinderMob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PathfinderMob.h; sourceTree = "<group>"; };
 		D5B50EA114CFF66F005F7284 /* Abilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abilities.h; sourceTree = "<group>"; };
 		D5B50EA214CFF66F005F7284 /* Inventory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Inventory.cpp; sourceTree = "<group>"; };
@@ -3138,7 +3135,6 @@
 		D598BD9B164157C300A36438 /* badge */ = {
 			isa = PBXGroup;
 			children = (
-				D598BD9C164157D500A36438 /* minecon140.png */,
 			);
 			name = badge;
 			sourceTree = "<group>";
@@ -3940,7 +3936,7 @@
 				D5B50E9414CFF66F005F7284 /* MobCategory.h */,
 				D5B50E9514CFF66F005F7284 /* MobFactory.h */,
 				D5B50E9614CFF66F005F7284 /* monster */,
-				D5B50E9E14CFF66F005F7284 /* PathFinderMob.cpp */,
+				D5B50E9E14CFF66F005F7284 /* PathfinderMob.cpp */,
 				D5B50E9F14CFF66F005F7284 /* PathfinderMob.h */,
 				D5B50EA014CFF66F005F7284 /* player */,
 				D5B50EA814CFF66F005F7284 /* projectile */,
@@ -5019,7 +5015,6 @@
 				D598BD92163ED0DB00A36438 /* sign.png in Resources */,
 				D598BD95163ED14000A36438 /* pigzombie.png in Resources */,
 				D598BD99163ED26500A36438 /* kz.png in Resources */,
-				D598BD9E164157D500A36438 /* minecon140.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5237,7 +5232,6 @@
 				D598BD91163ED0DB00A36438 /* sign.png in Resources */,
 				D598BD94163ED14000A36438 /* pigzombie.png in Resources */,
 				D598BD98163ED26500A36438 /* kz.png in Resources */,
-				D598BD9D164157D500A36438 /* minecon140.png in Resources */,
 				04004533169EE72E003EB6FA /* clouds.png in Resources */,
 				0425EBA016A94D14000C7483 /* chain_1.png in Resources */,
 				0425EBA116A94D14000C7483 /* chain_2.png in Resources */,
@@ -5394,7 +5388,7 @@
 				D5B5113214CFF670005F7284 /* Mob.cpp in Sources */,
 				D5B5113414CFF670005F7284 /* MobCategory.cpp in Sources */,
 				F99D34282F736AFB00DC153E /* OptionsFile.cpp in Sources */,
-				D5B5113814CFF670005F7284 /* PathFinderMob.cpp in Sources */,
+				D5B5113814CFF670005F7284 /* PathfinderMob.cpp in Sources */,
 				D5B5113A14CFF670005F7284 /* Inventory.cpp in Sources */,
 				D5B5113C14CFF670005F7284 /* Player.cpp in Sources */,
 				F99F0FB02F8436EB00F2B29A /* Color.cpp in Sources */,
@@ -5795,7 +5789,7 @@
 				D5B5113114CFF670005F7284 /* Mob.cpp in Sources */,
 				F99D34442F736F9400DC153E /* Option.cpp in Sources */,
 				D5B5113314CFF670005F7284 /* MobCategory.cpp in Sources */,
-				D5B5113714CFF670005F7284 /* PathFinderMob.cpp in Sources */,
+				D5B5113714CFF670005F7284 /* PathfinderMob.cpp in Sources */,
 				D5B5113914CFF670005F7284 /* Inventory.cpp in Sources */,
 				D5B5113B14CFF670005F7284 /* Player.cpp in Sources */,
 				D5B5113D14CFF670005F7284 /* Arrow.cpp in Sources */,
