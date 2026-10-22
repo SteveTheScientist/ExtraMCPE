@@ -15,6 +15,7 @@ enum ControlType {
 
 enum ActionId {
     ACTION_USERNAME,
+    ACTION_WORLD_OPTIONS,
     ACTION_KEYBINDS,
     ACTION_CREDITS,
     ACTION_CLOUDS,

@@ -3,6 +3,7 @@
 #include "PauseScreen.h"
 #include "CreditsScreen.h"
 #include "UsernameScreen.h"
+#include "WorldOptionsScreen.h"
 #include "KeyBindsScreen.h"
 #include "AudioScreen.h"
 #include "../../Minecraft.h"
@@ -490,8 +491,9 @@ void OptionsScreen::init() {
 	m_controls.clear();
 	int idSeq = 10;
 
-	// Top controls: Username
+	// Top controls: Username & World Options
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_USERNAME, "Username...", true, 0.0f, 1.0f, ACTION_USERNAME));
+	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "World Options...", true, 0.0f, 1.0f, ACTION_WORLD_OPTIONS));
 
 	// Sub-menu buttons in 2-column grid
 	m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Graphics...", false, 0.0f, 1.0f, ACTION_GRAPHICS));
@@ -719,6 +721,8 @@ void OptionsScreen::buttonClicked(Button* button) {
 		} else if (ctrl->controlType == CONTROL_ACTION) {
 			if (ctrl->actionId == ACTION_USERNAME) {
 				minecraft->setScreen(new UsernameScreen());
+			} else if (ctrl->actionId == ACTION_WORLD_OPTIONS) {
+				minecraft->setScreen(new WorldOptionsScreen());
 			} else if (ctrl->actionId == ACTION_KEYBINDS) {
 				minecraft->setScreen(new KeyBindsScreen());
 			} else if (ctrl->actionId == ACTION_CREDITS) {
@@ -1363,7 +1367,6 @@ void InterfaceOptionsScreen::init() {
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_ALLOW_SPRINT, "Allow Sprint"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_BAR_ON_TOP, "Hotbar On Top"));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_THIRD_PERSON_VIEW, "Third Person View"));
-    m_controls.push_back(new OptionControl(idSeq++, CONTROL_TOGGLE, OPTIONS_DIFFICULTY, "Difficulty"));
 
     for (size_t i = 0; i < m_controls.size(); ++i) {
         m_controls[i]->updateLabel(minecraft);

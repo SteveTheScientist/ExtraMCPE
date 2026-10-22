@@ -350,11 +350,15 @@ std::string CommandGive::execute(Minecraft& mc, Player& player, const std::vecto
     // Refresh display name with auxValue
     resItem.displayName = getDisplayName(resItem.id, auxValue, resItem.matchedKey, itemArg);
 
-    if (amount > 64) {
-        amount = 64;
+    int maxStack = resItem.maxStackSize > 0 ? resItem.maxStackSize : 64;
+    int maxAmount = maxStack * 100;
+
+    if (amount > maxAmount) {
+        std::ostringstream ssErr;
+        ssErr << SECTION "cCan't give more than " << maxAmount << " of " << resItem.displayName;
+        return ssErr.str();
     }
 
-    int maxStack = resItem.maxStackSize > 0 ? resItem.maxStackSize : 64;
     int remaining = amount;
 
     while (remaining > 0) {

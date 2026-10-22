@@ -16,8 +16,7 @@ PauseScreen::PauseScreen(bool wasBackPaused)
 	  bCustomizations(NULL),
 	  bQuit(NULL),
 	  bOptions(NULL),
-	  bCredits(NULL),
-	  bAllowCommands(NULL)
+	  bCredits(NULL)
 {
 }
 
@@ -27,38 +26,28 @@ PauseScreen::~PauseScreen() {
 	delete bQuit;
 	delete bOptions;
 	delete bCredits;
-	delete bAllowCommands;
 }
 
 void PauseScreen::init() {
 	bool isMP = (minecraft->raknetInstance && !minecraft->raknetInstance->isServer());
 	std::string quitText = isMP ? "Disconnect" : "Save and Quit to Title";
 
-	bool allowCmds = true;
-	if (minecraft->level != NULL && minecraft->level->getLevelData() != NULL) {
-		allowCmds = minecraft->level->getLevelData()->getAllowCheats();
-	}
-	std::string allowCmdsText = allowCmds ? "Allow Commands: ON" : "Allow Commands: OFF";
-
 	bContinue = new Button(1, 0, 0, 200, 20, "Back to Game");
 	bCustomizations = new Button(5, 0, 0, 200, 20, "Customizations...");
 	bOptions = new Button(2, 0, 0, 98, 20, "Options...");
 	bCredits = new Button(3, 0, 0, 98, 20, "Credits...");
-	bAllowCommands = new Button(6, 0, 0, 200, 20, allowCmdsText);
 	bQuit = new Button(4, 0, 0, 200, 20, quitText);
 
 	buttons.push_back(bContinue);
 	buttons.push_back(bCustomizations);
 	buttons.push_back(bOptions);
 	buttons.push_back(bCredits);
-	buttons.push_back(bAllowCommands);
 	buttons.push_back(bQuit);
 
 	tabButtons.push_back(bContinue);
 	tabButtons.push_back(bCustomizations);
 	tabButtons.push_back(bOptions);
 	tabButtons.push_back(bCredits);
-	tabButtons.push_back(bAllowCommands);
 	tabButtons.push_back(bQuit);
 }
 
@@ -69,32 +58,27 @@ void PauseScreen::setupPositions() {
 	bContinue->width = 200;
 	bContinue->height = 20;
 	bContinue->x = centerX - 100;
-	bContinue->y = centerY - 52;
+	bContinue->y = centerY - 48;
 
 	bCustomizations->width = 200;
 	bCustomizations->height = 20;
 	bCustomizations->x = centerX - 100;
-	bCustomizations->y = centerY - 28;
+	bCustomizations->y = centerY - 24;
 
 	bOptions->width = 98;
 	bOptions->height = 20;
 	bOptions->x = centerX - 100;
-	bOptions->y = centerY - 4;
+	bOptions->y = centerY;
 
 	bCredits->width = 98;
 	bCredits->height = 20;
 	bCredits->x = centerX + 2;
-	bCredits->y = centerY - 4;
-
-	bAllowCommands->width = 200;
-	bAllowCommands->height = 20;
-	bAllowCommands->x = centerX - 100;
-	bAllowCommands->y = centerY + 20;
+	bCredits->y = centerY;
 
 	bQuit->width = 200;
 	bQuit->height = 20;
 	bQuit->x = centerX - 100;
-	bQuit->y = centerY + 44;
+	bQuit->y = centerY + 24;
 }
 
 void PauseScreen::tick() {
@@ -122,12 +106,6 @@ void PauseScreen::buttonClicked(Button* button) {
 		minecraft->setScreen(new OptionsScreen());
 	} else if (button->id == bCredits->id) {
 		minecraft->setScreen(new CreditsScreen(CREDITS_RETURN_PAUSE));
-	} else if (button->id == bAllowCommands->id) {
-		if (minecraft->level != NULL && minecraft->level->getLevelData() != NULL) {
-			bool newAllow = !minecraft->level->getLevelData()->getAllowCheats();
-			minecraft->level->getLevelData()->setAllowCheats(newAllow);
-			bAllowCommands->msg = newAllow ? "Allow Commands: ON" : "Allow Commands: OFF";
-		}
 	} else if (button->id == bQuit->id) {
 		minecraft->leaveGame();
 	}

@@ -1169,6 +1169,8 @@
 		F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */; };
 		F99D34492F736BDA00DC153E /* CloudsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34482F736BDA00DC153E /* CloudsScreen.cpp */; };
 		F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34482F736BDA00DC153E /* CloudsScreen.cpp */; };
+		F99D34592F736BDA00DC153E /* WorldOptionsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34582F736BDA00DC153E /* WorldOptionsScreen.cpp */; };
+		F99D345A2F736BDA00DC153E /* WorldOptionsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34582F736BDA00DC153E /* WorldOptionsScreen.cpp */; };
 		A11100012F736BDA00DC153E /* AudioScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A11100002F736BDA00DC153E /* AudioScreen.cpp */; };
 		A11100022F736BDA00DC153E /* AudioScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A11100002F736BDA00DC153E /* AudioScreen.cpp */; };
 		EF1000062C00000000000001 /* FogScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1000052C00000000000001 /* FogScreen.cpp */; };
@@ -2514,6 +2516,8 @@
 		F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = KeyBindsScreen.cpp; path = ../../src/client/gui/screens/KeyBindsScreen.cpp; sourceTree = "<group>"; };
 		F99D34472F736BDA00DC153E /* CloudsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CloudsScreen.h; path = ../../src/client/gui/screens/CloudsScreen.h; sourceTree = "<group>"; };
 		F99D34482F736BDA00DC153E /* CloudsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CloudsScreen.cpp; path = ../../src/client/gui/screens/CloudsScreen.cpp; sourceTree = "<group>"; };
+		F99D34572F736BDA00DC153E /* WorldOptionsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WorldOptionsScreen.h; path = ../../src/client/gui/screens/WorldOptionsScreen.h; sourceTree = "<group>"; };
+		F99D34582F736BDA00DC153E /* WorldOptionsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = WorldOptionsScreen.cpp; path = ../../src/client/gui/screens/WorldOptionsScreen.cpp; sourceTree = "<group>"; };
 		A11100032F736BDA00DC153E /* AudioScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AudioScreen.h; path = ../../src/client/gui/screens/AudioScreen.h; sourceTree = "<group>"; };
 		A11100002F736BDA00DC153E /* AudioScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = AudioScreen.cpp; path = ../../src/client/gui/screens/AudioScreen.cpp; sourceTree = "<group>"; };
 		EF1000042C00000000000001 /* FogScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FogScreen.h; path = ../../src/client/gui/screens/FogScreen.h; sourceTree = "<group>"; };
@@ -4496,6 +4500,8 @@
 				F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */,
 				F99D34472F736BDA00DC153E /* CloudsScreen.h */,
 				F99D34482F736BDA00DC153E /* CloudsScreen.cpp */,
+				F99D34572F736BDA00DC153E /* WorldOptionsScreen.h */,
+				F99D34582F736BDA00DC153E /* WorldOptionsScreen.cpp */,
 				A11100032F736BDA00DC153E /* AudioScreen.h */,
 				A11100002F736BDA00DC153E /* AudioScreen.cpp */,
 				EF1000042C00000000000001 /* FogScreen.h */,
@@ -5511,6 +5517,7 @@
 				F99D34412F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */,
 				F99D34452F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
 				F99D34492F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
+				F99D34592F736BDA00DC153E /* WorldOptionsScreen.cpp in Sources */,
 				A11100012F736BDA00DC153E /* AudioScreen.cpp in Sources */,
 				D5251E301538192700FC82C8 /* RakWString.cpp in Sources */,
 				D5251E321538192700FC82C8 /* Rand.cpp in Sources */,
@@ -5922,6 +5929,7 @@
 				F99D34422F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */,
 				F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
 				F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
+				F99D345A2F736BDA00DC153E /* WorldOptionsScreen.cpp in Sources */,
 				A11100022F736BDA00DC153E /* AudioScreen.cpp in Sources */,
 				EF1000062C00000000000001 /* FogScreen.cpp in Sources */,
 				EF10000A2C00000000000001 /* ChatSettingsScreen.cpp in Sources */,

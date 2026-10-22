@@ -28,7 +28,6 @@ private:
 	Button* bQuit;
 	Button* bOptions;
 	Button* bCredits;
-	Button* bAllowCommands;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI__PauseScreen_H__*/
