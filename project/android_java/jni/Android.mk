@@ -134,6 +134,9 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandClear.cpp \
 ../../../src/commands/CommandSpawnPoint.cpp \
 ../../../src/commands/CommandSetWorldSpawn.cpp \
+../../../src/commands/CommandSay.cpp \
+../../../src/commands/CommandMe.cpp \
+../../../src/commands/CommandMsg.cpp \
 ../../../src/network/ClientSideNetworkHandler.cpp \
 ../../../src/network/NetEventCallback.cpp \
 ../../../src/network/Packet.cpp \

@@ -164,6 +164,9 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandClear.cpp \
 ../../../src/commands/CommandSpawnPoint.cpp \
 ../../../src/commands/CommandSetWorldSpawn.cpp \
+../../../src/commands/CommandSay.cpp \
+../../../src/commands/CommandMe.cpp \
+../../../src/commands/CommandMsg.cpp \
 ../../../src/server/ServerLevel.cpp \
 ../../../src/server/ServerPlayer.cpp \
 ../../../src/util/DataIO.cpp \

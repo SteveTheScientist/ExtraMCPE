@@ -19,6 +19,9 @@
 #include "commands/CommandClear.hpp"
 #include "commands/CommandSpawnPoint.hpp"
 #include "commands/CommandSetWorldSpawn.hpp"
+#include "commands/CommandSay.hpp"
+#include "commands/CommandMe.hpp"
+#include "commands/CommandMsg.hpp"
 #include "network/packet/ChatPacket.h"
 #include "network/RakNetInstance.h"
 #include "world/level/Level.h"
@@ -42,6 +45,11 @@ void CommandManager::registerAllCommands() {
     m_commands.push_back(new CommandClear());
     m_commands.push_back(new CommandSpawnPoint());
     m_commands.push_back(new CommandSetWorldSpawn());
+    m_commands.push_back(new CommandSay());
+    m_commands.push_back(new CommandMe());
+    m_commands.push_back(new CommandMsg("msg"));
+    m_commands.push_back(new CommandMsg("tell"));
+    m_commands.push_back(new CommandMsg("w"));
     // m_commands.push_back(new CommandGimmieItems());
 }
 
