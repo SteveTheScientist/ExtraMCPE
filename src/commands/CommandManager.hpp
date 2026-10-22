@@ -9,6 +9,7 @@ public:
     CommandManager();
 
     std::vector<std::string> getListAllCommands();
+    std::vector<std::string> getListAllCommands(Minecraft& mc);
 
     std::string execute(Minecraft& mc, Player& player, const std::string& input);
 

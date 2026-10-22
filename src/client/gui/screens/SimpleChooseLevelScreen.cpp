@@ -15,7 +15,7 @@ SimpleChooseLevelScreen::SimpleChooseLevelScreen(const std::string& levelName)
     bCreate(nullptr),
     bCancel(nullptr),
     gamemode(GameType::Survival),
-    cheatsEnabled(false),
+    cheatsEnabled(true),
     hasChosen(false),
     levelName(levelName),
     tLevelName(0, "New World"),
@@ -38,7 +38,7 @@ void SimpleChooseLevelScreen::init()
     tLevelName.text = "New World";
 
     bGamemode = new Button(1, "Game Mode: Survival");
-    bCheats   = new Button(4, "Allow Commands: OFF");
+    bCheats   = new Button(4, "Allow Commands: ON");
     bCreate   = new Button(3, "Create New World");
     bCancel   = new Button(5, "Cancel");
 

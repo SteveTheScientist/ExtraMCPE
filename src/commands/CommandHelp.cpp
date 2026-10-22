@@ -8,7 +8,7 @@ CommandHelp::CommandHelp() : Command("help") {}
 
 std::string CommandHelp::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
     if (args.empty()) {
-        auto cmds = mc.commandManager().getListAllCommands();
+        auto cmds = mc.commandManager().getListAllCommands(mc);
 
         std::ostringstream output;
 

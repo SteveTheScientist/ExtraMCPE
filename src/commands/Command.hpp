@@ -10,6 +10,7 @@ public:
     const std::string& getName() { return m_name; }
 
     bool isPlayerOp(Minecraft& mc, Player& player);
+    virtual bool isOperatorCommand() const { return true; }
 
     virtual std::string execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) = 0;
     virtual std::string help(Minecraft& mc) = 0;

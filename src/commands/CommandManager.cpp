@@ -63,6 +63,23 @@ std::vector<std::string> CommandManager::getListAllCommands() {
     return ret;
 }
 
+std::vector<std::string> CommandManager::getListAllCommands(Minecraft& mc) {
+    std::vector<std::string> ret;
+    bool allowCmds = true;
+    if (mc.level != NULL && mc.level->getLevelData() != NULL) {
+        allowCmds = mc.level->getLevelData()->getAllowCheats();
+    }
+
+    for (auto& cmd : m_commands) {
+        if (!allowCmds && cmd->isOperatorCommand()) {
+            continue;
+        }
+        ret.push_back(cmd->getName());
+    }
+
+    return ret;
+}
+
 std::string CommandManager::execute(Minecraft& mc, Player& player, const std::string& input) {
     std::istringstream ss(input);
     std::string cmd;
@@ -79,6 +96,15 @@ std::string CommandManager::execute(Minecraft& mc, Player& player, const std::st
 
     if (it == m_commands.end()) {
         return "\xc2\xa7" "cUnknown command. Try /help for a list of commands.";
+    }
+
+    bool allowCmds = true;
+    if (mc.level != NULL && mc.level->getLevelData() != NULL) {
+        allowCmds = mc.level->getLevelData()->getAllowCheats();
+    }
+
+    if (!allowCmds && (*it)->isOperatorCommand()) {
+        return "\xc2\xa7" "cCommands are not enabled in this world";
     }
 
     std::vector<std::string> args;

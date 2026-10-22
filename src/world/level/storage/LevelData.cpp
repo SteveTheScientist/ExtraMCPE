@@ -183,7 +183,11 @@ void LevelData::getTagData( const CompoundTag* tag )
 	if (!tag) return;
 	seed = (long)tag->getLong("RandomSeed");
 	gameType = tag->getInt("GameType");
-	allowCheats = tag->getBoolean("AllowCommands");
+	if (tag->contains("AllowCommands")) {
+		allowCheats = tag->getBoolean("AllowCommands");
+	} else {
+		allowCheats = true;
+	}
 	xSpawn = tag->getInt("SpawnX");
 	ySpawn = tag->getInt("SpawnY");
 	zSpawn = tag->getInt("SpawnZ");
