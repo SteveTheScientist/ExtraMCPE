@@ -319,7 +319,9 @@ ChatScreen::ChatScreen()
 	  m_scrollY(0.0f),
 	  m_maxScroll(0.0f),
 	  m_isDragging(false),
+	  m_dragStartX(0),
 	  m_dragStartY(0),
+	  m_startTouchX(0),
 	  m_startTouchY(0),
 	  m_dragAccumulatorY(0.0f),
 	  m_lastRawInputForHighlight("\xFF"),
@@ -337,8 +339,22 @@ void ChatScreen::init() {
 	m_blinkTimer = 0;
 	m_scrollY = 0.0f;
 	m_isDragging = false;
+	m_dragStartX = 0;
+	m_dragStartY = 0;
+	m_startTouchX = 0;
+	m_startTouchY = 0;
 	m_dragAccumulatorY = 0.0f;
 	m_lastRawInputForHighlight = "\xFF";
+	if (minecraft) {
+		minecraft->gui.scrollChat(-99999);
+	}
+}
+
+void ChatScreen::removed() {
+	Screen::removed();
+	if (minecraft) {
+		minecraft->gui.scrollChat(-99999);
+	}
 }
 
 void ChatScreen::tick() {
@@ -378,14 +394,19 @@ void ChatScreen::tick() {
 			m_dragStartY = ym;
 			m_dragAccumulatorY += deltaY;
 
-			if (m_dragAccumulatorY >= lineH) {
-				int steps = (int)(m_dragAccumulatorY / lineH);
-				minecraft->gui.scrollChat(steps);
-				m_dragAccumulatorY -= steps * lineH;
-			} else if (m_dragAccumulatorY <= -lineH) {
-				int steps = (int)(-m_dragAccumulatorY / lineH);
-				minecraft->gui.scrollChat(-steps);
-				m_dragAccumulatorY += steps * lineH;
+			float totalDistX = std::abs((float)(xm - m_startTouchX));
+			float totalDistY = std::abs((float)(ym - m_startTouchY));
+
+			if (totalDistX >= 10.0f || totalDistY >= 10.0f || std::abs(m_dragAccumulatorY) >= lineH) {
+				if (m_dragAccumulatorY >= lineH) {
+					int steps = (int)(m_dragAccumulatorY / lineH);
+					minecraft->gui.scrollChat(steps);
+					m_dragAccumulatorY -= steps * lineH;
+				} else if (m_dragAccumulatorY <= -lineH) {
+					int steps = (int)(-m_dragAccumulatorY / lineH);
+					minecraft->gui.scrollChat(-steps);
+					m_dragAccumulatorY += steps * lineH;
+				}
 			}
 		}
 	} else {
@@ -750,10 +771,14 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 		const float baseY = screenHeightF - posY - lineH;
 		float boxTop = baseY - (maxLines - 1) * lineH - 1.0f;
 
+		float chatRight = std::max(posX + boxWidth + 20.0f, (float)width * 0.7f);
+
 		// Chat box touch region
-		if (x >= posX && x <= posX + boxWidth && y >= boxTop - 4.0f && y <= baseY + lineH + 4.0f) {
+		if (x >= 0 && (float)x <= chatRight && (float)y >= std::max(0.0f, boxTop - 20.0f) && (float)y <= baseY + lineH + 10.0f) {
 			m_isDragging = true;
+			m_dragStartX = x;
 			m_dragStartY = y;
+			m_startTouchX = x;
 			m_startTouchY = y;
 			m_dragAccumulatorY = 0.0f;
 			return;

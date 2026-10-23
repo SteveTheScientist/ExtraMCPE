@@ -10,8 +10,9 @@ public:
 	ChatScreen();
 	virtual ~ChatScreen();
 
-	virtual void init();
-	virtual void tick();
+	virtual void init() override;
+	virtual void removed() override;
+	virtual void tick() override;
 	virtual bool handleBackEvent(bool isDown);
 	virtual void render(int xm, int ym, float a);
 	virtual void buttonClicked(Button* button) {}
@@ -33,7 +34,9 @@ protected:
 	float m_scrollY;
 	float m_maxScroll;
 	bool m_isDragging;
+	int m_dragStartX;
 	int m_dragStartY;
+	int m_startTouchX;
 	int m_startTouchY;
 	float m_dragAccumulatorY;
 
