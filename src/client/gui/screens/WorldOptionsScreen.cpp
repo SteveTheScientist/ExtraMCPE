@@ -7,6 +7,7 @@
 #include "../../../network/RakNetInstance.h"
 #include "../../../world/level/Level.h"
 #include "../../../world/entity/player/Player.h"
+#include "../../../AppPlatform.h"
 #include "platform/input/Keyboard.h"
 #include "platform/input/Mouse.h"
 #include <algorithm>
@@ -15,6 +16,8 @@ WorldOptionsScreen::WorldOptionsScreen()
     : btnDone(NULL),
       btnAllowCommands(NULL),
       ctrlDifficulty(NULL),
+      ctrlItemDropDelay(NULL),
+      btnResetItemDropDelay(NULL),
       m_scrollY(0.0f),
       m_maxScroll(0.0f),
       m_isDraggingScrollbar(false)
@@ -25,6 +28,8 @@ WorldOptionsScreen::~WorldOptionsScreen() {
     delete btnDone;
     delete btnAllowCommands;
     delete ctrlDifficulty;
+    delete ctrlItemDropDelay;
+    delete btnResetItemDropDelay;
 }
 
 bool WorldOptionsScreen::canEditSettings() {
@@ -66,13 +71,32 @@ void WorldOptionsScreen::init() {
 
     ctrlDifficulty->updateLabel(minecraft);
 
+    if (minecraft && minecraft->platform() && minecraft->platform()->supportsTouchscreen()) {
+        ctrlItemDropDelay = new OptionControl(203, CONTROL_SLIDER, OPTIONS_ITEM_DROP_DELAY, "Item Drop Delay", false, 100.0f, 1500.0f);
+        btnResetItemDropDelay = new Button(204, 0, 0, 150, 20, "Reset Drop Delay");
+        buttons.push_back(ctrlItemDropDelay);
+        buttons.push_back(btnResetItemDropDelay);
+
+        if (minecraft->level && minecraft->level->getLevelData()) {
+            int currentDelay = minecraft->level->getLevelData()->getItemDropDelay();
+            minecraft->options.set(OPTIONS_ITEM_DROP_DELAY, (float)currentDelay);
+        }
+        ctrlItemDropDelay->updateLabel(minecraft);
+    }
+
     bool editable = canEditSettings();
     btnAllowCommands->active = editable;
     ctrlDifficulty->active = editable;
+    if (ctrlItemDropDelay) ctrlItemDropDelay->active = editable;
+    if (btnResetItemDropDelay) btnResetItemDropDelay->active = editable;
 }
 
 void WorldOptionsScreen::updateScrollBounds() {
-    float contentH = (float)(1 * 24 + 10);
+    int totalRows = 1;
+    if (ctrlItemDropDelay != NULL) {
+        totalRows = 2;
+    }
+    float contentH = (float)(totalRows * 24 + 10);
     float viewportH = (float)(height - 68);
     m_maxScroll = std::max(0.0f, contentH - viewportH);
     m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
@@ -109,9 +133,33 @@ void WorldOptionsScreen::setupPositions() {
         ctrlDifficulty->updateLabel(minecraft);
     }
 
+    if (ctrlItemDropDelay && btnResetItemDropDelay) {
+        int itemY1 = (int)(topY + 4 + 24 - m_scrollY);
+
+        ctrlItemDropDelay->x = centerX - 155;
+        ctrlItemDropDelay->y = itemY1;
+        ctrlItemDropDelay->width = 150;
+        ctrlItemDropDelay->height = 20;
+        ctrlItemDropDelay->visible = (itemY1 + 20 >= 34 && itemY1 < height - 34);
+
+        if (minecraft->level && minecraft->level->getLevelData()) {
+            int currentDelay = minecraft->level->getLevelData()->getItemDropDelay();
+            minecraft->options.set(OPTIONS_ITEM_DROP_DELAY, (float)currentDelay);
+        }
+        ctrlItemDropDelay->updateLabel(minecraft);
+
+        btnResetItemDropDelay->x = centerX + 5;
+        btnResetItemDropDelay->y = itemY1;
+        btnResetItemDropDelay->width = 150;
+        btnResetItemDropDelay->height = 20;
+        btnResetItemDropDelay->visible = (itemY1 + 20 >= 34 && itemY1 < height - 34);
+    }
+
     bool editable = canEditSettings();
     if (btnAllowCommands) btnAllowCommands->active = editable;
     if (ctrlDifficulty) ctrlDifficulty->active = editable;
+    if (ctrlItemDropDelay) ctrlItemDropDelay->active = editable;
+    if (btnResetItemDropDelay) btnResetItemDropDelay->active = editable;
 }
 
 void WorldOptionsScreen::tick() {
@@ -120,6 +168,18 @@ void WorldOptionsScreen::tick() {
     int xm = Mouse::getX();
     int ym = Mouse::getY();
     toGUICoordinate(xm, ym);
+
+    if (ctrlItemDropDelay && ctrlItemDropDelay->isDraggingSlider) {
+        if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
+            ctrlItemDropDelay->updateSliderValue(minecraft, xm);
+            if (minecraft->level && minecraft->level->getLevelData()) {
+                int newDelay = (int)(minecraft->options.getProgressValue(OPTIONS_ITEM_DROP_DELAY) + 0.5f);
+                minecraft->level->getLevelData()->setItemDropDelay(newDelay);
+            }
+        } else {
+            ctrlItemDropDelay->isDraggingSlider = false;
+        }
+    }
 
     if (m_isDraggingScrollbar) {
         if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
@@ -204,6 +264,9 @@ void WorldOptionsScreen::render(int xm, int ym, float a) {
 
 void WorldOptionsScreen::buttonClicked(Button* button) {
     if (button == btnDone) {
+        if (minecraft->level && minecraft->level->getLevelData()) {
+            minecraft->level->saveLevelData();
+        }
         minecraft->options.save();
         minecraft->setScreen(new OptionsScreen());
         return;
@@ -223,6 +286,21 @@ void WorldOptionsScreen::buttonClicked(Button* button) {
             ctrlDifficulty->toggleValue(minecraft);
             minecraft->options.save();
             setupPositions();
+        }
+        return;
+    }
+
+    if (button == btnResetItemDropDelay) {
+        if (canEditSettings()) {
+            if (minecraft->level && minecraft->level->getLevelData()) {
+                minecraft->level->getLevelData()->setItemDropDelay(500);
+                minecraft->level->saveLevelData();
+            }
+            minecraft->options.set(OPTIONS_ITEM_DROP_DELAY, 500.0f);
+            minecraft->options.save();
+            if (ctrlItemDropDelay) {
+                ctrlItemDropDelay->updateLabel(minecraft);
+            }
         }
         return;
     }
@@ -256,6 +334,17 @@ void WorldOptionsScreen::mouseClicked(int x, int y, int buttonNum) {
 
 void WorldOptionsScreen::mouseReleased(int x, int y, int buttonNum) {
     m_isDraggingScrollbar = false;
+    if (ctrlItemDropDelay) {
+        if (ctrlItemDropDelay->isDraggingSlider) {
+            if (minecraft->level && minecraft->level->getLevelData()) {
+                int newDelay = (int)(minecraft->options.getProgressValue(OPTIONS_ITEM_DROP_DELAY) + 0.5f);
+                minecraft->level->getLevelData()->setItemDropDelay(newDelay);
+                minecraft->level->saveLevelData();
+            }
+            minecraft->options.save();
+        }
+        ctrlItemDropDelay->isDraggingSlider = false;
+    }
     super::mouseReleased(x, y, buttonNum);
 }
 

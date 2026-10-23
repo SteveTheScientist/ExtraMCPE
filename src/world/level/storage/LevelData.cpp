@@ -13,7 +13,7 @@ LevelData::LevelData()
 	playerDataVersion(-1),
 	storageVersion(0),
 	gameType(GameType::Default),	spawnMobs(false),
-	allowCheats(false),	loadedPlayerTag(NULL)
+	allowCheats(false),	itemDropDelay(500),	loadedPlayerTag(NULL)
 {
 	//LOGI("ctor 1: %p\n", this);
 	spawnMobs = (gameType == GameType::Survival);
@@ -29,6 +29,7 @@ LevelData::LevelData( const LevelSettings& settings, const std::string& levelNam
 	time(0),
 	dimension(Dimension::NORMAL),
 	playerDataVersion(-1),
+	itemDropDelay(500),
 	loadedPlayerTag(NULL)
 {
 	//LOGI("ctor 2: %p\n", this);
@@ -41,7 +42,7 @@ LevelData::LevelData( const LevelSettings& settings, const std::string& levelNam
 }
 
 LevelData::LevelData( CompoundTag* tag )
-:	loadedPlayerTag(NULL)
+:	itemDropDelay(500), loadedPlayerTag(NULL)
 {
 	//LOGI("ctor 3: %p (%p)\n", this, tag);
 	getTagData(tag);
@@ -62,6 +63,7 @@ LevelData::LevelData( const LevelData& rhs )
 	generatorVersion(rhs.generatorVersion),
 	spawnMobs(rhs.spawnMobs),
 	allowCheats(rhs.allowCheats),
+	itemDropDelay(rhs.itemDropDelay),
 	gameRules(rhs.gameRules),
 	loadedPlayerTag(NULL),
 	playerData(rhs.playerData)
@@ -86,6 +88,7 @@ LevelData& LevelData::operator=( const LevelData& rhs )
 		dimension	= rhs.dimension;
 		spawnMobs	= rhs.spawnMobs;
 		allowCheats	= rhs.allowCheats;
+		itemDropDelay = rhs.itemDropDelay;
 		gameRules	= rhs.gameRules;
 		playerData  = rhs.playerData;
 		playerDataVersion	= rhs.playerDataVersion;
@@ -165,6 +168,7 @@ void LevelData::setTagData( CompoundTag* tag, CompoundTag* playerTag )
 	tag->putLong("RandomSeed", seed);
 	tag->putInt("GameType", gameType);
 	tag->putBoolean("AllowCommands", allowCheats);
+	tag->putInt("ItemDropDelay", itemDropDelay);
 	CompoundTag* rulesTag = new CompoundTag();
 	gameRules.write(rulesTag);
 	tag->putCompound("GameRules", rulesTag);
@@ -192,6 +196,11 @@ void LevelData::getTagData( const CompoundTag* tag )
 		allowCheats = tag->getBoolean("AllowCommands");
 	} else {
 		allowCheats = true;
+	}
+	if (tag->contains("ItemDropDelay")) {
+		itemDropDelay = Mth::clamp(tag->getInt("ItemDropDelay"), 100, 1500);
+	} else {
+		itemDropDelay = 500;
 	}
 	if (tag->contains("GameRules", Tag::TAG_Compound)) {
 		gameRules.read(tag->getCompound("GameRules"));
@@ -386,6 +395,16 @@ bool LevelData::getAllowCheats() const
 void LevelData::setAllowCheats( bool allow )
 {
 	allowCheats = allow;
+}
+
+int LevelData::getItemDropDelay() const
+{
+	return itemDropDelay;
+}
+
+void LevelData::setItemDropDelay( int delayMs )
+{
+	itemDropDelay = Mth::clamp(delayMs, 100, 1500);
 }
 
 GameRules& LevelData::getGameRules()

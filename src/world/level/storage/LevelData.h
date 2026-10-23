@@ -76,6 +76,9 @@ public:
 	bool		getAllowCheats() const;
 	void		setAllowCheats(bool allow);
 
+	int			getItemDropDelay() const;
+	void		setItemDropDelay(int delayMs);
+
 	GameRules&	getGameRules();
 	const GameRules& getGameRules() const;
 
@@ -97,6 +100,7 @@ private:
 	int storageVersion;
 	bool spawnMobs;
 	bool allowCheats;
+	int itemDropDelay;
 	GameRules gameRules;
 	//@note: This version is never written or loaded to disk. The only purpose
 	//       is to use it in the level generator on server and clients.
