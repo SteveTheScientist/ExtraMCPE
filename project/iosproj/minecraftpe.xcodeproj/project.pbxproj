@@ -1080,8 +1080,8 @@
 		D5D8C4A0163930D600FD35F0 /* MelonTile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C49D163930D600FD35F0 /* MelonTile.cpp */; };
 		D5D8C4A3163930E600FD35F0 /* NetherReactor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A1163930E600FD35F0 /* NetherReactor.cpp */; };
 		D5D8C4A4163930E600FD35F0 /* NetherReactor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A1163930E600FD35F0 /* NetherReactor.cpp */; };
-		D5D8C4A7163931F000FD35F0 /* InBedScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A5163931F000FD35F0 /* InBedScreen.cpp */; };
-		D5D8C4A8163931F000FD35F0 /* InBedScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A5163931F000FD35F0 /* InBedScreen.cpp */; };
+		D5D8C4A7163931F000FD35F0 /* InBedChatScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A5163931F000FD35F0 /* InBedChatScreen.cpp */; };
+		D5D8C4A8163931F000FD35F0 /* InBedChatScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A5163931F000FD35F0 /* InBedChatScreen.cpp */; };
 		D5D8C4AB163932B900FD35F0 /* SignRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A9163932B900FD35F0 /* SignRenderer.cpp */; };
 		D5D8C4AC163932B900FD35F0 /* SignRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4A9163932B900FD35F0 /* SignRenderer.cpp */; };
 		D5D8C4AF163932CF00FD35F0 /* PaintingRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5D8C4AD163932CF00FD35F0 /* PaintingRenderer.cpp */; };
@@ -2430,8 +2430,8 @@
 		D5D8C49E163930D600FD35F0 /* MelonTile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MelonTile.h; sourceTree = "<group>"; };
 		D5D8C4A1163930E600FD35F0 /* NetherReactor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NetherReactor.cpp; sourceTree = "<group>"; };
 		D5D8C4A2163930E600FD35F0 /* NetherReactor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetherReactor.h; sourceTree = "<group>"; };
-		D5D8C4A5163931F000FD35F0 /* InBedScreen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InBedScreen.cpp; sourceTree = "<group>"; };
-		D5D8C4A6163931F000FD35F0 /* InBedScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InBedScreen.h; sourceTree = "<group>"; };
+		D5D8C4A5163931F000FD35F0 /* InBedChatScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = InBedChatScreen.cpp; sourceTree = "<group>"; };
+		D5D8C4A6163931F000FD35F0 /* InBedChatScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InBedChatScreen.h; sourceTree = "<group>"; };
 		D5D8C4A9163932B900FD35F0 /* SignRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SignRenderer.cpp; sourceTree = "<group>"; };
 		D5D8C4AA163932B900FD35F0 /* SignRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignRenderer.h; sourceTree = "<group>"; };
 		D5D8C4AD163932CF00FD35F0 /* PaintingRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PaintingRenderer.cpp; sourceTree = "<group>"; };
@@ -3448,8 +3448,8 @@
 				D5A6F8CF15B45E2600819B71 /* ChestScreen.cpp */,
 				D5A6F8D015B45E2600819B71 /* ChestScreen.h */,
 				D5B50C3F14CFF66F005F7284 /* BuyGameScreen.h */,
-				D5D8C4A5163931F000FD35F0 /* InBedScreen.cpp */,
-				D5D8C4A6163931F000FD35F0 /* InBedScreen.h */,
+				D5D8C4A5163931F000FD35F0 /* InBedChatScreen.cpp */,
+				D5D8C4A6163931F000FD35F0 /* InBedChatScreen.h */,
 				D5B50C4014CFF66F005F7284 /* ChatScreen.cpp */,
 				D5B5118D14DEA27E005F7284 /* DeathScreen.cpp */,
 				D5B50C4114CFF66F005F7284 /* ChatScreen.h */,
@@ -5618,7 +5618,7 @@
 				D5D8C49C1639305100FD35F0 /* PigZombie.cpp in Sources */,
 				D5D8C4A0163930D600FD35F0 /* MelonTile.cpp in Sources */,
 				D5D8C4A4163930E600FD35F0 /* NetherReactor.cpp in Sources */,
-				D5D8C4A8163931F000FD35F0 /* InBedScreen.cpp in Sources */,
+				D5D8C4A8163931F000FD35F0 /* InBedChatScreen.cpp in Sources */,
 				D5D8C4AC163932B900FD35F0 /* SignRenderer.cpp in Sources */,
 				D5D8C4B0163932CF00FD35F0 /* PaintingRenderer.cpp in Sources */,
 				D5D8C4B61639335000FD35F0 /* HangingEntity.cpp in Sources */,
@@ -6028,7 +6028,7 @@
 				D5D8C49B1639305100FD35F0 /* PigZombie.cpp in Sources */,
 				D5D8C49F163930D600FD35F0 /* MelonTile.cpp in Sources */,
 				D5D8C4A3163930E600FD35F0 /* NetherReactor.cpp in Sources */,
-				D5D8C4A7163931F000FD35F0 /* InBedScreen.cpp in Sources */,
+				D5D8C4A7163931F000FD35F0 /* InBedChatScreen.cpp in Sources */,
 				D5D8C4AB163932B900FD35F0 /* SignRenderer.cpp in Sources */,
 				D5D8C4AF163932CF00FD35F0 /* PaintingRenderer.cpp in Sources */,
 				D5D8C4B51639335000FD35F0 /* HangingEntity.cpp in Sources */,

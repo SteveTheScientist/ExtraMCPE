@@ -61,7 +61,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/client/gui/screens/ChestScreen.cpp \
 ../../../src/client/gui/screens/DeathScreen.cpp \
 ../../../src/client/gui/screens/FurnaceScreen.cpp \
-../../../src/client/gui/screens/InBedScreen.cpp \
+../../../src/client/gui/screens/InBedChatScreen.cpp \
 ../../../src/client/gui/screens/IngameBlockSelectionScreen.cpp \
 ../../../src/client/gui/screens/JoinGameScreen.cpp \
 ../../../src/client/gui/screens/OptionsScreen.cpp \

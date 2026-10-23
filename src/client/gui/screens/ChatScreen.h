@@ -24,8 +24,8 @@ public:
 
 	virtual bool renderGameBehind() const { return true; }
 
-private:
-	void execute();
+protected:
+	virtual void execute();
 
 	std::string m_input;
 	int m_cursorPos;

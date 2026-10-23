@@ -41,7 +41,7 @@
 #include "../gui/screens/ChestScreen.h"
 #include "../gui/screens/crafting/WorkbenchScreen.h"
 #include "../gui/screens/crafting/StonecutterScreen.h"
-#include "../gui/screens/InBedScreen.h"
+#include "../gui/screens/InBedChatScreen.h"
 #include "../gui/screens/TextEditScreen.h"
 #include "../particle/TakeAnimationParticle.h"
 #endif
@@ -828,7 +828,7 @@ int LocalPlayer::startSleepInBed( int x, int y, int z ) {
 	int startSleepInBedReturnValue = super::startSleepInBed(x, y, z);
 #ifndef STANDALONE_SERVER
 	if(startSleepInBedReturnValue == BedSleepingResult::OK)
-		minecraft->setScreen(new InBedScreen());
+		minecraft->setScreen(new InBedChatScreen());
 #endif
 	return startSleepInBedReturnValue;
 }
