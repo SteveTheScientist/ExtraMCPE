@@ -280,6 +280,12 @@ Java_com_mojang_minecraftpe_MainActivity_nativeHandleBack(JNIEnv* env, jclass cl
     return JNI_FALSE;
 }
 
+JNIEXPORT void JNICALL
+Java_com_mojang_minecraftpe_MainActivity_nativeOnKeyboardClosed(JNIEnv* env, jclass cls) {
+    LOGI("@nativeOnKeyboardClosed\n");
+    appPlatform.onKeyboardClosed();
+}
+
 //
 // Mouse events
 //

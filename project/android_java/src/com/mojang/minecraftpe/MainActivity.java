@@ -50,6 +50,7 @@ import android.view.WindowManager;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.view.inputmethod.InputMethodManager;
 
 import com.mojang.minecraftpe.R;
 import com.mojang.minecraftpe.sound.SoundPlayer;
@@ -91,6 +92,73 @@ public class MainActivity extends Activity {
 
         checkAndRequestPermissions();
         initNative();
+        setupKeyboardListener();
+    }
+
+    private boolean mKeyboardOpen = false;
+
+    public void showKeyboard(final boolean bShow) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm == null) return;
+
+                if (bShow) {
+                    View focused = getCurrentFocus();
+                    if (focused == null) {
+                        focused = getWindow().getDecorView();
+                    }
+                    if (focused != null) {
+                        focused.setFocusable(true);
+                        focused.setFocusableInTouchMode(true);
+                        focused.requestFocus();
+
+                        boolean success = imm.showSoftInput(focused, InputMethodManager.SHOW_IMPLICIT);
+                        if (!success) {
+                            final View target = focused;
+                            target.postDelayed(new Runnable() {
+                                public void run() {
+                                    target.setFocusable(true);
+                                    target.setFocusableInTouchMode(true);
+                                    target.requestFocus();
+                                    imm.showSoftInput(target, InputMethodManager.SHOW_IMPLICIT);
+                                }
+                            }, 100);
+                        }
+                    }
+                } else {
+                    View focused = getCurrentFocus();
+                    if (focused == null) {
+                        focused = getWindow().getDecorView();
+                    }
+                    if (focused != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
+        });
+    }
+
+    private void setupKeyboardListener() {
+        final View decorView = getWindow().getDecorView();
+        if (decorView == null) return;
+
+        decorView.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+            public void onGlobalLayout() {
+                android.graphics.Rect r = new android.graphics.Rect();
+                decorView.getWindowVisibleDisplayFrame(r);
+                int screenHeight = decorView.getRootView().getHeight();
+                int heightDiff = screenHeight - (r.bottom - r.top);
+
+                boolean isOpen = heightDiff > (screenHeight * 0.15);
+                if (isOpen != mKeyboardOpen) {
+                    mKeyboardOpen = isOpen;
+                    if (!isOpen) {
+                        nativeOnKeyboardClosed();
+                    }
+                }
+            }
+        });
     }
 
     private void initNative() {
@@ -722,6 +790,7 @@ public class MainActivity extends Activity {
     //
     native void nativeRegisterThis();
     native void nativeUnregisterThis();
+    native static void nativeOnKeyboardClosed();
     native static void nativeOnCreate(int screenWidth, int screenHeight);
     native static void nativeOnDestroy();
     native static void nativeOnKeyDown(int key);

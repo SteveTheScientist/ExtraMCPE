@@ -45,6 +45,9 @@ void TextBox::mouseClicked(Minecraft* minecraft, int x, int y, int buttonNum) {
     if (buttonNum == MouseAction::ACTION_LEFT) {
         if (pointInside(x, y)) {
             setFocus(minecraft);
+            if (minecraft) {
+                minecraft->platform()->showKeyboard();
+            }
         } else {
             loseFocus(minecraft);
         }

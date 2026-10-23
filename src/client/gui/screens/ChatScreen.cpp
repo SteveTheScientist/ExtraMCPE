@@ -773,6 +773,19 @@ void ChatScreen::mouseClicked(int x, int y, int buttonNum) {
 
 		float chatRight = std::max(posX + boxWidth + 20.0f, (float)width * 0.7f);
 
+		int barX = 2;
+		int barW = width - 4;
+		int visibleLines = 1;
+		int barH = visibleLines * 12;
+		int barY = height - 2 - barH;
+
+		if (x >= barX && x <= barX + barW && y >= barY && y <= barY + barH) {
+			if (minecraft) {
+				minecraft->platform()->showKeyboard();
+			}
+			return;
+		}
+
 		// Chat box touch region
 		if (x >= 0 && (float)x <= chatRight && (float)y >= std::max(0.0f, boxTop - 20.0f) && (float)y <= baseY + lineH + 10.0f) {
 			m_isDragging = true;

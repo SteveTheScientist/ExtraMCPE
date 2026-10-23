@@ -113,6 +113,12 @@ JNIEXPORT jint JNICALL
 	Java_com_mojang_minecraftpe_MainActivity_nativeStopThis(JNIEnv* env, jobject clazz) {
 			LOGI("Lost Focus!");
 	}
+
+	JNIEXPORT void JNICALL
+	Java_com_mojang_minecraftpe_MainActivity_nativeOnKeyboardClosed(JNIEnv* env, jclass clazz) {
+		LOGI("@OnKeyboardClosed\n");
+		appPlatform.onKeyboardClosed();
+	}
 }
 
 static void internal_process_input(struct android_app* app, struct android_poll_source* source) {

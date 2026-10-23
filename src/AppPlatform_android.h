@@ -61,7 +61,7 @@ public:
         _showDialog(0),
         _methodTick(0),
         _methodFinish(0),
-        
+
         _methodUserInputInitiate(0),
         _methodUserInputStatus(0),
         _methodUserInputString(0),
@@ -153,6 +153,7 @@ public:
 		_methodGetPlatformStringVar = env->GetMethodID( _activityClass, "getPlatformStringVar", "(I)Ljava/lang/String;");
 		// custom helper to launch external URLs
 		_methodOpenURL = env->GetMethodID(_activityClass, "openURL", "(Ljava/lang/String;)V");
+		_methodShowKeyboard = env->GetMethodID(_activityClass, "showKeyboard", "(Z)V");
 
 		_classWindow = (jclass)env->NewGlobalRef(env->FindClass("android/view/Window"));
 		_classContext = (jclass)env->NewGlobalRef(env->FindClass("android/content/Context"));
@@ -166,7 +167,7 @@ public:
 		_methodShowSoftInput = env->GetMethodID(_classInputManager, "showSoftInput", "(Landroid/view/View;I)Z");
 		_methodGetWindowToken = env->GetMethodID(_classView, "getWindowToken", "()Landroid/os/IBinder;");
 		_methodHideSoftInput = env->GetMethodID(_classInputManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z");
-		
+
 		_methodGetKeyFromKeyCode = env->GetMethodID( _activityClass, "getKeyFromKeyCode", "(III)I");
 
         if (env->ExceptionOccurred()) {
@@ -552,18 +553,26 @@ public:
 		showKeyboard(false);
 		super::hideKeyboard();
 	}
+	void onKeyboardClosed() {
+		keyboardVisible = false;
+	}
+
 	virtual void showKeyboard(bool bShow) {
 		if (!_isInited) return;
-
-		jint lResult = 0;
-		jint lFlags = 0;
 
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
 
- 		jobject INPUT_METHOD_SERVICE =
- 			env->GetStaticObjectField(_classContext,
- 			_fieldINPUT_METHOD_SERVICE);
+		if (_methodShowKeyboard) {
+			env->CallVoidMethod(instance, _methodShowKeyboard, (jboolean)bShow);
+			return;
+		}
+
+		jint lFlags = 0;
+
+		jobject INPUT_METHOD_SERVICE =
+			env->GetStaticObjectField(_classContext,
+			_fieldINPUT_METHOD_SERVICE);
 
 		jobject lInputMethodManager = env->CallObjectMethod(
 			instance, _methodGetSystemService,
@@ -576,15 +585,13 @@ public:
 			_methodGetDecorView);
 
 		if (bShow) {
-			// Runs lInputMethodManager.showSoftInput(...).
-			jboolean lResult = env->CallBooleanMethod(
+			env->CallBooleanMethod(
 				lInputMethodManager, _methodShowSoftInput,
 				lDecorView, lFlags);
 		} else {
-			// Runs lWindow.getViewToken()
 			jobject lBinder = env->CallObjectMethod(lDecorView,
 				_methodGetWindowToken);
-			jboolean lRes = env->CallBooleanMethod(
+			env->CallBooleanMethod(
 				lInputMethodManager, _methodHideSoftInput,
 				lBinder, lFlags);
 		}
@@ -629,6 +636,7 @@ private:
 
 	jmethodID _methodGetPlatformStringVar;
 	jmethodID _methodOpenURL; // new JNI method for launching browser
+	jmethodID _methodShowKeyboard;
 
 	jclass _classWindow;
 	jclass _classContext;
