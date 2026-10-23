@@ -7,10 +7,6 @@
 CommandSeed::CommandSeed() : Command("seed") {}
 
 std::string CommandSeed::execute(Minecraft& mc, Player& player, const std::vector<std::string>& args) {
-    if (!isPlayerOp(mc, player)) {
-        return SECTION "cYou do not have permission to use this command";
-    }
-
     long seed = 0;
     if (mc.level != NULL) {
         seed = mc.level->getSeed();

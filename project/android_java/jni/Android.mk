@@ -127,6 +127,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandOp.cpp \
 ../../../src/commands/CommandGive.cpp \
 ../../../src/commands/CommandGameMode.cpp \
+../../../src/commands/CommandDifficulty.cpp \
 ../../../src/commands/CommandTime.cpp \
 ../../../src/commands/CommandSeed.cpp \
 ../../../src/commands/CommandList.cpp \

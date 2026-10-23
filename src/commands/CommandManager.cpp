@@ -11,6 +11,7 @@
 #include "commands/CommandGimmieItems.hpp"
 #include "commands/CommandGive.hpp"
 #include "commands/CommandGameMode.hpp"
+#include "commands/CommandDifficulty.hpp"
 #include "commands/CommandTime.hpp"
 #include "commands/CommandSeed.hpp"
 #include "commands/CommandList.hpp"
@@ -37,6 +38,7 @@ void CommandManager::registerAllCommands() {
     m_commands.push_back(new CommandBan());
     m_commands.push_back(new CommandGive());
     m_commands.push_back(new CommandGameMode());
+    m_commands.push_back(new CommandDifficulty());
     m_commands.push_back(new CommandTime());
     m_commands.push_back(new CommandSeed());
     m_commands.push_back(new CommandList());
