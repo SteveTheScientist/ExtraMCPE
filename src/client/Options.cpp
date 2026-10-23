@@ -109,7 +109,6 @@ OptionFloat chatPosX("chat_pos_x", 2.0f, 0.0f, 500.0f);
 OptionFloat chatPosY("chat_pos_y", 40.0f, 0.0f, 500.0f);
 OptionBool textFormatting("text_formatting", true);
 OptionBool commandColors("command_colors", true);
-OptionFloat itemDropDelay("item_drop_delay", 500.0f, 100.0f, 1500.0f);
 
 OptionInt keyForward("key.forward", Keyboard::KEY_W);
 OptionInt keyLeft("key.left", Keyboard::KEY_A);
@@ -263,7 +262,6 @@ void Options::initTable() {
 	m_options[OPTIONS_CHAT_POS_Y] = &chatPosY;
 	m_options[OPTIONS_TEXT_FORMATTING] = &textFormatting;
 	m_options[OPTIONS_COMMAND_COLORS] = &commandColors;
-	m_options[OPTIONS_ITEM_DROP_DELAY] = &itemDropDelay;
 }
 
 void Options::set(OptionId key, bool value) {

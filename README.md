@@ -11,9 +11,11 @@
 8. [docs/git-and-build.md](docs/git-and-build.md) - Build system instructions (CMake, Android, iOS, Web, CI workflows) and build error troubleshooting.
 9. [docs/CLOUDS.md](docs/CLOUDS.md) - Detailed architecture of volumetric 3D cloud rendering and options.
 10. [docs/FONT.md](docs/FONT.md) - Text rendering, font formatting, and text input box component architecture.
+11. [docs/termux-server.md](docs/termux-server.md) - Guide for hosting a dedicated Minecraft PE server on an Android phone using Termux.
 
 ## Documentation File Summaries
 * **[README.md](README.md):** Main documentation index and recommended reading order for new developers.
+* **[termux-server.md](docs/termux-server.md):** Detailed beginner guide for compiling and hosting a dedicated server on an Android phone using Termux.
 * **[project-map.md](docs/project-map.md):** High-level folder map, platform main loops, per-frame tick/render lifecycle, and "how-to" cookbook examples.
 * **[android-bridge.md](docs/android-bridge.md):** Full `AppPlatform` virtual interface, JNI method lookup catalog, control flows, and Android platform integration.
 * **[gui-and-player.md](docs/gui-and-player.md):** `Screen`, `Button`, and `TextBox` APIs, player skin/cape rendering pipeline, and immediate model refreshing.

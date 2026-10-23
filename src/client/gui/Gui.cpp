@@ -52,7 +52,6 @@ Gui::Gui(Minecraft* minecraft)
 	_numSlots(4),
 	_currentDropTicks(-1),
 	_currentDropSlot(-1),
-	_dropStartTime(-1.0f),
 	MAX_MESSAGE_WIDTH(240),
 	itemNameOverlayTime(2),
 	_openInventorySlot(minecraft->useTouchscreen())
@@ -662,20 +661,12 @@ void Gui::tickItemDrop()
 	if (Mouse::isButtonDown(MouseAction::ACTION_LEFT)) {
 		int slot = getSlotIdAt(Mouse::getX(), Mouse::getY());
 		if (slot >= 0 && slot < slots) {
-			float now = getTimeS();
-			if (slot != _currentDropSlot || _dropStartTime < 0.0f) {
-				_dropStartTime = now;
+			if (slot != _currentDropSlot) {
+				_currentDropTicks = 0;
 				_currentDropSlot = slot;
-				_currentDropTicks = 0.0f;
 			}
 			isCurrentlyActive = true;
-			float delayMs = minecraft->options.getProgressValue(OPTIONS_ITEM_DROP_DELAY);
-			if (delayMs < 100.0f) delayMs = 500.0f;
-
-			float elapsedMs = (now - _dropStartTime) * 1000.0f;
-			_currentDropTicks = elapsedMs / 50.0f;
-
-			if (elapsedMs >= delayMs) {
+			if ((_currentDropTicks += 1.0f) >= DropTicks) {
 				minecraft->player->inventory->dropSlot(slot, false);
 				minecraft->level->playSound(minecraft->player, "random.pop", 0.3f, 1);
 				isCurrentlyActive = false;
@@ -684,8 +675,7 @@ void Gui::tickItemDrop()
 	}
 	if (!isCurrentlyActive) {
 		_currentDropSlot = -1;
-		_currentDropTicks = -1.0f;
-		_dropStartTime = -1.0f;
+		_currentDropTicks = -1;
 	}
 }
 
@@ -1341,17 +1331,12 @@ void Gui::renderToolBar( float a, int ySlot, const int screenWidth ) {
 	blit(xBase, yBase, 0, 0, slotsWidth, 22);
 	blit(xBase + slotsWidth, yBase, 180, 0, 2, 22);
 
-	if (_currentDropSlot >= 0 && inventory->getItem(_currentDropSlot) && _dropStartTime >= 0.0f) {
+	if (_currentDropSlot >= 0 && inventory->getItem(_currentDropSlot)) {
 		int x = xBase + 3 +  _currentDropSlot * 20;
 		int color = 0x8000ff00;
-		float delayMs = minecraft->options.getProgressValue(OPTIONS_ITEM_DROP_DELAY);
-		if (delayMs < 100.0f) delayMs = 500.0f;
+		int yy = (int)(17.0f * (_currentDropTicks + a) / DropTicks);
 
-		float elapsedMs = (getTimeS() - _dropStartTime) * 1000.0f;
-		float progress = Mth::clamp(elapsedMs / delayMs, 0.0f, 1.0f);
-		int yy = (int)(17.0f * progress);
-
-		if (elapsedMs >= 150.0f) {
+		if (_currentDropTicks >= 3) {
 			glColor4f2(0, 1, 0, 0.5f);
 		}
 		fill(x, ySlot+16-yy, x+16, ySlot+16, color);
