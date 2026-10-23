@@ -109,6 +109,80 @@ int main() {
     assert(tb.text == "0123456789^!@#$%&*()- _=+");
     assert(tb.focused == true);
 
+    // 6. Test parseColorTags for bracketed strings like "[Stone]" vs "[gold]"
+    struct ColorSegmentTest {
+        std::string text;
+        uint32_t color;
+    };
+    auto getColorFromTagTest = [](const std::string& tag, uint32_t& outColor) -> bool {
+        if (!tag.empty() && tag[0] == '/') {
+            outColor = 0xffffff;
+            return true;
+        }
+        std::string lower;
+        lower.resize(tag.size());
+        std::transform(tag.begin(), tag.end(), lower.begin(), ::tolower);
+        if (lower == "gold") { outColor = 0xffd700; return true; }
+        if (lower == "green") { outColor = 0x00ff00; return true; }
+        if (lower == "yellow") { outColor = 0xffff00; return true; }
+        if (lower == "red") { outColor = 0xff0000; return true; }
+        if (lower == "blue") { outColor = 0x0000ff; return true; }
+        return false;
+    };
+    auto parseColorTagsTest = [&](const std::string& in, std::vector<ColorSegmentTest>& out) {
+        uint32_t curColor = 0xffffff;
+        size_t pos = 0;
+        while (pos < in.size()) {
+            size_t open = in.find('[', pos);
+            if (open == std::string::npos) {
+                out.push_back({in.substr(pos), curColor});
+                break;
+            }
+            if (open > pos) {
+                out.push_back({in.substr(pos, open - pos), curColor});
+            }
+            size_t close = in.find(']', open);
+            if (close == std::string::npos) {
+                out.push_back({in.substr(open), curColor});
+                break;
+            }
+            std::string tag = in.substr(open + 1, close - open - 1);
+            uint32_t tagColor = 0;
+            if (getColorFromTagTest(tag, tagColor)) {
+                curColor = tagColor;
+                pos = close + 1;
+            } else {
+                out.push_back({in.substr(open, close - open + 1), curColor});
+                pos = close + 1;
+            }
+        }
+    };
+
+    std::vector<ColorSegmentTest> segs;
+    parseColorTagsTest("Gave 45 [Stone] to AA", segs);
+    std::string reassembled = "";
+    for (const auto& s : segs) {
+        reassembled += s.text;
+    }
+    assert(reassembled == "Gave 45 [Stone] to AA");
+
+    segs.clear();
+    parseColorTagsTest("[gold]Gave 1 [Stone] to AA[/gold]", segs);
+    reassembled = "";
+    for (const auto& s : segs) {
+        reassembled += s.text;
+    }
+    assert(reassembled == "Gave 1 [Stone] to AA");
+    assert(segs[0].color == 0xffd700);
+
+    segs.clear();
+    parseColorTagsTest("Gave 64 [Redstone Dust] to AA", segs);
+    reassembled = "";
+    for (const auto& s : segs) {
+        reassembled += s.text;
+    }
+    assert(reassembled == "Gave 64 [Redstone Dust] to AA");
+
     std::cout << "All Font unit tests passed successfully!" << std::endl;
     return 0;
 }

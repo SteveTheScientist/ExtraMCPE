@@ -1113,6 +1113,22 @@ struct ColorSegment {
 };
 
 // parse [tag] and [/tag] markers; tags may contain a color name (gold, green, etc.)
+static bool getColorFromTag(const std::string& tag, uint32_t& outColor) {
+	if (!tag.empty() && tag[0] == '/') {
+		outColor = 0xffffff;
+		return true;
+	}
+	std::string lower;
+	lower.resize(tag.size());
+	std::transform(tag.begin(), tag.end(), lower.begin(), ::tolower);
+	if (lower == "gold") { outColor = 0xffd700; return true; }
+	if (lower == "green") { outColor = 0x00ff00; return true; }
+	if (lower == "yellow") { outColor = 0xffff00; return true; }
+	if (lower == "red") { outColor = 0xff0000; return true; }
+	if (lower == "blue") { outColor = 0x0000ff; return true; }
+	return false;
+}
+
 static void parseColorTags(const std::string& in, std::vector<ColorSegment>& out) {
 	uint32_t curColor = 0xffffff;
 	size_t pos = 0;
@@ -1131,19 +1147,14 @@ static void parseColorTags(const std::string& in, std::vector<ColorSegment>& out
 			break;
 		}
 		std::string tag = in.substr(open + 1, close - open - 1);
-		if (!tag.empty() && tag[0] == '/') {
-			curColor = 0xffffff;
+		uint32_t tagColor = 0;
+		if (getColorFromTag(tag, tagColor)) {
+			curColor = tagColor;
+			pos = close + 1;
 		} else {
-			std::string lower;
-			lower.resize(tag.size());
-			std::transform(tag.begin(), tag.end(), lower.begin(), ::tolower);
-			if (lower.find("gold") != std::string::npos) curColor = 0xffd700;
-			else if (lower.find("green") != std::string::npos) curColor = 0x00ff00;
-			else if (lower.find("yellow") != std::string::npos) curColor = 0xffff00;
-			else if (lower.find("red") != std::string::npos) curColor = 0xff0000;
-			else if (lower.find("blue") != std::string::npos) curColor = 0x0000ff;
+			out.push_back({in.substr(open, close - open + 1), curColor});
+			pos = close + 1;
 		}
-		pos = close + 1;
 	}
 }
 
