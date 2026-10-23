@@ -92,11 +92,9 @@ void WorldOptionsScreen::init() {
 }
 
 void WorldOptionsScreen::updateScrollBounds() {
-    int totalRows = 1;
-    if (ctrlItemDropDelay != NULL) {
-        totalRows = 2;
-    }
-    float contentH = (float)(totalRows * 24 + 10);
+    int totalRows = (ctrlItemDropDelay != NULL) ? 2 : 1;
+    bool showNotice = (!minecraft || !minecraft->isLevelGenerated() || minecraft->level == NULL);
+    float contentH = (float)(totalRows * 24 + (showNotice ? 28 : 10));
     float viewportH = (float)(height - 68);
     m_maxScroll = std::max(0.0f, contentH - viewportH);
     m_scrollY = Mth::clamp(m_scrollY, 0.0f, m_maxScroll);
@@ -218,8 +216,9 @@ void WorldOptionsScreen::render(int xm, int ym, float a) {
     super::render(xm, ym, a);
 
     if (!minecraft->isLevelGenerated() || minecraft->level == NULL) {
-        int itemY = (int)(topY + 4 - m_scrollY);
-        drawCenteredString(font, "Open a world to change these.", width / 2, itemY + 26, 0xffa0a0a0);
+        int totalRows = (ctrlItemDropDelay != NULL) ? 2 : 1;
+        int noticeY = (int)(topY + 4 + totalRows * 24 - m_scrollY);
+        drawCenteredString(font, "Open a world to change these.", width / 2, noticeY + 4, 0xffa0a0a0);
     }
 
     glDisable(GL_SCISSOR_TEST);

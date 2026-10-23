@@ -445,7 +445,7 @@ void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
     Font* font = minecraft->font;
     Tesselator& t = Tesselator::instance;
 
-    bool isHovered = (xm >= x && ym >= y && xm < x + width && ym < y + height);
+    bool isHovered = active && (xm >= x && ym >= y && xm < x + width && ym < y + height);
 
     if (controlType == CONTROL_SLIDER) {
         minecraft->textures->loadAndBindTexture(isHovered ? "gui/Widget_slider_highlighted.png" : "gui/Widget_slider.png");
@@ -461,7 +461,7 @@ void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
         float pct = Mth::clamp((val - minVal) / (maxVal - minVal), 0.0f, 1.0f);
         float handleW = 8.0f;
         float handleX = (float)x + ((float)width - handleW) * pct;
-        bool isHandleHovered = isHovered || isDraggingSlider;
+        bool isHandleHovered = active && (isHovered || isDraggingSlider);
 
         minecraft->textures->loadAndBindTexture(isHandleHovered ? "gui/Widget_slider_handle_highlighted.png" : "gui/Widget_slider_handle.png");
         glColor4f2(1, 1, 1, 1);
@@ -472,7 +472,8 @@ void OptionControl::render(Minecraft* minecraft, int xm, int ym) {
         t.vertexUV(handleX, (float)y, blitOffset, 0, 0);
         t.draw();
 
-        drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, 0xffffffff);
+        int textColor = active ? 0xffffffff : 0xffa0a0a0;
+        drawCenteredString(font, msg, x + width / 2, y + (height - 8) / 2, textColor);
     } else {
         super::render(minecraft, xm, ym);
     }
