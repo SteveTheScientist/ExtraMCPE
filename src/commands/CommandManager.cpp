@@ -12,6 +12,7 @@
 #include "commands/CommandGive.hpp"
 #include "commands/CommandGameMode.hpp"
 #include "commands/CommandDifficulty.hpp"
+#include "commands/CommandGameRule.hpp"
 #include "commands/CommandTime.hpp"
 #include "commands/CommandSeed.hpp"
 #include "commands/CommandList.hpp"
@@ -39,6 +40,7 @@ void CommandManager::registerAllCommands() {
     m_commands.push_back(new CommandGive());
     m_commands.push_back(new CommandGameMode());
     m_commands.push_back(new CommandDifficulty());
+    m_commands.push_back(new CommandGameRule());
     m_commands.push_back(new CommandTime());
     m_commands.push_back(new CommandSeed());
     m_commands.push_back(new CommandList());

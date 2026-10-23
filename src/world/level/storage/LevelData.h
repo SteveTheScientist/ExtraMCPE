@@ -7,6 +7,7 @@
 #include "PlayerData.h"
 #include "../LevelSettings.h"
 #include "../dimension/Dimension.h"
+#include "../GameRules.hpp"
 
 // sorry for RakNet dependency, but I really like using BitStream
 #include "../../../raknet/BitStream.h"
@@ -75,6 +76,9 @@ public:
 	bool		getAllowCheats() const;
 	void		setAllowCheats(bool allow);
 
+	GameRules&	getGameRules();
+	const GameRules& getGameRules() const;
+
 public:
 	PlayerData playerData;
 	int playerDataVersion;
@@ -93,6 +97,7 @@ private:
 	int storageVersion;
 	bool spawnMobs;
 	bool allowCheats;
+	GameRules gameRules;
 	//@note: This version is never written or loaded to disk. The only purpose
 	//       is to use it in the level generator on server and clients.
 	int generatorVersion;

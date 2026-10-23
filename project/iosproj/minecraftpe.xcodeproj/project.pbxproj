@@ -1214,6 +1214,10 @@
 		F9E5A794300E7B3400164066 /* CommandGameMode.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A795300E7B3400164066 /* CommandGameMode.hpp */; };
 		F9E5A792300E7B34001640DF /* CommandDifficulty.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A793300E7B34001640DF /* CommandDifficulty.cpp */; };
 		F9E5A794300E7B34001640DF /* CommandDifficulty.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A795300E7B34001640DF /* CommandDifficulty.hpp */; };
+		F9E5A792300E7B34001640E0 /* CommandGameRule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A793300E7B34001640E0 /* CommandGameRule.cpp */; };
+		F9E5A794300E7B34001640E0 /* CommandGameRule.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A795300E7B34001640E0 /* CommandGameRule.hpp */; };
+		F9E5A792300E7B34001640E1 /* GameRules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A793300E7B34001640E1 /* GameRules.cpp */; };
+		F9E5A794300E7B34001640E1 /* GameRules.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A795300E7B34001640E1 /* GameRules.hpp */; };
 		F9E5A796300E7B3400164066 /* CommandTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A797300E7B3400164066 /* CommandTime.cpp */; };
 		F9E5A798300E7B3400164066 /* CommandTime.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A799300E7B3400164066 /* CommandTime.hpp */; };
 		F9E5A79A300E7B3400164066 /* CommandSeed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79B300E7B3400164066 /* CommandSeed.cpp */; };
@@ -2558,6 +2562,10 @@
 		F9E5A795300E7B3400164066 /* CommandGameMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandGameMode.hpp; path = ../../src/commands/CommandGameMode.hpp; sourceTree = "<group>"; };
 		F9E5A793300E7B34001640DF /* CommandDifficulty.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandDifficulty.cpp; path = ../../src/commands/CommandDifficulty.cpp; sourceTree = "<group>"; };
 		F9E5A795300E7B34001640DF /* CommandDifficulty.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandDifficulty.hpp; path = ../../src/commands/CommandDifficulty.hpp; sourceTree = "<group>"; };
+		F9E5A793300E7B34001640E0 /* CommandGameRule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandGameRule.cpp; path = ../../src/commands/CommandGameRule.cpp; sourceTree = "<group>"; };
+		F9E5A795300E7B34001640E0 /* CommandGameRule.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandGameRule.hpp; path = ../../src/commands/CommandGameRule.hpp; sourceTree = "<group>"; };
+		F9E5A793300E7B34001640E1 /* GameRules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GameRules.cpp; path = ../../src/world/level/GameRules.cpp; sourceTree = "<group>"; };
+		F9E5A795300E7B34001640E1 /* GameRules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = GameRules.hpp; path = ../../src/world/level/GameRules.hpp; sourceTree = "<group>"; };
 		F9E5A797300E7B3400164066 /* CommandTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandTime.cpp; path = ../../src/commands/CommandTime.cpp; sourceTree = "<group>"; };
 		F9E5A799300E7B3400164066 /* CommandTime.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandTime.hpp; path = ../../src/commands/CommandTime.hpp; sourceTree = "<group>"; };
 		F9E5A79B300E7B3400164066 /* CommandSeed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSeed.cpp; path = ../../src/commands/CommandSeed.cpp; sourceTree = "<group>"; };
@@ -4438,6 +4446,10 @@
 				F9E5A795300E7B3400164066 /* CommandGameMode.hpp */,
 				F9E5A793300E7B34001640DF /* CommandDifficulty.cpp */,
 				F9E5A795300E7B34001640DF /* CommandDifficulty.hpp */,
+				F9E5A793300E7B34001640E0 /* CommandGameRule.cpp */,
+				F9E5A795300E7B34001640E0 /* CommandGameRule.hpp */,
+				F9E5A793300E7B34001640E1 /* GameRules.cpp */,
+				F9E5A795300E7B34001640E1 /* GameRules.hpp */,
 				F9E5A797300E7B3400164066 /* CommandTime.cpp */,
 				F9E5A799300E7B3400164066 /* CommandTime.hpp */,
 				F9E5A79B300E7B3400164066 /* CommandSeed.cpp */,
@@ -5630,6 +5642,10 @@
 				F9E5A794300E7B3400164066 /* CommandGameMode.hpp in Sources */,
 				F9E5A792300E7B34001640DF /* CommandDifficulty.cpp in Sources */,
 				F9E5A794300E7B34001640DF /* CommandDifficulty.hpp in Sources */,
+				F9E5A792300E7B34001640E0 /* CommandGameRule.cpp in Sources */,
+				F9E5A794300E7B34001640E0 /* CommandGameRule.hpp in Sources */,
+				F9E5A792300E7B34001640E1 /* GameRules.cpp in Sources */,
+				F9E5A794300E7B34001640E1 /* GameRules.hpp in Sources */,
 				F9E5A796300E7B3400164066 /* CommandTime.cpp in Sources */,
 				F9E5A798300E7B3400164066 /* CommandTime.hpp in Sources */,
 				F9E5A79A300E7B3400164066 /* CommandSeed.cpp in Sources */,

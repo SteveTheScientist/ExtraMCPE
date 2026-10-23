@@ -128,6 +128,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandGive.cpp \
 ../../../src/commands/CommandGameMode.cpp \
 ../../../src/commands/CommandDifficulty.cpp \
+../../../src/commands/CommandGameRule.cpp \
 ../../../src/commands/CommandTime.cpp \
 ../../../src/commands/CommandSeed.cpp \
 ../../../src/commands/CommandList.cpp \
@@ -207,6 +208,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/world/item/crafting/ToolRecipes.cpp \
 ../../../src/world/item/crafting/WeaponRecipes.cpp \
 ../../../src/world/level/Explosion.cpp \
+../../../src/world/level/GameRules.cpp \
 ../../../src/world/level/Level.cpp \
 ../../../src/world/level/LightLayer.cpp \
 ../../../src/world/level/LightUpdate.cpp \

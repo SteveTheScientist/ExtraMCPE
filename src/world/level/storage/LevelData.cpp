@@ -62,6 +62,7 @@ LevelData::LevelData( const LevelData& rhs )
 	generatorVersion(rhs.generatorVersion),
 	spawnMobs(rhs.spawnMobs),
 	allowCheats(rhs.allowCheats),
+	gameRules(rhs.gameRules),
 	loadedPlayerTag(NULL),
 	playerData(rhs.playerData)
 {
@@ -85,6 +86,7 @@ LevelData& LevelData::operator=( const LevelData& rhs )
 		dimension	= rhs.dimension;
 		spawnMobs	= rhs.spawnMobs;
 		allowCheats	= rhs.allowCheats;
+		gameRules	= rhs.gameRules;
 		playerData  = rhs.playerData;
 		playerDataVersion	= rhs.playerDataVersion;
 		generatorVersion	= rhs.generatorVersion;
@@ -163,6 +165,9 @@ void LevelData::setTagData( CompoundTag* tag, CompoundTag* playerTag )
 	tag->putLong("RandomSeed", seed);
 	tag->putInt("GameType", gameType);
 	tag->putBoolean("AllowCommands", allowCheats);
+	CompoundTag* rulesTag = new CompoundTag();
+	gameRules.write(rulesTag);
+	tag->putCompound("GameRules", rulesTag);
 	tag->putInt("SpawnX", xSpawn);
 	tag->putInt("SpawnY", ySpawn);
 	tag->putInt("SpawnZ", zSpawn);
@@ -187,6 +192,9 @@ void LevelData::getTagData( const CompoundTag* tag )
 		allowCheats = tag->getBoolean("AllowCommands");
 	} else {
 		allowCheats = true;
+	}
+	if (tag->contains("GameRules", Tag::TAG_Compound)) {
+		gameRules.read(tag->getCompound("GameRules"));
 	}
 	xSpawn = tag->getInt("SpawnX");
 	ySpawn = tag->getInt("SpawnY");
@@ -378,4 +386,14 @@ bool LevelData::getAllowCheats() const
 void LevelData::setAllowCheats( bool allow )
 {
 	allowCheats = allow;
+}
+
+GameRules& LevelData::getGameRules()
+{
+	return gameRules;
+}
+
+const GameRules& LevelData::getGameRules() const
+{
+	return gameRules;
 }

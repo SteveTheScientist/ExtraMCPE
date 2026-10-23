@@ -101,6 +101,28 @@ Whenever you create a new `.cpp` file (for example `src/commands/CommandMagic.cp
    ```
 3. **`project/iosproj/minecraftpe.xcodeproj/project.pbxproj`:** Add file reference under `PBXBuildFile`, `PBXFileReference`, and `PBXSourcesBuildPhase`.
 
+### Example 4: How to Add a Game Rule
+Game rules are registered globally using `GameRules::registerRule` and read per world from `level->getLevelData()->getGameRules()`:
+
+1. **Register the rule:** (e.g. at startup or initialization)
+```cpp
+// Register a boolean game rule named "doDaylightCycle" with default value true
+GameRules::registerRule("doDaylightCycle", GameRules::TYPE_BOOL, "true");
+
+// Or register an integer game rule named "randomTickSpeed" with default value 3
+GameRules::registerRule("randomTickSpeed", GameRules::TYPE_INT, "3");
+```
+
+2. **Read the rule value from game code:**
+```cpp
+if (level != NULL && level->getLevelData() != NULL) {
+    bool doDaylight = level->getLevelData()->getGameRules().getBool("doDaylightCycle");
+    if (doDaylight) {
+        // Advance world time
+    }
+}
+```
+
 ---
 
 ## 4. Main Game Loops & Frame Lifecycle
