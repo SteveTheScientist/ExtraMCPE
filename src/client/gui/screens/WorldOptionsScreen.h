@@ -29,6 +29,8 @@ private:
     Button* btnDone;
     Button* btnAllowCommands;
     OptionControl* ctrlDifficulty;
+    OptionControl* ctrlItemDropDelay;
+    Button* btnResetItemDropDelay;
 
     float m_scrollY;
     float m_maxScroll;

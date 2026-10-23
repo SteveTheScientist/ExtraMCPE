@@ -23,10 +23,15 @@ bool OptionFloat::parse(const std::string& value) {
     
     if (parse_bool_like(value, b)) {
         m_value = b ? 1.f : 0.f;
+        m_value = Mth::clamp(m_value, m_min, m_max);
         return true;
     }
 
-    return sscanf(value.c_str(), "%f", &m_value) == 1;
+    if (sscanf(value.c_str(), "%f", &m_value) == 1) {
+        m_value = Mth::clamp(m_value, m_min, m_max);
+        return true;
+    }
+    return false;
 }
 bool OptionInt::parse(const std::string& value) {
     bool b;

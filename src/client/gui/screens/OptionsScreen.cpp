@@ -74,6 +74,11 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
             }
             return;
         }
+        if (optionId == OPTIONS_ITEM_DROP_DELAY) {
+            int ms = (int)(val + 0.5f);
+            msg = baseName + ": " + to_str(ms) + " ms";
+            return;
+        }
         if (optionId == OPTIONS_CHAT_WIDTH || optionId == OPTIONS_CHAT_FOCUSED_HEIGHT || optionId == OPTIONS_CHAT_UNFOCUSED_HEIGHT || optionId == OPTIONS_CHAT_POS_X || optionId == OPTIONS_CHAT_POS_Y) {
             int px = (int)(val + 0.5f);
             msg = baseName + ": " + to_str(px) + "px";
@@ -354,6 +359,13 @@ void OptionControl::updateLabel(Minecraft* minecraft) {
         return;
     }
 
+    if (optionId == OPTIONS_ITEM_DROP_DELAY) {
+        float val = minecraft->options.getProgressValue(OPTIONS_ITEM_DROP_DELAY);
+        int ms = (int)(val + 0.5f);
+        msg = "Item Drop Delay: " + to_str(ms) + " ms";
+        return;
+    }
+
     bool state = minecraft->options.getBooleanValue(optionId);
     msg = baseName + (state ? ": ON" : ": OFF");
 }
@@ -398,6 +410,9 @@ void OptionControl::updateSliderValue(Minecraft* minecraft, int mx) {
     float newVal = minVal + pct * (maxVal - minVal);
     if (optionId == OPTIONS_LIMIT_FRAMERATE) {
         newVal = floorf(newVal / 10.0f + 0.5f) * 10.0f;
+    } else if (optionId == OPTIONS_ITEM_DROP_DELAY) {
+        newVal = floorf((newVal - 100.0f) / 50.0f + 0.5f) * 50.0f + 100.0f;
+        newVal = Mth::clamp(newVal, 100.0f, 1500.0f);
     }
     minecraft->options.set(optionId, newVal);
     updateLabel(minecraft);

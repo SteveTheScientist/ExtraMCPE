@@ -129,6 +129,7 @@ private:
 	static const float DropTicks;
 	float  _currentDropTicks;
 	int    _currentDropSlot;
+	float  _dropStartTime;
 
 	bool   _openInventorySlot;
 };
