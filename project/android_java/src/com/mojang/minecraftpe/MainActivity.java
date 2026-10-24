@@ -468,7 +468,6 @@ public class MainActivity extends Activity {
         	InputStream is = assets.open(filename);
         	bis = new BufferedInputStream(is);
         } catch (IOException e) {
-        	e.printStackTrace();
         	return null;
         }
 
@@ -488,6 +487,16 @@ public class MainActivity extends Activity {
     	}
 
     	return s.toByteArray();
+    }
+
+    public String[] listAssetFiles(String path) {
+        try {
+            AssetManager assets = getAssets();
+            String[] files = assets.list(path);
+            return files != null ? files : new String[0];
+        } catch (Exception e) {
+            return new String[0];
+        }
     }
     
     public int getScreenWidth() {

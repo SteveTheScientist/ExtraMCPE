@@ -101,6 +101,7 @@ public:
 
 	virtual void uploadPlatformDependentData(int id, void* data) {}
 	virtual BinaryBlob readAssetFile(const std::string& filename) { return BinaryBlob(); }
+	virtual StringVector listAssetFiles(const std::string& path) { return StringVector(); }
 	virtual void _tick() {}
 
 	virtual int getScreenWidth() { return 854; }

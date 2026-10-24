@@ -316,37 +316,7 @@ void SkinsScreen::loadSkins() {
 
     createFolderIfNotExists("data/images/skins/texts");
 
-    std::string skinsDir = "data/images/skins";
-    std::vector<std::string> candidateFiles;
-
-#ifdef WIN32
-    std::string searchPath = skinsDir + "/*.png";
-    WIN32_FIND_DATAA findData;
-    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
-    if (hFind != INVALID_HANDLE_VALUE) {
-        do {
-            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-                candidateFiles.push_back(findData.cFileName);
-            }
-        } while (FindNextFileA(hFind, &findData));
-        FindClose(hFind);
-    }
-#else
-    DIR* dir = opendir(skinsDir.c_str());
-    if (dir) {
-        struct dirent* entry;
-        while ((entry = readdir(dir)) != NULL) {
-            std::string filename = entry->d_name;
-            if (filename.length() > 4) {
-                std::string ext = filename.substr(filename.length() - 4);
-                if (ext == ".png" || ext == ".PNG") {
-                    candidateFiles.push_back(filename);
-                }
-            }
-        }
-        closedir(dir);
-    }
-#endif
+    std::vector<std::string> candidateFiles = listDataFiles(minecraft->platform(), "images/skins", ".png");
 
     for (size_t i = 0; i < candidateFiles.size(); ++i) {
         const std::string& fn = candidateFiles[i];
@@ -362,6 +332,21 @@ void SkinsScreen::loadSkins() {
     std::sort(m_skinFiles.begin(), m_skinFiles.end());
 
     std::string langPath = "data/images/skins/texts/en_us.lang";
+    std::string assetLangPath = "images/skins/texts/en_us.lang";
+
+    // Requirement 4: Ensure en_us.lang is copied to writable folder on first use if missing on disk
+    if (!fileExists(langPath) && minecraft->platform()) {
+        BinaryBlob langBlob = minecraft->platform()->readAssetFile(assetLangPath);
+        if (langBlob.data && langBlob.size > 0) {
+            std::ofstream out(langPath.c_str(), std::ios::binary);
+            if (out.is_open()) {
+                out.write((const char*)langBlob.data, langBlob.size);
+                out.close();
+            }
+            delete[] langBlob.data;
+        }
+    }
+
     std::map<std::string, std::string> langMap;
 
     std::ifstream langIn(langPath.c_str());
@@ -502,11 +487,14 @@ void SkinsScreen::tick() {
     if (m_skinList) {
         m_skinList->tick();
         if (m_skinFiles.empty()) {
-            if (btnLeft) btnLeft->active = false;
-            if (btnRight) btnRight->active = false;
+            if (btnLeft) { btnLeft->active = false; btnLeft->visible = false; }
+            if (btnRight) { btnRight->active = false; btnRight->visible = false; }
             if (btnSelect) btnSelect->active = false;
             if (btnReset) btnReset->active = false;
         } else {
+            if (btnLeft) btnLeft->visible = true;
+            if (btnRight) btnRight->visible = true;
+
             int idx = m_skinList->selectedItem;
             int num = m_skinList->getNumberOfItems();
             if (btnLeft) btnLeft->active = (idx > 0);
@@ -534,7 +522,19 @@ void SkinsScreen::render(int xm, int ym, float a) {
     }
 
     if (m_skinFiles.empty()) {
-        drawCenteredString(minecraft->font, "No skins found in data/images/skins/", width / 2, height / 2 - 4, 0xffffffff);
+        // UI requirement 5: Center between arrows, wrap onto two lines if needed, hide arrows when empty
+        std::string msg = "No skins found in\ndata/images/skins/";
+        std::stringstream ss(msg);
+        std::string line;
+        std::vector<std::string> lines;
+        while (std::getline(ss, line)) {
+            lines.push_back(line);
+        }
+        int totalH = (int)lines.size() * 12;
+        int startY = height / 2 - totalH / 2;
+        for (size_t i = 0; i < lines.size(); ++i) {
+            drawCenteredString(minecraft->font, lines[i], width / 2, startY + (int)i * 12, 0xffffffff);
+        }
     } else if (m_skinList) {
         m_skinList->render(xm, ym, a);
     }
