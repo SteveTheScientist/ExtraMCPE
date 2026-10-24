@@ -59,6 +59,8 @@ SOURCES := ../../src/main.cpp \
 ../../src/client/gui/screens/JoinGameScreen.cpp \
 ../../src/client/gui/screens/MouseUnlockedScreen.cpp \
 ../../src/client/gui/screens/OptionsScreen.cpp \
+../../src/client/gui/screens/CustomizationsScreen.cpp \
+../../src/client/gui/screens/SkinsScreen.cpp \
 ../../src/client/gui/screens/AudioScreen.cpp \
 ../../src/client/gui/screens/PauseScreen.cpp \
 ../../src/client/gui/screens/FogScreen.cpp \
