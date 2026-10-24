@@ -86,6 +86,10 @@ private:
     Level* m_dummyLevel;
     LevelStorage* m_dummyStorage;
     bool m_ownsPreviewPlayer;
+
+    std::string m_debugDiskPath;
+    int m_debugDiskCount;
+    int m_debugAssetCount;
 };
 
 #endif /*NET_MINECRAFT_CLIENT_GUI_SCREENS__SkinsScreen_H__*/

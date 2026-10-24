@@ -22,6 +22,13 @@ int getFileSize(const char* filename);
 bool createTree(const char* base, const char* tree[], int treeLength);
 
 class AppPlatform;
-std::vector<std::string> listDataFiles(AppPlatform* platform, const std::string& dir, const std::string& extension = "");
+std::vector<std::string> listDataFiles(
+	AppPlatform* platform,
+	const std::string& dir,
+	const std::string& extension = "",
+	std::string* outDiskPath = NULL,
+	std::vector<std::string>* outDiskFiles = NULL,
+	std::vector<std::string>* outAssetFiles = NULL
+);
 
 #endif

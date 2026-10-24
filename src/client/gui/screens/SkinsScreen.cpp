@@ -26,7 +26,16 @@
 #include <windows.h>
 #endif
 
+static const bool SHOW_DEBUG_INFO = true;
+
+static std::string intToStr(int val) {
+    std::ostringstream oss;
+    oss << val;
+    return oss.str();
+}
+
 static bool fileExists(const std::string& path) {
+    if (path.empty()) return false;
     struct stat st;
     return stat(path.c_str(), &st) == 0;
 }
@@ -94,7 +103,7 @@ void SkinsScreen::setSkinFromFile(Minecraft* minecraft, Player* player, const st
         if (fileExists(targetPath)) {
             texPath = "skins/" + filename;
         } else {
-            LOGW("[Skin] Saved skin file '%s' is missing, falling back to char.png\n", filename.c_str());
+            LOGW("[Skins] Saved skin file '%s' is missing, falling back to char.png\n", filename.c_str());
             filename = "char.png";
             minecraft->options.set(OPTIONS_SKIN_NAME, std::string("char.png"));
             minecraft->options.save();
@@ -139,6 +148,7 @@ SkinList::SkinList(SkinsScreen* screen, Minecraft* minecraft, int width, int hei
 }
 
 int SkinList::getNumberOfItems() {
+    if (!m_screen) return 0;
     return (int)m_screen->m_skinFiles.size();
 }
 
@@ -153,6 +163,7 @@ bool SkinList::isSelectedItem(int item) {
 }
 
 void SkinList::renderItem(int i, int x, int y, int h, Tesselator& t) {
+    if (!m_screen || !minecraft || !minecraft->font) return;
     int centerx = x + h / 2;
 
     float a0 = std::max(0.2f, 1.1f - std::abs(width / 2 - centerx) * 0.0055f);
@@ -168,7 +179,14 @@ void SkinList::renderItem(int i, int x, int y, int h, Tesselator& t) {
 
     // Render player preview
     float playerY = (float)height * 0.72f;
-    m_screen->renderPlayer((float)centerx, playerY, "skins/" + m_screen->m_skinFiles[i]);
+    if (i >= 0 && i < (int)m_screen->m_skinFiles.size()) {
+        if (m_screen->m_previewPlayer) {
+            m_screen->renderPlayer((float)centerx, playerY, "skins/" + m_screen->m_skinFiles[i]);
+        } else {
+            int textW = minecraft->font->width("Preview unavailable");
+            drawString(minecraft->font, "Preview unavailable", centerx - textW / 2, (int)playerY, 0xffa0a0a0);
+        }
+    }
 }
 
 void SkinList::setSelectedItemAndCenter(int index) {
@@ -289,7 +307,9 @@ SkinsScreen::SkinsScreen()
       m_previewPlayer(NULL),
       m_dummyLevel(NULL),
       m_dummyStorage(NULL),
-      m_ownsPreviewPlayer(false)
+      m_ownsPreviewPlayer(false),
+      m_debugDiskCount(0),
+      m_debugAssetCount(0)
 {
 }
 
@@ -312,19 +332,55 @@ void SkinsScreen::loadSkins() {
     m_skinFiles.clear();
     m_skinNames.clear();
 
+    if (!minecraft) return;
+
     ensureDefaultSkinExists();
 
     createFolderIfNotExists("data/images/skins/texts");
 
-    std::vector<std::string> candidateFiles = listDataFiles(minecraft->platform(), "images/skins", ".png");
+    std::string scannedDiskPath;
+    std::vector<std::string> diskFiles;
+    std::vector<std::string> assetFiles;
 
-    for (size_t i = 0; i < candidateFiles.size(); ++i) {
-        const std::string& fn = candidateFiles[i];
-        TextureId texId = minecraft->textures->loadTexture("skins/" + fn, true);
-        if (texId != Textures::InvalidId) {
-            const TextureData* texData = minecraft->textures->getTemporaryTextureData(texId);
-            if (texData && texData->w == 64 && (texData->h == 32 || texData->h == 64)) {
-                m_skinFiles.push_back(fn);
+    std::vector<std::string> candidateFiles = listDataFiles(
+        minecraft->platform(),
+        "images/skins",
+        ".png",
+        &scannedDiskPath,
+        &diskFiles,
+        &assetFiles
+    );
+
+    m_debugDiskPath = scannedDiskPath;
+    m_debugDiskCount = (int)diskFiles.size();
+    m_debugAssetCount = (int)assetFiles.size();
+
+    LOGI("[Skins] Scanned disk path: '%s' (%d files)\n", scannedDiskPath.c_str(), (int)diskFiles.size());
+    for (size_t i = 0; i < diskFiles.size(); ++i) {
+        LOGI("[Skins]   Disk file: %s\n", diskFiles[i].c_str());
+    }
+    LOGI("[Skins] Scanned asset path: 'images/skins' (%d files)\n", (int)assetFiles.size());
+    for (size_t i = 0; i < assetFiles.size(); ++i) {
+        LOGI("[Skins]   Asset file: %s\n", assetFiles[i].c_str());
+    }
+
+    if (minecraft->textures) {
+        for (size_t i = 0; i < candidateFiles.size(); ++i) {
+            const std::string& fn = candidateFiles[i];
+            if (fn.empty()) continue;
+
+            TextureId texId = minecraft->textures->loadTexture("skins/" + fn, true);
+            if (texId != Textures::InvalidId) {
+                const TextureData* texData = minecraft->textures->getTemporaryTextureData(texId);
+                if (texData && texData->data && texData->w == 64 && (texData->h == 32 || texData->h == 64)) {
+                    m_skinFiles.push_back(fn);
+                } else {
+                    LOGW("[Skins] Skipping invalid skin file '%s' (data=%p, w=%d, h=%d)\n",
+                         fn.c_str(), texData ? (void*)texData->data : NULL,
+                         texData ? texData->w : 0, texData ? texData->h : 0);
+                }
+            } else {
+                LOGW("[Skins] Failed to load skin texture '%s'\n", fn.c_str());
             }
         }
     }
@@ -334,7 +390,6 @@ void SkinsScreen::loadSkins() {
     std::string langPath = "data/images/skins/texts/en_us.lang";
     std::string assetLangPath = "images/skins/texts/en_us.lang";
 
-    // Requirement 4: Ensure en_us.lang is copied to writable folder on first use if missing on disk
     if (!fileExists(langPath) && minecraft->platform()) {
         BinaryBlob langBlob = minecraft->platform()->readAssetFile(assetLangPath);
         if (langBlob.data && langBlob.size > 0) {
@@ -370,6 +425,7 @@ void SkinsScreen::loadSkins() {
 
     for (size_t i = 0; i < m_skinFiles.size(); ++i) {
         std::string fn = m_skinFiles[i];
+        if (fn.length() < 5) continue;
         std::string key = fn.substr(0, fn.length() - 4);
 
         std::map<std::string, std::string>::iterator it = langMap.find(key);
@@ -392,6 +448,12 @@ void SkinsScreen::loadSkins() {
             langOut.close();
         }
     }
+
+    LOGI("[Skins] Total valid skins ready (%d):\n", (int)m_skinFiles.size());
+    for (size_t i = 0; i < m_skinFiles.size(); ++i) {
+        LOGI("[Skins]   Skin %d: %s ('%s')\n", (int)i, m_skinFiles[i].c_str(),
+             (i < m_skinNames.size() ? m_skinNames[i].c_str() : ""));
+    }
 }
 
 void SkinsScreen::init() {
@@ -413,7 +475,7 @@ void SkinsScreen::init() {
     tabButtons.push_back(btnSelect);
     tabButtons.push_back(btnDone);
 
-    if (minecraft->player) {
+    if (minecraft && minecraft->player) {
         m_previewPlayer = minecraft->player;
         m_ownsPreviewPlayer = false;
     } else {
@@ -429,7 +491,7 @@ void SkinsScreen::init() {
     m_skinList = new SkinList(this, minecraft, width, height);
 
     // Position carousel at the currently applied skin
-    std::string currentApplied = minecraft->options.getStringValue(OPTIONS_SKIN_NAME);
+    std::string currentApplied = minecraft ? minecraft->options.getStringValue(OPTIONS_SKIN_NAME) : "char.png";
     if (currentApplied.empty()) currentApplied = "char.png";
 
     int foundIdx = -1;
@@ -442,8 +504,7 @@ void SkinsScreen::init() {
     if (foundIdx >= 0) {
         m_skinList->setSelectedItemAndCenter(foundIdx);
     } else {
-        // Saved skin file is missing; fall back to char.png
-        applySavedSkin(minecraft, minecraft->player);
+        applySavedSkin(minecraft, minecraft ? minecraft->player : NULL);
         for (size_t i = 0; i < m_skinFiles.size(); ++i) {
             if (m_skinFiles[i] == "char.png") {
                 m_skinList->setSelectedItemAndCenter((int)i);
@@ -501,7 +562,7 @@ void SkinsScreen::tick() {
             if (btnRight) btnRight->active = (idx >= 0 && idx < num - 1);
 
             std::string previewedSkin = (idx >= 0 && idx < (int)m_skinFiles.size()) ? m_skinFiles[idx] : "";
-            std::string currentApplied = minecraft->options.getStringValue(OPTIONS_SKIN_NAME);
+            std::string currentApplied = minecraft ? minecraft->options.getStringValue(OPTIONS_SKIN_NAME) : "char.png";
             if (currentApplied.empty()) currentApplied = "char.png";
 
             if (btnSelect) {
@@ -515,14 +576,13 @@ void SkinsScreen::tick() {
 }
 
 void SkinsScreen::render(int xm, int ym, float a) {
-    if (minecraft->isLevelGenerated()) {
+    if (minecraft && minecraft->isLevelGenerated()) {
         renderBackground();
     } else {
         renderDirtBackground(0);
     }
 
     if (m_skinFiles.empty()) {
-        // UI requirement 5: Center between arrows, wrap onto two lines if needed, hide arrows when empty
         std::string msg = "No skins found in\ndata/images/skins/";
         std::stringstream ss(msg);
         std::string line;
@@ -533,7 +593,9 @@ void SkinsScreen::render(int xm, int ym, float a) {
         int totalH = (int)lines.size() * 12;
         int startY = height / 2 - totalH / 2;
         for (size_t i = 0; i < lines.size(); ++i) {
-            drawCenteredString(minecraft->font, lines[i], width / 2, startY + (int)i * 12, 0xffffffff);
+            if (minecraft && minecraft->font) {
+                drawCenteredString(minecraft->font, lines[i], width / 2, startY + (int)i * 12, 0xffffffff);
+            }
         }
     } else if (m_skinList) {
         m_skinList->render(xm, ym, a);
@@ -541,10 +603,22 @@ void SkinsScreen::render(int xm, int ym, float a) {
 
     super::render(xm, ym, a);
 
-    drawCenteredString(minecraft->font, "Skins", width / 2, 10, 0xffffffff);
+    if (minecraft && minecraft->font) {
+        drawCenteredString(minecraft->font, "Skins", width / 2, 10, 0xffffffff);
+
+        if (SHOW_DEBUG_INFO) {
+            std::string debugStr = "disk: " + m_debugDiskPath + " (" + intToStr(m_debugDiskCount) + ") | assets (" + intToStr(m_debugAssetCount) + ")";
+            int textW = minecraft->font->width(debugStr);
+            int drawX = width / 2 - textW / 2;
+            if (drawX < 2) drawX = 2;
+            drawString(minecraft->font, debugStr.c_str(), drawX, height - 10, 0xffa0a0a0);
+        }
+    }
 }
 
 void SkinsScreen::buttonClicked(Button* button) {
+    if (!button || !minecraft) return;
+
     if (button == btnDone) {
         minecraft->setScreen(new CustomizationsScreen());
         return;
@@ -605,10 +679,10 @@ void SkinsScreen::mouseWheel(int dx, int dy, int xm, int ym) {
 
 void SkinsScreen::keyPressed(int eventKey) {
     if (eventKey == Keyboard::KEY_ESCAPE) {
-        minecraft->setScreen(new CustomizationsScreen());
+        if (minecraft) minecraft->setScreen(new CustomizationsScreen());
         return;
     }
-    if (m_skinList) {
+    if (m_skinList && minecraft) {
         if (eventKey == minecraft->options.getIntValue(OPTIONS_KEY_LEFT)) {
             m_skinList->stepLeft();
             return;
@@ -622,7 +696,13 @@ void SkinsScreen::keyPressed(int eventKey) {
 }
 
 void SkinsScreen::renderPlayer(float xo, float yo, const std::string& skinTexturePath) {
-    if (!m_previewPlayer) return;
+    if (!m_previewPlayer || !minecraft || !minecraft->textures) return;
+
+    EntityRenderDispatcher* rd = EntityRenderDispatcher::getInstance();
+    if (!rd) return;
+
+    rd->setMinecraft(minecraft);
+    rd->textures = minecraft->textures;
 
     glPushMatrix();
 
@@ -664,7 +744,6 @@ void SkinsScreen::renderPlayer(float xo, float yo, const std::string& skinTextur
     std::string oldTex = m_previewPlayer->textureName;
     m_previewPlayer->textureName = skinTexturePath;
 
-    EntityRenderDispatcher* rd = EntityRenderDispatcher::getInstance();
     rd->playerRotY = 180.0f;
     rd->render(m_previewPlayer, 0, 0, 0, 0, 1.0f);
 

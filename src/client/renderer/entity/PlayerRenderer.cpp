@@ -55,7 +55,11 @@ void PlayerRenderer::setupRotations( Entity* mob, float bob, float bodyRot, floa
 }
 
 bool PlayerRenderer::isModernPlayerSkin(Mob* mob) {
+	if (!mob || !entityRenderDispatcher || !entityRenderDispatcher->textures)
+		return false;
 	const std::string texName = mob->getTexture();
+	if (texName.empty())
+		return false;
 	TextureId texId = entityRenderDispatcher->textures->loadTexture(texName);
 	if (!Textures::isTextureIdValid(texId))
 		return false;
@@ -64,6 +68,7 @@ bool PlayerRenderer::isModernPlayerSkin(Mob* mob) {
 }
 
 void PlayerRenderer::renderName( Mob* mob, float x, float y, float z ){
+	if (!mob || !entityRenderDispatcher || !mob->level) return;
 	//@todo: figure out how to handle HideGUI
 	if (mob != entityRenderDispatcher->cameraEntity && mob->level->adventureSettings.showNameTags) {
 		renderNameTag(mob, ((Player*)mob)->name, x, y, z, 32);
@@ -72,6 +77,7 @@ void PlayerRenderer::renderName( Mob* mob, float x, float y, float z ){
 
 // @note fix player skin system
 void PlayerRenderer::setModernSkin(Mob* mob) {
+	if (!mob) return;
 	HumanoidModel* desired = isModernPlayerSkin(mob) ? playerModel64 : playerModel32;
 	if (model != desired || humanoidModel != desired) {
 		model = desired;
@@ -80,10 +86,11 @@ void PlayerRenderer::setModernSkin(Mob* mob) {
 }
 
 void PlayerRenderer::render(Entity* mob_, float x, float y, float z, float rot, float a) {
+	if (!mob_) return;
 	Mob* mob = (Mob*) mob_;
 	setModernSkin(mob);
-	/* LOGI("[PlayerRenderer] %s: skin=%s, modelTex=%dx%d, desired=%s\n", 
-		((Player*)mob)->name.c_str(), mob->getTexture().c_str(), 
+	/* LOGI("[PlayerRenderer] %s: skin=%s, modelTex=%dx%d, desired=%s\n",
+		((Player*)mob)->name.c_str(), mob->getTexture().c_str(),
 		humanoidModel->texWidth, humanoidModel->texHeight,
 		(desired == playerModel64 ? "64" : "32")); */
 	HumanoidMobRenderer::render(mob_, x, y, z, rot, a);

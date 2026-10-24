@@ -171,6 +171,9 @@ void EntityRenderDispatcher::setLevel( Level* level )
 void EntityRenderDispatcher::setMinecraft( Minecraft* minecraft )
 {
 	this->minecraft = minecraft;
+	if (minecraft) {
+		this->textures = minecraft->textures;
+	}
 }
 
 float EntityRenderDispatcher::distanceToSqr( float x, float y, float z )

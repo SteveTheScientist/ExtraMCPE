@@ -91,19 +91,48 @@ static bool endsWithCaseInsensitive(const std::string& str, const std::string& s
     return true;
 }
 
-std::vector<std::string> listDataFiles(AppPlatform* platform, const std::string& dir, const std::string& extension) {
+static std::string getFullPath(const std::string& relPath) {
+#ifndef WIN32
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd))) {
+        std::string s = cwd;
+        if (!s.empty() && s[s.length() - 1] != '/') s += "/";
+        return s + relPath;
+    }
+#endif
+    return relPath;
+}
+
+std::vector<std::string> listDataFiles(
+    AppPlatform* platform,
+    const std::string& dir,
+    const std::string& extension,
+    std::string* outDiskPath,
+    std::vector<std::string>* outDiskFiles,
+    std::vector<std::string>* outAssetFiles
+) {
     std::set<std::string> resultSet;
     std::vector<std::string> result;
+    if (outDiskFiles) outDiskFiles->clear();
+    if (outAssetFiles) outAssetFiles->clear();
 
     std::string diskPath = dir;
     std::string assetPath = dir;
 
     if (dir.find("data/") == 0) {
-        assetPath = dir;
+        diskPath = dir;
+        assetPath = dir.substr(5);
     } else {
         diskPath = "data/" + dir;
         assetPath = dir;
     }
+
+    createFolderIfNotExists("data");
+    createFolderIfNotExists("data/images");
+    createFolderIfNotExists("data/images/skins");
+
+    std::string fullDiskPath = getFullPath(diskPath);
+    if (outDiskPath) *outDiskPath = fullDiskPath;
 
     // 1. Real folder on disk
 #ifdef WIN32
@@ -116,6 +145,7 @@ std::vector<std::string> listDataFiles(AppPlatform* platform, const std::string&
                 std::string fname = findData.cFileName;
                 if (endsWithCaseInsensitive(fname, extension)) {
                     resultSet.insert(fname);
+                    if (outDiskFiles) outDiskFiles->push_back(fname);
                 }
             }
         } while (FindNextFileA(hFind, &findData));
@@ -130,6 +160,7 @@ std::vector<std::string> listDataFiles(AppPlatform* platform, const std::string&
             if (fname != "." && fname != "..") {
                 if (endsWithCaseInsensitive(fname, extension)) {
                     resultSet.insert(fname);
+                    if (outDiskFiles) outDiskFiles->push_back(fname);
                 }
             }
         }
@@ -144,6 +175,7 @@ std::vector<std::string> listDataFiles(AppPlatform* platform, const std::string&
             const std::string& fname = assetFiles[i];
             if (endsWithCaseInsensitive(fname, extension)) {
                 resultSet.insert(fname);
+                if (outAssetFiles) outAssetFiles->push_back(fname);
             }
         }
     }
