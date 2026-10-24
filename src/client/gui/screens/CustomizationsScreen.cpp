@@ -2,6 +2,7 @@
 #include "CloudsScreen.h"
 #include "FogScreen.h"
 #include "ChatSettingsScreen.h"
+#include "SkinsScreen.h"
 #include "StartMenuScreen.h"
 #include "PauseScreen.h"
 #include "../../Minecraft.h"
@@ -37,6 +38,7 @@ void CustomizationsScreen::init() {
     int idSeq = 200;
 
     // Customization Options: sub-menu buttons
+    m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Skins...", false, 0.0f, 1.0f, ACTION_SKINS));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Clouds...", false, 0.0f, 1.0f, ACTION_CLOUDS));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Fog...", false, 0.0f, 1.0f, ACTION_FOG));
     m_controls.push_back(new OptionControl(idSeq++, CONTROL_ACTION, OPTIONS_COUNT, "Chat...", false, 0.0f, 1.0f, ACTION_CHAT_SETTINGS));
@@ -245,7 +247,9 @@ void CustomizationsScreen::buttonClicked(Button* button) {
             minecraft->options.save();
             setupPositions();
         } else if (ctrl->controlType == CONTROL_ACTION) {
-            if (ctrl->actionId == ACTION_CLOUDS) {
+            if (ctrl->actionId == ACTION_SKINS) {
+                minecraft->setScreen(new SkinsScreen());
+            } else if (ctrl->actionId == ACTION_CLOUDS) {
                 minecraft->setScreen(new CloudsScreen());
             } else if (ctrl->actionId == ACTION_FOG) {
                 minecraft->setScreen(new FogScreen());

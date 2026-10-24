@@ -46,6 +46,7 @@
 #include "gui/screens/DeathScreen.h"
 #include "gui/screens/FurnaceScreen.h"
 #include "gui/screens/ArmorScreen.h"
+#include "gui/screens/SkinsScreen.h"
 #include "renderer/tileentity/TileEntityRenderDispatcher.h"
 #include "renderer/ptexture/DynamicTexture.h"
 #include "renderer/GameRenderer.h"
@@ -1218,6 +1219,10 @@ void Minecraft::init()
 
 	setIsCreativeMode(false); // false means it's Survival Mode
 	reloadOptions();
+
+#ifndef STANDALONE_SERVER
+	SkinsScreen::applySavedSkin(this, NULL);
+#endif
 }
 
 void Minecraft::setSize(int w, int h) {
@@ -1467,6 +1472,7 @@ void Minecraft::_levelGenerated()
 
 	gameMode->adjustPlayer(player);
 	gui.onLevelGenerated();
+	SkinsScreen::applySavedSkin(this, player);
 #endif
 
 	level->validateSpawn();

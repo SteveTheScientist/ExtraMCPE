@@ -1,5 +1,6 @@
 #include "EntityRenderDispatcher.h"
 
+#include "../../Minecraft.h"
 #include "../../Options.h"
 #include "../../../world/entity/player/Player.h"
 #include "../../../world/item/Item.h"
@@ -62,7 +63,7 @@ EntityRenderDispatcher::EntityRenderDispatcher()
 	}
 }
 
-void EntityRenderDispatcher::destroy() 
+void EntityRenderDispatcher::destroy()
 {
 	if (instance) {
 		delete instance;
@@ -109,7 +110,7 @@ void EntityRenderDispatcher::prepare( Level* level, Font* font, Mob* player, Opt
 		playerRotY = player->yRotO + (player->yRot - player->yRotO) * a;
 		playerRotX = player->xRotO + (player->xRot - player->xRotO) * a;
 	}
-	
+
 	xPlayer = player->xOld + (player->x - player->xOld) * a;
 	yPlayer = player->yOld + (player->y - player->yOld) * a;
 	zPlayer = player->zOld + (player->z - player->zOld) * a;
@@ -171,6 +172,9 @@ void EntityRenderDispatcher::setLevel( Level* level )
 void EntityRenderDispatcher::setMinecraft( Minecraft* minecraft )
 {
 	this->minecraft = minecraft;
+	if (minecraft) {
+		this->textures = minecraft->textures;
+	}
 }
 
 float EntityRenderDispatcher::distanceToSqr( float x, float y, float z )

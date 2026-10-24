@@ -40,9 +40,9 @@ void AppPlatform_iOS::showDialog(int dialogId) {
     }
     if (dialogId == DialogDefinitions::DIALOG_DEMO_FEATURE_DISABLED) {
         UIAlertView *a = [[UIAlertView alloc]
-            initWithTitle:@"" 
-            message:@"Feature not enabled for this demo" 
-            delegate:nil 
+            initWithTitle:@""
+            message:@"Feature not enabled for this demo"
+            delegate:nil
             cancelButtonTitle:@"OK"
             otherButtonTitles:nil];
         [a show];
@@ -50,8 +50,39 @@ void AppPlatform_iOS::showDialog(int dialogId) {
     }
 }
 
+TextureData AppPlatform_iOS::loadTextureFromMemory(const unsigned char* data, size_t size) {
+    TextureData out;
+    out.memoryHandledExternally = false;
+
+    if (!data || size == 0) return out;
+
+    NSData* nsData = [NSData dataWithBytes:data length:size];
+    UIImage* image = [UIImage imageWithData:nsData];
+
+    if (image != nil) {
+        out.w = CGImageGetWidth(image.CGImage);
+        out.h = CGImageGetHeight(image.CGImage);
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        out.data = new unsigned char[4 * out.w * out.h];
+        CGContextRef imgcontext = CGBitmapContextCreate(out.data, out.w, out.h, 8, 4 * out.w, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+        CGColorSpaceRelease(colorSpace);
+        CGContextClearRect(imgcontext, CGRectMake(0, 0, out.w, out.h));
+        CGContextTranslateCTM(imgcontext, 0, 0);
+        CGContextDrawImage(imgcontext, CGRectMake(0, 0, out.w, out.h), image.CGImage);
+        CGContextRelease(imgcontext);
+    }
+    return out;
+}
+
 TextureData AppPlatform_iOS::loadTexture(const std::string& filename_, bool textureFolder)
 {
+    std::string diskPath = textureFolder ? "data/images/" + filename_ : filename_;
+    NSData* diskData = [NSData dataWithContentsOfFile:[NSString stringWithUTF8String:diskPath.c_str()]];
+    if (diskData != nil) {
+        TextureData td = loadTextureFromMemory((const unsigned char*)[diskData bytes], [diskData length]);
+        if (td.data) return td;
+    }
+
     TextureData out;
     out.memoryHandledExternally = false;
 
@@ -65,7 +96,7 @@ TextureData AppPlatform_iOS::loadTexture(const std::string& filename_, bool text
 
 //    if (filename == "terrain" || filename_[dotp+2] == 'v') { // @fix
 //        //NSString *path = [[NSBundle mainBundle] pathForResource:[[NSString alloc] initWithUTF8String:filename.c_str()] ofType:@"pvr4"];
-//        
+//
 //        //FILE* fp = fopen([path UTF8String], "rb");
 //        int fp = 1;
 //        if (fp) {
@@ -89,7 +120,7 @@ TextureData AppPlatform_iOS::loadTexture(const std::string& filename_, bool text
 //            out.format = TEXF_UNCOMPRESSED_565;// TEXF_COMPRESSED_PVRTC_5551;
 //            //fclose(fp);
 //        }
-//        
+//
 ////        PVRTexture* tex = [PVRTexture pvrTextureWithContentsOfFile:path];
 ////        //NSLog(@"path: %@, tex: %p, name: %d\n", path, tex, [tex name]);
 ////        out.identifier = [tex name];
@@ -100,7 +131,7 @@ TextureData AppPlatform_iOS::loadTexture(const std::string& filename_, bool text
 ////        out.identifier = texId;
 //        return out;
 //    }
-    
+
     NSString *p = [[NSString alloc] initWithUTF8String:filename.c_str()];
     NSString *path =  [[NSBundle mainBundle] pathForResource:p ofType:@"png"];
     [p release];
@@ -144,7 +175,7 @@ TextureData AppPlatform_iOS::loadTexture(const std::string& filename_, bool text
     }
     [image release];
     [texData release];
-    
+
     return out;
 }
 
@@ -178,13 +209,13 @@ BinaryBlob AppPlatform_iOS::readAssetFile(const std::string& filename_) {
 std::string AppPlatform_iOS::getDateString(int s) {
 
     NSDate* date = [NSDate dateWithTimeIntervalSince1970:s];
-    
+
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     //dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm";
 
     [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
     [dateFormatter setTimeStyle:NSDateFormatterShortStyle];
-    
+
     //NSTimeZone *gmt = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     //[dateFormatter setTimeZone:gmt];
     NSString *timeStamp = [dateFormatter stringFromDate:date];
@@ -226,7 +257,7 @@ StringVector AppPlatform_iOS::getOptionStrings() {
     //@options
     StringVector options;
     NSDictionary* d = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
-    
+
     for( NSString *key in d )
     {
         if ([key hasPrefix:@"mp_"]
@@ -246,7 +277,7 @@ StringVector AppPlatform_iOS::getOptionStrings() {
 bool AppPlatform_iOS::isSuperFast() {
     const char* s = (const char*)glGetString(GL_RENDERER);
     if (!s) return false;
-    
+
     return (strstr(s, "SGX") != NULL) && (strstr(s, "543") != NULL);
 }
 
@@ -255,7 +286,7 @@ bool AppPlatform_iOS::isNetworkEnabled(bool onlyWifiAllowed) {
     /*
     Reachability *reachability = [Reachability reachabilityForInternetConnection];
     [reachability startNotifier];
-    
+
     NetworkStatus status = [reachability currentReachabilityStatus];
     bool success = (status == ReachableViaWiFiNetwork);
     if (!onlyWifiAllowed && !success)

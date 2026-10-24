@@ -30,6 +30,7 @@ OptionFloat cameraSpeed("cameraSpeed", 1.f);
 OptionInt guiScale("guiScale", 0, 0, 3);
 
 OptionString skin("skin", "Default");
+OptionString skinName("skinName", "char.png");
 
 #ifdef RPI
 OptionString username("username", "StevePi");
@@ -166,6 +167,7 @@ void Options::initTable() {
 	m_options[OPTIONS_WINDOW_SCALE] = &windowScale;
 
 	m_options[OPTIONS_SKIN] = &skin;
+	m_options[OPTIONS_SKIN_NAME] = &skinName;
 	m_options[OPTIONS_USERNAME] = &username;
 
     m_options[OPTIONS_DESTROY_VIBRATION] = &destroyVibration;

@@ -254,7 +254,6 @@ public class MainActivity extends NativeActivity {
         	InputStream is = assets.open(filename);
         	bis = new BufferedInputStream(is);
         } catch (IOException e) {
-        	e.printStackTrace();
         	return null;
         }
 
@@ -274,6 +273,31 @@ public class MainActivity extends NativeActivity {
     	}
 
     	return s.toByteArray();
+    }
+
+    public String[] listAssetFiles(String path) {
+        try {
+            AssetManager assets = getAssets();
+            String[] files = assets.list(path);
+            return files != null ? files : new String[0];
+        } catch (Exception e) {
+            return new String[0];
+        }
+    }
+
+    public int[] getImageDataFromBytes(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return null;
+        Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        if (bm == null) return null;
+        int w = bm.getWidth();
+        int h = bm.getHeight();
+
+        int[] pixels = new int[w * h + 2];
+        pixels[0] = w;
+        pixels[1] = h;
+        bm.getPixels(pixels, 2, w, 0, 0, w, h);
+
+        return pixels;
     }
     
     public int[] getImageData(String filename) {

@@ -239,6 +239,12 @@ static void* fetchSkinForPlayer(void* param) {
     LocalPlayer* player = (LocalPlayer*)param;
     if (!player) return NULL;
 
+    std::string savedSkin = player->minecraft ? player->minecraft->options.getStringValue(OPTIONS_SKIN_NAME) : "";
+    if (!savedSkin.empty() && savedSkin != "char.png") {
+        LOGI("[Skin] Player has explicit skin option '%s', ignoring auto fetch\n", savedSkin.c_str());
+        return NULL;
+    }
+
     LOGI("[Skin] starting skin download for %s\n", player->name.c_str());
 
     const std::string cacheDir = "data/images/skins";

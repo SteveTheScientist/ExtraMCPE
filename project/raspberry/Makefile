@@ -7,6 +7,7 @@ SOURCES := ../../src/main.cpp \
 ../../src/platform/input/Multitouch.cpp \
 ../../src/platform/time.cpp \
 ../../src/platform/CThread.cpp \
+../../src/platform/PngLoader.cpp \
 ../../src/NinecraftApp.cpp \
 ../../src/Performance.cpp \
 ../../src/SharedConstants.cpp \
@@ -59,6 +60,8 @@ SOURCES := ../../src/main.cpp \
 ../../src/client/gui/screens/JoinGameScreen.cpp \
 ../../src/client/gui/screens/MouseUnlockedScreen.cpp \
 ../../src/client/gui/screens/OptionsScreen.cpp \
+../../src/client/gui/screens/CustomizationsScreen.cpp \
+../../src/client/gui/screens/SkinsScreen.cpp \
 ../../src/client/gui/screens/AudioScreen.cpp \
 ../../src/client/gui/screens/PauseScreen.cpp \
 ../../src/client/gui/screens/FogScreen.cpp \

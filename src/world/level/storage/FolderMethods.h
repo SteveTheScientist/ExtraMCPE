@@ -2,6 +2,8 @@
 #define _MINECRAFT_FOLDERMETHODS_H_
 
 #include "../../../platform/log.h"
+#include <vector>
+#include <string>
 
 #ifdef WIN32
 	#include <io.h>
@@ -18,5 +20,15 @@ int getRemainingFileSize(FILE* fp);
 int getFileSize(const char* filename);
 
 bool createTree(const char* base, const char* tree[], int treeLength);
+
+class AppPlatform;
+std::vector<std::string> listDataFiles(
+	AppPlatform* platform,
+	const std::string& dir,
+	const std::string& extension = "",
+	std::string* outDiskPath = NULL,
+	std::vector<std::string>* outDiskFiles = NULL,
+	std::vector<std::string>* outAssetFiles = NULL
+);
 
 #endif

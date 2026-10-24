@@ -80,8 +80,8 @@ private:
 public:
 	IMoveInput* input;
 	bool autoJumpEnabled;
-protected:
 	Minecraft* minecraft;
+protected:
 	int jumpTriggerTime;
 	int ascendTriggerTime;
 	int descendTriggerTime;

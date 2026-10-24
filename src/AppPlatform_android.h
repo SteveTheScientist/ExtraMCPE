@@ -5,6 +5,7 @@
 #include "client/renderer/gles.h"
 #include "platform/log.h"
 #include "platform/time.h"
+#include "world/level/storage/FolderMethods.h"
 #include <jni.h>
 #include <cmath>
 #include <exception>
@@ -56,6 +57,7 @@ public:
         _methodSaveScreenshot(0),
         _postScreenshotToFacebook(0),
         _getImageData(0),
+        _getImageDataFromBytes(0),
 		_readAssetFile(0),
         _methodPlaySound(0),
         _showDialog(0),
@@ -130,7 +132,9 @@ public:
         _methodSaveScreenshot = env->GetStaticMethodID( _activityClass, "saveScreenshot", "(Ljava/lang/String;II[I)V");
         _postScreenshotToFacebook = env->GetMethodID( _activityClass, "postScreenshotToFacebook", "(Ljava/lang/String;II[I)V");
         _getImageData = env->GetMethodID( _activityClass, "getImageData", "(Ljava/lang/String;)[I");
+        _getImageDataFromBytes = env->GetMethodID( _activityClass, "getImageDataFromBytes", "([B)[I");
 		_readAssetFile = env->GetMethodID( _activityClass, "getFileDataBytes", "(Ljava/lang/String;)[B");
+		_listAssetFiles = env->GetMethodID( _activityClass, "listAssetFiles", "(Ljava/lang/String;)[Ljava/lang/String;");
         #if defined(PRE_ANDROID23)
             _methodPlaySound = env->GetMethodID( _activityClass, "playSound", "(Ljava/lang/String;FF)V");
         #endif
@@ -374,16 +378,90 @@ public:
         }
     }
 
-    TextureData loadTexture(const std::string& filename, bool textureFolder) {
+    TextureData loadTextureFromMemory(const unsigned char* data, size_t size) override {
+        if (!_isInited || !_getImageDataFromBytes || !data || size == 0) return TextureData();
+
+        JVMAttacher ta(_vm);
+        JNIEnv* env = ta.getEnv();
+
+        jbyteArray jbytes = env->NewByteArray(size);
+        if (!jbytes) return TextureData();
+
+        env->SetByteArrayRegion(jbytes, 0, size, (const jbyte*)data);
+
+        jintArray arr = (jintArray)env->CallObjectMethod(instance, _getImageDataFromBytes, jbytes);
+        env->DeleteLocalRef(jbytes);
+
+        if (env->ExceptionOccurred()) {
+            env->ExceptionClear();
+            return TextureData();
+        }
+
+        if (!arr) return TextureData();
+
+        jsize len = env->GetArrayLength(arr);
+        if (len < 2) {
+            env->DeleteLocalRef(arr);
+            return TextureData();
+        }
+
+        int numPixels = len - 2;
+        int* pixels = new int[numPixels];
+        jint* body = env->GetIntArrayElements(arr, 0);
+
+        int w = body[0];
+        int h = body[1];
+        memcpy(pixels, &body[2], numPixels * sizeof(int));
+
+        for (int i = 0; i < numPixels; ++i)
+            pixels[i] = rgbToBgr(pixels[i]);
+
+        env->ReleaseIntArrayElements(arr, body, 0);
+        env->DeleteLocalRef(arr);
+
+        TextureData out;
+        out.w = w;
+        out.h = h;
+        out.data = (unsigned char*)pixels;
+        out.memoryHandledExternally = false;
+        return out;
+    }
+
+    TextureData loadTexture(const std::string& filename, bool textureFolder) override {
         if (!_isInited) return TextureData();
+
+        // 1. Try reading directly from disk if available (e.g. data/images/skins/... or data/skins/...)
+        std::string diskPath = textureFolder ? "data/images/" + filename : filename;
+        FILE* fp = fopen(diskPath.c_str(), "rb");
+        if (fp) {
+            int size = getRemainingFileSize(fp);
+            if (size > 0) {
+                unsigned char* buf = new unsigned char[size];
+                fread(buf, 1, size, fp);
+                fclose(fp);
+                TextureData td = loadTextureFromMemory(buf, size);
+                delete[] buf;
+                if (td.data) return td;
+            } else {
+                fclose(fp);
+            }
+        }
+
+        // 2. Try loading via Assets/JNI if not on disk
         if (!_getImageData) return TextureData();
 
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
 
         std::string path = textureFolder ? "images/" + filename : filename;
-        jintArray arr = (jintArray)env->CallObjectMethod(
-            instance, _getImageData, env->NewStringUTF(path.c_str()));
+        jstring jpath = env->NewStringUTF(path.c_str());
+        jintArray arr = (jintArray)env->CallObjectMethod(instance, _getImageData, jpath);
+        env->DeleteLocalRef(jpath);
+
+        if (env->ExceptionOccurred()) {
+            env->ExceptionClear();
+            return TextureData();
+        }
 
         if (!arr)
             return TextureData();
@@ -403,10 +481,7 @@ public:
         for (int i = 0; i < numPixels; ++i)
             pixels[i] = rgbToBgr(pixels[i]);
 
-        //LOGI("Read-Image-Data: Decided file size to be: %d x %d (len %d)\n", w, h, len);
-
         env->ReleaseIntArrayElements(arr, body, 0);
-  //      LOGI("loadtexture: 9\n");
 
         // Set the result
         TextureData out;
@@ -424,8 +499,15 @@ public:
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
 
+		jstring jfn = env->NewStringUTF(filename.c_str());
 		jbyteArray arr = (jbyteArray)env->CallObjectMethod(
-			instance, _readAssetFile, env->NewStringUTF(filename.c_str()));
+			instance, _readAssetFile, jfn);
+		env->DeleteLocalRef(jfn);
+
+		if (env->ExceptionOccurred()) {
+			env->ExceptionClear();
+			return BinaryBlob();
+		}
 
 		if (!arr)
 			return BinaryBlob();
@@ -436,7 +518,42 @@ public:
 		memcpy(blob.data, body, len);
 
 		env->ReleaseByteArrayElements(arr, body, 0);
+		env->DeleteLocalRef(arr);
 		return blob;
+	}
+
+	StringVector listAssetFiles(const std::string& path) override {
+		StringVector out;
+		if (!_isInited || !_listAssetFiles) return out;
+
+		JVMAttacher ta(_vm);
+		JNIEnv* env = ta.getEnv();
+
+		jstring jpath = env->NewStringUTF(path.c_str());
+		jobjectArray sa = (jobjectArray)env->CallObjectMethod(instance, _listAssetFiles, jpath);
+		env->DeleteLocalRef(jpath);
+
+		if (env->ExceptionOccurred()) {
+			env->ExceptionClear();
+			return out;
+		}
+
+		if (!sa) return out;
+
+		jsize len = env->GetArrayLength(sa);
+		for (jsize i = 0; i < len; ++i) {
+			jstring s = (jstring)env->GetObjectArrayElement(sa, i);
+			if (s) {
+				const char* str = env->GetStringUTFChars(s, NULL);
+				if (str) {
+					out.push_back(std::string(str));
+					env->ReleaseStringUTFChars(s, str);
+				}
+				env->DeleteLocalRef(s);
+			}
+		}
+		env->DeleteLocalRef(sa);
+		return out;
 	}
 
 	std::string getDateString(int s) {
@@ -614,7 +731,9 @@ private:
     jmethodID _methodSaveScreenshot;
     jmethodID _postScreenshotToFacebook;
     jmethodID _getImageData;
+    jmethodID _getImageDataFromBytes;
 	jmethodID _readAssetFile;
+	jmethodID _listAssetFiles;
     jmethodID _methodPlaySound;
     jmethodID _showDialog;
     jmethodID _methodTick;
