@@ -15,6 +15,7 @@
 #include "commands/CommandGameRule.hpp"
 #include "commands/CommandTime.hpp"
 #include "commands/CommandSeed.hpp"
+#include "commands/CommandSong.hpp"
 #include "commands/CommandList.hpp"
 #include "commands/CommandTeleport.hpp"
 #include "commands/CommandKill.hpp"
@@ -43,6 +44,7 @@ void CommandManager::registerAllCommands() {
     m_commands.push_back(new CommandGameRule());
     m_commands.push_back(new CommandTime());
     m_commands.push_back(new CommandSeed());
+    m_commands.push_back(new CommandSong());
     m_commands.push_back(new CommandList());
     m_commands.push_back(new CommandTeleport());
     m_commands.push_back(new CommandKill());

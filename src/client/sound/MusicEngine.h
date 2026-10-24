@@ -29,6 +29,10 @@ public:
     void onAppPause();
     void onAppResume();
 
+    bool playTrack(const std::string& trackNameOrPath);
+    const std::vector<std::string>& getTracks() const { return tracks; }
+    std::vector<std::string> getTrackNamesWithoutExtension() const;
+
 private:
     void loadTrackList();
     void pickNextTrack();

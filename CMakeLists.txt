@@ -126,6 +126,7 @@ file(GLOB SERVER_SOURCES
     "src/client/Options.cpp"
     "src/client/OptionsFile.cpp"
     "src/client/ServerProfiler.cpp"
+    "src/client/sound/*.cpp"
 
     "src/client/gamemode/CreativeMode.cpp"
     "src/client/gamemode/GameMode.cpp"

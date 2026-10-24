@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 
 #include "stb_vorbis.c"
 
@@ -139,10 +140,21 @@ void MusicEngine::loadTrackList() {
         tracks.push_back("featherfall.ogg");
         tracks.push_back("komorebi.ogg");
         tracks.push_back("Precipice.ogg");
-        tracks.push_back("Puzzlebox [ray1Svv6Sl8].ogg");
     }
 
     LOGI("MusicEngine loaded %d tracks.\n", (int)tracks.size());
+}
+
+std::vector<std::string> MusicEngine::getTrackNamesWithoutExtension() const {
+    std::vector<std::string> names;
+    for (const auto& t : tracks) {
+        std::string name = t;
+        if (name.size() >= 4 && name.substr(name.size() - 4) == ".ogg") {
+            name = name.substr(0, name.size() - 4);
+        }
+        names.push_back(name);
+    }
+    return names;
 }
 
 void MusicEngine::tick() {
@@ -234,6 +246,34 @@ void MusicEngine::pickNextTrack() {
     startTrack(candidate);
 }
 
+bool MusicEngine::playTrack(const std::string& trackNameOrPath) {
+    if (tracks.empty()) return false;
+
+    std::string target = trackNameOrPath;
+    // Lowercase conversion for case-insensitive lookup
+    std::transform(target.begin(), target.end(), target.begin(), ::tolower);
+    if (target.size() < 4 || target.substr(target.size() - 4) != ".ogg") {
+        target += ".ogg";
+    }
+
+    std::string foundTrack = "";
+    for (const auto& t : tracks) {
+        std::string lowerT = t;
+        std::transform(lowerT.begin(), lowerT.end(), lowerT.begin(), ::tolower);
+        if (lowerT == target) {
+            foundTrack = t;
+            break;
+        }
+    }
+
+    if (foundTrack.empty()) {
+        return false;
+    }
+
+    startTrack(foundTrack);
+    return isPlaying;
+}
+
 void MusicEngine::startTrack(const std::string& trackName) {
     if (isDisabled) return;
 
@@ -310,12 +350,22 @@ void MusicEngine::startTrack(const std::string& trackName) {
     alSourcePlay(streamingSource);
 
     isPlaying = true;
-    LOGI("MusicEngine: Started playing %s\n", trackName.c_str());
 #else
     // On non-OpenAL platforms (such as Android OpenSL or Web), decoding is verified without crash
     isPlaying = true;
-    LOGI("MusicEngine: Started streaming track %s\n", trackName.c_str());
 #endif
+
+    std::string displayName = trackName;
+    if (displayName.size() >= 4 && displayName.substr(displayName.size() - 4) == ".ogg") {
+        displayName = displayName.substr(0, displayName.size() - 4);
+    }
+
+    std::string msg = "Now playing: " + displayName;
+    LOGI("MusicEngine: %s\n", msg.c_str());
+
+    if (options && options->getProgressValue(OPTIONS_MUSIC_VOLUME) > 0.0f) {
+        mc->addMessage(SECTION "eNow playing: " + displayName);
+    }
 }
 
 #if (defined(__APPLE__) || defined(PLATFORM_DESKTOP)) && !defined(NO_SOUND)

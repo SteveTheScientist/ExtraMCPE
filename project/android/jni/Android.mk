@@ -162,6 +162,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/commands/CommandGameRule.cpp \
 ../../../src/commands/CommandTime.cpp \
 ../../../src/commands/CommandSeed.cpp \
+../../../src/commands/CommandSong.cpp \
 ../../../src/commands/CommandList.cpp \
 ../../../src/commands/CommandTeleport.cpp \
 ../../../src/commands/CommandKill.cpp \

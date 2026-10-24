@@ -1223,6 +1223,7 @@
 		F9E5A796300E7B3400164066 /* CommandTime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A797300E7B3400164066 /* CommandTime.cpp */; };
 		F9E5A798300E7B3400164066 /* CommandTime.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A799300E7B3400164066 /* CommandTime.hpp */; };
 		F9E5A79A300E7B3400164066 /* CommandSeed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79B300E7B3400164066 /* CommandSeed.cpp */; };
+		F9E5A79C300E7B3400164066 /* CommandSong.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79D300E7B3400164066 /* CommandSong.cpp */; };
 		F9E5A79C300E7B3400164066 /* CommandSeed.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79D300E7B3400164066 /* CommandSeed.hpp */; };
 		F9E5A79E300E7B3400164066 /* CommandList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79F300E7B3400164066 /* CommandList.cpp */; };
 		F9E5A7A0300E7B3400164066 /* CommandList.hpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A7A1300E7B3400164066 /* CommandList.hpp */; };
@@ -2575,6 +2576,8 @@
 		F9E5A797300E7B3400164066 /* CommandTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandTime.cpp; path = ../../src/commands/CommandTime.cpp; sourceTree = "<group>"; };
 		F9E5A799300E7B3400164066 /* CommandTime.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandTime.hpp; path = ../../src/commands/CommandTime.hpp; sourceTree = "<group>"; };
 		F9E5A79B300E7B3400164066 /* CommandSeed.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSeed.cpp; path = ../../src/commands/CommandSeed.cpp; sourceTree = "<group>"; };
+		F9E5A79D300E7B3400164066 /* CommandSong.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSong.cpp; path = ../../src/commands/CommandSong.cpp; sourceTree = "<group>"; };
+		F9E5A79E300E7B3400164066 /* CommandSong.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandSong.hpp; path = ../../src/commands/CommandSong.hpp; sourceTree = "<group>"; };
 		F9E5A79D300E7B3400164066 /* CommandSeed.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandSeed.hpp; path = ../../src/commands/CommandSeed.hpp; sourceTree = "<group>"; };
 		F9E5A79F300E7B3400164066 /* CommandList.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandList.cpp; path = ../../src/commands/CommandList.cpp; sourceTree = "<group>"; };
 		F9E5A7A1300E7B3400164066 /* CommandList.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = CommandList.hpp; path = ../../src/commands/CommandList.hpp; sourceTree = "<group>"; };
@@ -4463,6 +4466,8 @@
 				F9E5A797300E7B3400164066 /* CommandTime.cpp */,
 				F9E5A799300E7B3400164066 /* CommandTime.hpp */,
 				F9E5A79B300E7B3400164066 /* CommandSeed.cpp */,
+				F9E5A79D300E7B3400164066 /* CommandSong.cpp */,
+				F9E5A79E300E7B3400164066 /* CommandSong.hpp */,
 				F9E5A79D300E7B3400164066 /* CommandSeed.hpp */,
 				F9E5A79F300E7B3400164066 /* CommandList.cpp */,
 				F9E5A7A1300E7B3400164066 /* CommandList.hpp */,
@@ -5660,6 +5665,7 @@
 				F9E5A796300E7B3400164066 /* CommandTime.cpp in Sources */,
 				F9E5A798300E7B3400164066 /* CommandTime.hpp in Sources */,
 				F9E5A79A300E7B3400164066 /* CommandSeed.cpp in Sources */,
+		F9E5A79C300E7B3400164066 /* CommandSong.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9E5A79D300E7B3400164066 /* CommandSong.cpp */; };
 				F9E5A79C300E7B3400164066 /* CommandSeed.hpp in Sources */,
 				F9E5A79E300E7B3400164066 /* CommandList.cpp in Sources */,
 				F9E5A7A0300E7B3400164066 /* CommandList.hpp in Sources */,
