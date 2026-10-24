@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
                    ../../../src/platform/time.cpp \
                    ../../../src/platform/CThread.cpp \
                    ../../../src/platform/HttpClient.cpp \
+                   ../../../src/platform/PngLoader.cpp \
 ../../../src/NinecraftApp.cpp \
 ../../../src/Performance.cpp \
 ../../../src/SharedConstants.cpp \
