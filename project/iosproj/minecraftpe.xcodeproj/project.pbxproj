@@ -1165,8 +1165,6 @@
 		F99D34422F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */; };
 		F99D35022F736BDA00DC153E /* SkinsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D35012F736BDA00DC153E /* SkinsScreen.cpp */; };
 		F99D35032F736BDA00DC153E /* SkinsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D35012F736BDA00DC153E /* SkinsScreen.cpp */; };
-		F99D35042F736C0000DC153E /* PngLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D35052F736C0000DC153E /* PngLoader.cpp */; };
-		F99D35062F736C0000DC153E /* PngLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D35052F736C0000DC153E /* PngLoader.cpp */; };
 		F99D34452F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */; };
 		F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */; };
 		F99D34492F736BDA00DC153E /* CloudsScreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F99D34482F736BDA00DC153E /* CloudsScreen.cpp */; };
@@ -2521,7 +2519,6 @@
 		F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CustomizationsScreen.cpp; path = ../../src/client/gui/screens/CustomizationsScreen.cpp; sourceTree = "<group>"; };
 		F99D35002F736BDA00DC153E /* SkinsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SkinsScreen.h; path = ../../src/client/gui/screens/SkinsScreen.h; sourceTree = "<group>"; };
 		F99D35012F736BDA00DC153E /* SkinsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SkinsScreen.cpp; path = ../../src/client/gui/screens/SkinsScreen.cpp; sourceTree = "<group>"; };
-		F99D35052F736C0000DC153E /* PngLoader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PngLoader.cpp; path = ../../src/platform/PngLoader.cpp; sourceTree = "<group>"; };
 		F99D34432F736BDA00DC153E /* KeyBindsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = KeyBindsScreen.h; path = ../../src/client/gui/screens/KeyBindsScreen.h; sourceTree = "<group>"; };
 		F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = KeyBindsScreen.cpp; path = ../../src/client/gui/screens/KeyBindsScreen.cpp; sourceTree = "<group>"; };
 		F99D34472F736BDA00DC153E /* CloudsScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CloudsScreen.h; path = ../../src/client/gui/screens/CloudsScreen.h; sourceTree = "<group>"; };
@@ -4519,7 +4516,6 @@
 				F99D34402F736BDA00DC153E /* CustomizationsScreen.cpp */,
 				F99D35002F736BDA00DC153E /* SkinsScreen.h */,
 				F99D35012F736BDA00DC153E /* SkinsScreen.cpp */,
-				F99D35052F736C0000DC153E /* PngLoader.cpp */,
 				F99D34432F736BDA00DC153E /* KeyBindsScreen.h */,
 				F99D34442F736BDA00DC153E /* KeyBindsScreen.cpp */,
 				F99D34472F736BDA00DC153E /* CloudsScreen.h */,
@@ -5538,7 +5534,6 @@
 				F99D34332F736BDA00DC153E /* CreditsScreen.cpp in Sources */,
 				F99D34412F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */,
 				F99D35022F736BDA00DC153E /* SkinsScreen.cpp in Sources */,
-				F99D35042F736C0000DC153E /* PngLoader.cpp in Sources */,
 				F99D34452F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
 				F99D34492F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
 				F99D34592F736BDA00DC153E /* WorldOptionsScreen.cpp in Sources */,
@@ -5958,7 +5953,6 @@
 				F99D34342F736BDA00DC153E /* CreditsScreen.cpp in Sources */,
 				F99D34422F736BDA00DC153E /* CustomizationsScreen.cpp in Sources */,
 				F99D35032F736BDA00DC153E /* SkinsScreen.cpp in Sources */,
-				F99D35062F736C0000DC153E /* PngLoader.cpp in Sources */,
 				F99D34462F736BDA00DC153E /* KeyBindsScreen.cpp in Sources */,
 				F99D344A2F736BDA00DC153E /* CloudsScreen.cpp in Sources */,
 				F99D345A2F736BDA00DC153E /* WorldOptionsScreen.cpp in Sources */,

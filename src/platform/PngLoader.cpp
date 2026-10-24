@@ -1,5 +1,7 @@
 #include "PngLoader.h"
 
+#if !defined(ANDROID) && !defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
+
 #include <png.h>
 #include <cstring>
 
@@ -96,3 +98,5 @@ TextureData loadPngFromMemory(const unsigned char* data, size_t size) {
 
     return out;
 }
+
+#endif

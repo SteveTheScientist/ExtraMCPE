@@ -22,7 +22,7 @@ public:
     }
 
     void setBasePath(const std::string& bp) { _basePath = bp; }
-    
+
     void saveScreenshot(const std::string& filename, int glWidth, int glHeight) {
         //@todo
     }
@@ -34,22 +34,23 @@ public:
 	virtual void showDialog(int dialogId);
 	virtual int getUserInputStatus();
 	virtual StringVector getUserInput();
-    
+
     TextureData loadTexture(const std::string& filename_, bool textureFolder);
+    TextureData loadTextureFromMemory(const unsigned char* data, size_t size) override;
 
 	virtual BinaryBlob readAssetFile(const std::string& filename);
-    
+
     std::string getDateString(int s);
 
 	virtual int getScreenWidth();
 	virtual int getScreenHeight();
     virtual float getPixelsPerMillimeter();
-    
+
 	virtual bool isTouchscreen();
     virtual void vibrate(int milliSeconds);
-    
+
 	virtual bool isNetworkEnabled(bool onlyWifiAllowed);
-    
+
 	virtual StringVector getOptionStrings();
 
     virtual bool isPowerVR();
@@ -57,7 +58,7 @@ public:
     virtual void showKeyboard();
     virtual void hideKeyboard();
 private:
-    
+
     std::string _basePath;
     minecraftpeViewController* _viewController;
 };
