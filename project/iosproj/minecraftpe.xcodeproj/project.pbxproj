@@ -247,9 +247,7 @@
 		D5251E74153823DC00FC82C8 /* en_US.lang in Resources */ = {isa = PBXBuildFile; fileRef = D5251E73153823DC00FC82C8 /* en_US.lang */; };
 		D5251E75153823DC00FC82C8 /* en_US.lang in Resources */ = {isa = PBXBuildFile; fileRef = D5251E73153823DC00FC82C8 /* en_US.lang */; };
 		D5251E911539A9AF00FC82C8 /* SoundEngine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D5251E901539A9AF00FC82C8 /* SoundEngine.mm */; };
-		D5251E931539A9AF00FC82C8 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */; };
 		D5251E921539A9AF00FC82C8 /* SoundEngine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D5251E901539A9AF00FC82C8 /* SoundEngine.mm */; };
-		D5251E941539A9AF00FC82C8 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */; };
 		D54493EF15D13BF0005FA9B0 /* BedTile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D54493EA15D13BF0005FA9B0 /* BedTile.cpp */; };
 		D54493F015D13BF0005FA9B0 /* BedTile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D54493EA15D13BF0005FA9B0 /* BedTile.cpp */; };
 		D54493F115D13BF0005FA9B0 /* CropTile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D54493EC15D13BF0005FA9B0 /* CropTile.cpp */; };
@@ -856,7 +854,9 @@
 		D5B50FF514CFF670005F7284 /* TileRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CF114CFF66F005F7284 /* TileRenderer.cpp */; };
 		D5B50FF614CFF670005F7284 /* TileRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50CF114CFF66F005F7284 /* TileRenderer.cpp */; };
 		D5B5102D14CFF670005F7284 /* Sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1114CFF66F005F7284 /* Sound.cpp */; };
+		D5B5103014CFF670005F7284 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */; };
 		D5B5102E14CFF670005F7284 /* Sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1114CFF66F005F7284 /* Sound.cpp */; };
+		D5B5102F14CFF670005F7284 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */; };
 		D5B5102F14CFF670005F7284 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1B14CFF66F005F7284 /* main.cpp */; };
 		D5B5103014CFF670005F7284 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1B14CFF66F005F7284 /* main.cpp */; };
 		D5B5103514CFF670005F7284 /* Tag.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D2E14CFF66F005F7284 /* Tag.cpp */; };
@@ -1559,8 +1559,6 @@
 		D5251E6F15381D0500FC82C8 /* spritesheet.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spritesheet.png; sourceTree = "<group>"; };
 		D5251E73153823DC00FC82C8 /* en_US.lang */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = en_US.lang; sourceTree = "<group>"; };
 		D5251E901539A9AF00FC82C8 /* SoundEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SoundEngine.mm; sourceTree = "<group>"; };
-		D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusicEngine.cpp; sourceTree = "<group>"; };
-		D5251E961539A9AF00FC82C8 /* MusicEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusicEngine.h; sourceTree = "<group>"; };
 		D54493EA15D13BF0005FA9B0 /* BedTile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BedTile.cpp; sourceTree = "<group>"; };
 		D54493EB15D13BF0005FA9B0 /* BedTile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BedTile.h; sourceTree = "<group>"; };
 		D54493EC15D13BF0005FA9B0 /* CropTile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CropTile.cpp; sourceTree = "<group>"; };
@@ -2041,11 +2039,13 @@
 		D5B50CF214CFF66F005F7284 /* TileRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TileRenderer.h; sourceTree = "<group>"; };
 		D5B50CF314CFF66F005F7284 /* VertecDecl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VertecDecl.h; sourceTree = "<group>"; };
 		D5B50D1114CFF66F005F7284 /* Sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Sound.cpp; sourceTree = "<group>"; };
+		D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusicEngine.cpp; sourceTree = "<group>"; };
+		D5B50D1614CFF66F005F7284 /* MusicEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusicEngine.h; sourceTree = "<group>"; };
 		D5B50D1214CFF66F005F7284 /* Sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sound.h; sourceTree = "<group>"; };
 		D5B50D1314CFF66F005F7284 /* SoundEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SoundEngine.h; sourceTree = "<group>"; };
 		D5B50D1414CFF66F005F7284 /* SoundRepository.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SoundRepository.h; sourceTree = "<group>"; };
-				D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */,
-				D5251E961539A9AF00FC82C8 /* MusicEngine.h */,
+				D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */,
+				D5B50D1614CFF66F005F7284 /* MusicEngine.h */,
 		D5B50D1514CFF66F005F7284 /* Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
 		D5B50D1614CFF66F005F7284 /* User.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = User.h; sourceTree = "<group>"; };
 		D5B50D1714CFF66F005F7284 /* EglConfigPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EglConfigPrinter.h; sourceTree = "<group>"; };
@@ -3743,12 +3743,14 @@
 			isa = PBXGroup;
 			children = (
 				D5B50D1114CFF66F005F7284 /* Sound.cpp */,
+		D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusicEngine.cpp; sourceTree = "<group>"; };
+		D5B50D1614CFF66F005F7284 /* MusicEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusicEngine.h; sourceTree = "<group>"; };
 				D5251E901539A9AF00FC82C8 /* SoundEngine.mm */,
 				D5B50D1214CFF66F005F7284 /* Sound.h */,
 				D5B50D1314CFF66F005F7284 /* SoundEngine.h */,
 				D5B50D1414CFF66F005F7284 /* SoundRepository.h */,
-				D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */,
-				D5251E961539A9AF00FC82C8 /* MusicEngine.h */,
+				D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */,
+				D5B50D1614CFF66F005F7284 /* MusicEngine.h */,
 			);
 			path = sound;
 			sourceTree = "<group>";
@@ -5376,6 +5378,7 @@
 				D5B50FF414CFF670005F7284 /* Textures.cpp in Sources */,
 				D5B50FF614CFF670005F7284 /* TileRenderer.cpp in Sources */,
 				D5B5102E14CFF670005F7284 /* Sound.cpp in Sources */,
+		D5B5102F14CFF670005F7284 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */; };
 				D5B5103014CFF670005F7284 /* main.cpp in Sources */,
 				D5B5103614CFF670005F7284 /* Tag.cpp in Sources */,
 				D5B5103814CFF670005F7284 /* ClientSideNetworkHandler.cpp in Sources */,
@@ -5572,7 +5575,6 @@
 				D5251E6C1538192700FC82C8 /* VitaIncludes.cpp in Sources */,
 				D5251E6E1538192700FC82C8 /* WSAStartupSingleton.cpp in Sources */,
 				D5251E921539A9AF00FC82C8 /* SoundEngine.mm in Sources */,
-		D5251E941539A9AF00FC82C8 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */; };
 				D5951EC8159347EE0043A12A /* FurnaceRecipes.cpp in Sources */,
 				D5951ECA159347EE0043A12A /* OreRecipes.cpp in Sources */,
 				D5951EDC159348C50043A12A /* InventoryPane.cpp in Sources */,
@@ -5783,6 +5785,7 @@
 				D5B50FF314CFF670005F7284 /* Textures.cpp in Sources */,
 				D5B50FF514CFF670005F7284 /* TileRenderer.cpp in Sources */,
 				D5B5102D14CFF670005F7284 /* Sound.cpp in Sources */,
+		D5B5103014CFF670005F7284 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5B50D1514CFF66F005F7284 /* MusicEngine.cpp */; };
 				D5B5102F14CFF670005F7284 /* main.cpp in Sources */,
 				D5B5103514CFF670005F7284 /* Tag.cpp in Sources */,
 				D5B5103714CFF670005F7284 /* ClientSideNetworkHandler.cpp in Sources */,
@@ -5982,7 +5985,6 @@
 				D5251E6B1538192700FC82C8 /* VitaIncludes.cpp in Sources */,
 				D5251E6D1538192700FC82C8 /* WSAStartupSingleton.cpp in Sources */,
 				D5251E911539A9AF00FC82C8 /* SoundEngine.mm in Sources */,
-		D5251E941539A9AF00FC82C8 /* MusicEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D5251E951539A9AF00FC82C8 /* MusicEngine.cpp */; };
 				D5951EC7159347EE0043A12A /* FurnaceRecipes.cpp in Sources */,
 				D5951EC9159347EE0043A12A /* OreRecipes.cpp in Sources */,
 				D5951EDB159348C50043A12A /* InventoryPane.cpp in Sources */,
