@@ -171,6 +171,11 @@ void SkinList::renderItem(int i, int x, int y, int h, Tesselator& t) {
     m_screen->renderPlayer((float)centerx, playerY, "skins/" + m_screen->m_skinFiles[i]);
 }
 
+void SkinList::setSelectedItemAndCenter(int index) {
+    selectedItem = index;
+    xo = xoo = (float)(index * itemWidth - (width - itemWidth) * 0.5f);
+}
+
 void SkinList::stepLeft() {
     if (selectedItem > 0) {
         td.start = xo;
@@ -450,15 +455,13 @@ void SkinsScreen::init() {
         }
     }
     if (foundIdx >= 0) {
-        m_skinList->selectedItem = foundIdx;
-        m_skinList->xo = m_skinList->xoo = foundIdx * m_skinList->itemWidth - (width - m_skinList->itemWidth) * 0.5f;
+        m_skinList->setSelectedItemAndCenter(foundIdx);
     } else {
         // Saved skin file is missing; fall back to char.png
         applySavedSkin(minecraft, minecraft->player);
         for (size_t i = 0; i < m_skinFiles.size(); ++i) {
             if (m_skinFiles[i] == "char.png") {
-                m_skinList->selectedItem = (int)i;
-                m_skinList->xo = m_skinList->xoo = (int)i * m_skinList->itemWidth - (width - m_skinList->itemWidth) * 0.5f;
+                m_skinList->setSelectedItemAndCenter((int)i);
                 break;
             }
         }
@@ -573,8 +576,7 @@ void SkinsScreen::buttonClicked(Button* button) {
         }
         for (size_t i = 0; i < m_skinFiles.size(); ++i) {
             if (m_skinFiles[i] == "char.png") {
-                m_skinList->selectedItem = (int)i;
-                m_skinList->xo = m_skinList->xoo = (int)i * m_skinList->itemWidth - (width - m_skinList->itemWidth) * 0.5f;
+                m_skinList->setSelectedItemAndCenter((int)i);
                 break;
             }
         }

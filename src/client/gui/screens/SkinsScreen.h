@@ -37,6 +37,7 @@ public:
     void stepLeft();
     void stepRight();
     void tweenInited();
+    void setSelectedItemAndCenter(int index);
 
     int selectedItem;
     int mode;
