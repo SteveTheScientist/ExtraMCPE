@@ -57,6 +57,7 @@ private:
     int vorbisChannels;
     int vorbisSampleRate;
     bool isPlaying;
+    bool isDisabled;
 
 #if (defined(__APPLE__) || defined(PLATFORM_DESKTOP)) && !defined(NO_SOUND)
     ALuint streamingSource;

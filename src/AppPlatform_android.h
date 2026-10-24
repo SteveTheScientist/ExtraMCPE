@@ -172,6 +172,7 @@ public:
 
         if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
+            env->ExceptionClear();
         }
 
  //       LOGI("Class: %d\n. Methods: %d,%d\n", _activityClass,
@@ -357,7 +358,9 @@ public:
         JVMAttacher ta(_vm);
         JNIEnv* env = ta.getEnv();
 
-        env->CallVoidMethod(instance, _methodPlaySound, env->NewStringUTF(filename.c_str()), volume, pitch);
+        jstring jfilename = env->NewStringUTF(filename.c_str());
+        env->CallVoidMethod(instance, _methodPlaySound, jfilename, volume, pitch);
+        env->DeleteLocalRef(jfilename);
         //w.stop();
         //w.printEvery(1, "playSound-java");
     }
@@ -382,8 +385,10 @@ public:
         JNIEnv* env = ta.getEnv();
 
         std::string path = textureFolder ? "images/" + filename : filename;
+        jstring jpath = env->NewStringUTF(path.c_str());
         jintArray arr = (jintArray)env->CallObjectMethod(
-            instance, _getImageData, env->NewStringUTF(path.c_str()));
+            instance, _getImageData, jpath);
+        env->DeleteLocalRef(jpath);
 
         if (!arr)
             return TextureData();
@@ -424,18 +429,36 @@ public:
 		JVMAttacher ta(_vm);
 		JNIEnv* env = ta.getEnv();
 
+		jstring jfilename = env->NewStringUTF(filename.c_str());
 		jbyteArray arr = (jbyteArray)env->CallObjectMethod(
-			instance, _readAssetFile, env->NewStringUTF(filename.c_str()));
+			instance, _readAssetFile, jfilename);
+		env->DeleteLocalRef(jfilename);
+
+		if (env->ExceptionOccurred()) {
+			env->ExceptionDescribe();
+			env->ExceptionClear();
+			return BinaryBlob();
+		}
 
 		if (!arr)
 			return BinaryBlob();
 
 		jsize len = env->GetArrayLength(arr);
+		if (len <= 0) {
+			return BinaryBlob();
+		}
+
 		BinaryBlob blob(new unsigned char[len], len);
 		jbyte* body = env->GetByteArrayElements(arr, 0);
-		memcpy(blob.data, body, len);
+		if (body) {
+			memcpy(blob.data, body, len);
+			env->ReleaseByteArrayElements(arr, body, 0);
+		} else {
+			delete[] blob.data;
+			blob.data = NULL;
+			blob.size = 0;
+		}
 
-		env->ReleaseByteArrayElements(arr, body, 0);
 		return blob;
 	}
 
@@ -448,10 +471,13 @@ public:
 
         std::string out;
         jstring dateString = (jstring)env->CallObjectMethod(instance, _methodGetDateString, s);
-        const char* str = env->GetStringUTFChars(dateString, NULL);
-        if (str)
-            out = str;
-        env->ReleaseStringUTFChars(dateString, str);
+        if (dateString) {
+            const char* str = env->GetStringUTFChars(dateString, NULL);
+            if (str) {
+                out = str;
+                env->ReleaseStringUTFChars(dateString, str);
+            }
+        }
         return out;
     }
 
@@ -464,10 +490,13 @@ public:
 
 		std::string out;
 		jstring stringVar = (jstring)env->CallObjectMethod(instance, _methodGetPlatformStringVar, s);
-		const char* str = env->GetStringUTFChars(stringVar, NULL);
-		if (str)
-			out = str;
-		env->ReleaseStringUTFChars(stringVar, str);
+		if (stringVar) {
+			const char* str = env->GetStringUTFChars(stringVar, NULL);
+			if (str) {
+				out = str;
+				env->ReleaseStringUTFChars(stringVar, str);
+			}
+		}
 		return out;
 	}
 	// Opens a webpage using an Android intent.  Called from native code.

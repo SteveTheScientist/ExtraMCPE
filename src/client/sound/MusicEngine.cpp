@@ -57,8 +57,6 @@ static int mem_tell(void* datasource) {
     return (int)ms->offset;
 }
 
-static stb_vorbis_alloc mem_alloc_struct = { NULL, 0 };
-
 MusicEngine::MusicEngine()
 : mc(NULL),
   options(NULL),
@@ -72,7 +70,8 @@ MusicEngine::MusicEngine()
   memStreamPtr(NULL),
   vorbisChannels(0),
   vorbisSampleRate(0),
-  isPlaying(false)
+  isPlaying(false),
+  isDisabled(false)
 #if (defined(__APPLE__) || defined(PLATFORM_DESKTOP)) && !defined(NO_SOUND)
   , streamingSource(0)
 #endif
@@ -147,7 +146,7 @@ void MusicEngine::loadTrackList() {
 }
 
 void MusicEngine::tick() {
-    if (!mc || !options) return;
+    if (isDisabled || !mc || !options) return;
 
     bool worldInGame = (mc->level != NULL);
 
@@ -236,6 +235,8 @@ void MusicEngine::pickNextTrack() {
 }
 
 void MusicEngine::startTrack(const std::string& trackName) {
+    if (isDisabled) return;
+
     stopTrack();
 
     currentTrack = trackName;
@@ -271,10 +272,6 @@ void MusicEngine::startTrack(const std::string& trackName) {
             ms->size = trackBlobSize;
             ms->offset = 0;
             memStreamPtr = ms;
-
-            stb_vorbis_alloc alloc;
-            alloc.alloc_buffer = NULL;
-            alloc.alloc_buffer_length_in_bytes = 0;
 
             vorbisDecoder = stb_vorbis_open_memory(trackBlobData, (int)trackBlobSize, &error, NULL);
         }
