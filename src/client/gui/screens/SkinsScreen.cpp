@@ -451,12 +451,14 @@ void SkinsScreen::init() {
     }
     if (foundIdx >= 0) {
         m_skinList->selectedItem = foundIdx;
+        m_skinList->xo = m_skinList->xoo = foundIdx * m_skinList->itemWidth - (width - m_skinList->itemWidth) * 0.5f;
     } else {
         // Saved skin file is missing; fall back to char.png
         applySavedSkin(minecraft, minecraft->player);
         for (size_t i = 0; i < m_skinFiles.size(); ++i) {
             if (m_skinFiles[i] == "char.png") {
                 m_skinList->selectedItem = (int)i;
+                m_skinList->xo = m_skinList->xoo = (int)i * m_skinList->itemWidth - (width - m_skinList->itemWidth) * 0.5f;
                 break;
             }
         }
@@ -572,6 +574,7 @@ void SkinsScreen::buttonClicked(Button* button) {
         for (size_t i = 0; i < m_skinFiles.size(); ++i) {
             if (m_skinFiles[i] == "char.png") {
                 m_skinList->selectedItem = (int)i;
+                m_skinList->xo = m_skinList->xoo = (int)i * m_skinList->itemWidth - (width - m_skinList->itemWidth) * 0.5f;
                 break;
             }
         }
