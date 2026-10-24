@@ -116,6 +116,7 @@ LOCAL_SRC_FILES := ../../../src/main.cpp \
 ../../../src/client/renderer/tileentity/TileEntityRenderer.cpp \
 ../../../src/client/sound/Sound.cpp \
 ../../../src/client/sound/SoundEngine.cpp \
+../../../src/client/sound/MusicEngine.cpp \
 ../../../src/locale/I18n.cpp \
 ../../../src/nbt/Tag.cpp \
 ../../../src/network/command/CommandServer.cpp \

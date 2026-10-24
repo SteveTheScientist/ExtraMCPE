@@ -28,6 +28,7 @@ class GameMode;
 class Textures;
 class CThread;
 class SoundEngine;
+class MusicEngine;
 class Screen;
 class Font;
 class LevelStorageSource;
@@ -167,6 +168,7 @@ public:
 	GameRenderer*   gameRenderer;
 	ParticleEngine* particleEngine;
 	SoundEngine*    soundEngine;
+	MusicEngine*    musicEngine;
 
 	GameMode* gameMode;
 #ifndef STANDALONE_SERVER
