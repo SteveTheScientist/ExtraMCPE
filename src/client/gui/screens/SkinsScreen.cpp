@@ -461,11 +461,11 @@ void SkinsScreen::keyPressed(int eventKey) {
         return;
     }
     if (m_skinList) {
-        if (eventKey == Keyboard::KEY_LEFT || eventKey == minecraft->options.getIntValue(OPTIONS_KEY_LEFT)) {
+        if (eventKey == minecraft->options.getIntValue(OPTIONS_KEY_LEFT)) {
             m_skinList->stepLeft();
             return;
         }
-        if (eventKey == Keyboard::KEY_RIGHT || eventKey == minecraft->options.getIntValue(OPTIONS_KEY_RIGHT)) {
+        if (eventKey == minecraft->options.getIntValue(OPTIONS_KEY_RIGHT)) {
             m_skinList->stepRight();
             return;
         }

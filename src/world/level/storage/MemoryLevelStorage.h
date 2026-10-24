@@ -44,6 +44,9 @@ public:
     void save(Player* player) {}
     void load(Player* player) {}
 
+    virtual void savePlayer(Player& player) override {}
+    virtual bool loadPlayer(Player& player) override { return false; }
+
     /* CompoundTag loadPlayerDataTag(std::string playerName) {
         return NULL;
     } */
