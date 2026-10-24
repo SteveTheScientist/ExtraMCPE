@@ -53,6 +53,9 @@ public:
     SkinsScreen();
     virtual ~SkinsScreen();
 
+    static void applySavedSkin(Minecraft* minecraft, Player* player);
+    static void setSkinFromFile(Minecraft* minecraft, Player* player, const std::string& skinFileName);
+
     virtual void init() override;
     virtual void setupPositions() override;
     virtual void tick() override;

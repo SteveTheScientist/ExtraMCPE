@@ -12,17 +12,44 @@
 #include "../../../world/level/LevelSettings.h"
 #include "platform/input/Keyboard.h"
 #include "platform/input/Mouse.h"
+#include "platform/log.h"
 #include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <cctype>
 #include <map>
+#include <sys/stat.h>
 
 #ifndef WIN32
 #include <dirent.h>
 #else
 #include <windows.h>
 #endif
+
+static bool fileExists(const std::string& path) {
+    struct stat st;
+    return stat(path.c_str(), &st) == 0;
+}
+
+static void ensureDefaultSkinExists() {
+    createFolderIfNotExists("data");
+    createFolderIfNotExists("data/images");
+    createFolderIfNotExists("data/images/skins");
+
+    std::string skinChar = "data/images/skins/char.png";
+    if (!fileExists(skinChar)) {
+        std::string mobChar = "data/images/mob/char.png";
+        std::ifstream src(mobChar.c_str(), std::ios::binary);
+        if (src.is_open()) {
+            std::ofstream dst(skinChar.c_str(), std::ios::binary);
+            if (dst.is_open()) {
+                dst << src.rdbuf();
+                dst.close();
+            }
+            src.close();
+        }
+    }
+}
 
 static std::string formatSkinName(const std::string& key) {
     std::string name = key;
@@ -41,6 +68,61 @@ static std::string formatSkinName(const std::string& key) {
         }
     }
     return name;
+}
+
+void SkinsScreen::setSkinFromFile(Minecraft* minecraft, Player* player, const std::string& skinFileName) {
+    if (!minecraft) return;
+
+    ensureDefaultSkinExists();
+
+    std::string filename = skinFileName;
+    if (filename.empty()) filename = "char.png";
+
+    std::string skinsDir = "data/images/skins/";
+    std::string targetPath = skinsDir + filename;
+
+    std::string texPath;
+    if (filename == "char.png") {
+        if (fileExists(targetPath)) {
+            texPath = "skins/char.png";
+        } else if (fileExists("data/images/mob/char.png")) {
+            texPath = "mob/char.png";
+        } else {
+            texPath = "skins/char.png";
+        }
+    } else {
+        if (fileExists(targetPath)) {
+            texPath = "skins/" + filename;
+        } else {
+            LOGW("[Skin] Saved skin file '%s' is missing, falling back to char.png\n", filename.c_str());
+            filename = "char.png";
+            minecraft->options.set(OPTIONS_SKIN_NAME, std::string("char.png"));
+            minecraft->options.save();
+            if (fileExists("data/images/skins/char.png")) {
+                texPath = "skins/char.png";
+            } else {
+                texPath = "mob/char.png";
+            }
+        }
+    }
+
+    minecraft->options.set(OPTIONS_SKIN_NAME, filename);
+    minecraft->options.save();
+
+    if (minecraft->textures) {
+        minecraft->textures->loadTexture(texPath, true);
+    }
+
+    if (player) {
+        player->setTextureName(texPath);
+    }
+}
+
+void SkinsScreen::applySavedSkin(Minecraft* minecraft, Player* player) {
+    if (!minecraft) return;
+    std::string savedSkin = minecraft->options.getStringValue(OPTIONS_SKIN_NAME);
+    if (savedSkin.empty()) savedSkin = "char.png";
+    setSkinFromFile(minecraft, player, savedSkin);
 }
 
 //
@@ -225,9 +307,8 @@ void SkinsScreen::loadSkins() {
     m_skinFiles.clear();
     m_skinNames.clear();
 
-    createFolderIfNotExists("data");
-    createFolderIfNotExists("data/images");
-    createFolderIfNotExists("data/images/skins");
+    ensureDefaultSkinExists();
+
     createFolderIfNotExists("data/images/skins/texts");
 
     std::string skinsDir = "data/images/skins";
@@ -356,6 +437,30 @@ void SkinsScreen::init() {
 
     delete m_skinList;
     m_skinList = new SkinList(this, minecraft, width, height);
+
+    // Position carousel at the currently applied skin
+    std::string currentApplied = minecraft->options.getStringValue(OPTIONS_SKIN_NAME);
+    if (currentApplied.empty()) currentApplied = "char.png";
+
+    int foundIdx = -1;
+    for (size_t i = 0; i < m_skinFiles.size(); ++i) {
+        if (m_skinFiles[i] == currentApplied) {
+            foundIdx = (int)i;
+            break;
+        }
+    }
+    if (foundIdx >= 0) {
+        m_skinList->selectedItem = foundIdx;
+    } else {
+        // Saved skin file is missing; fall back to char.png
+        applySavedSkin(minecraft, minecraft->player);
+        for (size_t i = 0; i < m_skinFiles.size(); ++i) {
+            if (m_skinFiles[i] == "char.png") {
+                m_skinList->selectedItem = (int)i;
+                break;
+            }
+        }
+    }
 }
 
 void SkinsScreen::setupPositions() {
@@ -394,11 +499,24 @@ void SkinsScreen::tick() {
         if (m_skinFiles.empty()) {
             if (btnLeft) btnLeft->active = false;
             if (btnRight) btnRight->active = false;
+            if (btnSelect) btnSelect->active = false;
+            if (btnReset) btnReset->active = false;
         } else {
             int idx = m_skinList->selectedItem;
             int num = m_skinList->getNumberOfItems();
             if (btnLeft) btnLeft->active = (idx > 0);
             if (btnRight) btnRight->active = (idx >= 0 && idx < num - 1);
+
+            std::string previewedSkin = (idx >= 0 && idx < (int)m_skinFiles.size()) ? m_skinFiles[idx] : "";
+            std::string currentApplied = minecraft->options.getStringValue(OPTIONS_SKIN_NAME);
+            if (currentApplied.empty()) currentApplied = "char.png";
+
+            if (btnSelect) {
+                btnSelect->active = (!previewedSkin.empty() && previewedSkin != currentApplied);
+            }
+            if (btnReset) {
+                btnReset->active = (currentApplied != "char.png");
+            }
         }
     }
 }
@@ -432,6 +550,31 @@ void SkinsScreen::buttonClicked(Button* button) {
     }
     if (button == btnRight && m_skinList) {
         m_skinList->stepRight();
+        return;
+    }
+    if (button == btnSelect && m_skinList) {
+        int idx = m_skinList->selectedItem;
+        if (idx >= 0 && idx < (int)m_skinFiles.size()) {
+            std::string chosen = m_skinFiles[idx];
+            setSkinFromFile(minecraft, minecraft->player, chosen);
+            if (m_ownsPreviewPlayer && m_previewPlayer) {
+                m_previewPlayer->setTextureName("skins/" + chosen);
+            }
+        }
+        return;
+    }
+    if (button == btnReset) {
+        setSkinFromFile(minecraft, minecraft->player, "char.png");
+        if (m_ownsPreviewPlayer && m_previewPlayer) {
+            std::string charTex = fileExists("data/images/skins/char.png") ? "skins/char.png" : "mob/char.png";
+            m_previewPlayer->setTextureName(charTex);
+        }
+        for (size_t i = 0; i < m_skinFiles.size(); ++i) {
+            if (m_skinFiles[i] == "char.png") {
+                m_skinList->selectedItem = (int)i;
+                break;
+            }
+        }
         return;
     }
 }
