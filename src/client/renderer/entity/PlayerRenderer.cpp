@@ -68,7 +68,7 @@ bool PlayerRenderer::isModernPlayerSkin(Mob* mob) {
 }
 
 void PlayerRenderer::renderName( Mob* mob, float x, float y, float z ){
-	if (!mob || !entityRenderDispatcher || !mob->level) return;
+	if (!mob || !entityRenderDispatcher || !mob->level || !entityRenderDispatcher->getFont()) return;
 	//@todo: figure out how to handle HideGUI
 	if (mob != entityRenderDispatcher->cameraEntity && mob->level->adventureSettings.showNameTags) {
 		renderNameTag(mob, ((Player*)mob)->name, x, y, z, 32);

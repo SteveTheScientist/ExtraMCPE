@@ -128,8 +128,7 @@ std::vector<std::string> listDataFiles(
     }
 
     createFolderIfNotExists("data");
-    createFolderIfNotExists("data/images");
-    createFolderIfNotExists("data/images/skins");
+    createFolderIfNotExists(diskPath.c_str());
 
     std::string fullDiskPath = getFullPath(diskPath);
     if (outDiskPath) *outDiskPath = fullDiskPath;

@@ -87,40 +87,30 @@ void SkinsScreen::setSkinFromFile(Minecraft* minecraft, Player* player, const st
     std::string filename = skinFileName;
     if (filename.empty()) filename = "char.png";
 
-    std::string skinsDir = "data/images/skins/";
-    std::string targetPath = skinsDir + filename;
+    std::string texPath = "skins/" + filename;
+    bool isValid = false;
 
-    std::string texPath;
-    if (filename == "char.png") {
-        if (fileExists(targetPath)) {
-            texPath = "skins/char.png";
-        } else if (fileExists("data/images/mob/char.png")) {
-            texPath = "mob/char.png";
-        } else {
-            texPath = "skins/char.png";
-        }
-    } else {
-        if (fileExists(targetPath)) {
-            texPath = "skins/" + filename;
-        } else {
-            LOGW("[Skins] Saved skin file '%s' is missing, falling back to char.png\n", filename.c_str());
-            filename = "char.png";
-            minecraft->options.set(OPTIONS_SKIN_NAME, std::string("char.png"));
-            minecraft->options.save();
-            if (fileExists("data/images/skins/char.png")) {
-                texPath = "skins/char.png";
-            } else {
-                texPath = "mob/char.png";
+    if (minecraft->textures) {
+        TextureId tid = minecraft->textures->loadTexture(texPath, true);
+        if (tid != Textures::InvalidId) {
+            const TextureData* td = minecraft->textures->getTemporaryTextureData(tid);
+            if (td && td->data && td->w == 64 && (td->h == 32 || td->h == 64)) {
+                isValid = true;
             }
+        }
+    }
+
+    if (!isValid && filename != "char.png") {
+        LOGW("[Skins] Saved skin file '%s' is missing or invalid, falling back to char.png\n", filename.c_str());
+        filename = "char.png";
+        texPath = "skins/char.png";
+        if (minecraft->textures) {
+            minecraft->textures->loadTexture(texPath, true);
         }
     }
 
     minecraft->options.set(OPTIONS_SKIN_NAME, filename);
     minecraft->options.save();
-
-    if (minecraft->textures) {
-        minecraft->textures->loadTexture(texPath, true);
-    }
 
     if (player) {
         player->setTextureName(texPath);
@@ -324,7 +314,9 @@ SkinsScreen::~SkinsScreen() {
     if (m_ownsPreviewPlayer) {
         delete m_previewPlayer;
         delete m_dummyLevel;
-        delete m_dummyStorage;
+        m_dummyLevel = NULL;
+        m_previewPlayer = NULL;
+        m_dummyStorage = NULL;
     }
 }
 
@@ -703,6 +695,7 @@ void SkinsScreen::renderPlayer(float xo, float yo, const std::string& skinTextur
 
     rd->setMinecraft(minecraft);
     rd->textures = minecraft->textures;
+    rd->cameraEntity = m_previewPlayer;
 
     glPushMatrix();
 
